@@ -1,0 +1,31 @@
+{
+  "name": "socialdistribution",
+  "version": "1.0.0",
+  "description": "--- [![Build Status](https://travis-ci.org/CMPUT404/socialdistribution.svg)](https://travis-ci.org/CMPUT404/socialdistribution)",
+  "main": "bower.json",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CMPUT404/socialdistribution.git"
+  },
+  "author": "",
+  "license": "ALv2",
+  "bugs": {
+    "url": "https://github.com/CMPUT404/socialdistribution/issues"
+  },
+  "homepage": "https://github.com/CMPUT404/socialdistribution",
+  "dependencies": {
+    "bootstrap": "^3.3.2",
+    "browserify": "^8.1.3",
+    "del": "^1.1.1",
+    "flux": "^2.0.1",
+    "gulp": "^3.8.10",
+    "jquery": "^2.1.3",
+    "react": "^0.12.2",
+    "react-router": "^0.11.6",
+    "reactify": "^1.0.0",
+    "vinyl-source-stream": "^1.0.0"
+  }
+}
