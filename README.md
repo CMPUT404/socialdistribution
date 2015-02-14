@@ -1,19 +1,15 @@
-# socialdistribution
----
-[![Build
-Status](https://travis-ci.org/CMPUT404/socialdistribution.svg)](https://travis-ci.org/CMPUT404/socialdistribution)
+## ReactSports
 
-A distributed social network.
+#### Installation
 
-#### Installation:
+```bash
+npm install
+bower install
+```
 
-* Clone the repo
-* "npm install"
-* "gulp build"
-* "./manage.py runserver"
+#### How To Run
 
-#### Resources:
-
-React: http://facebook.github.io/react/
-Flux: http://facebook.github.io/flux/docs/overview.html#content
-React-Router: https://github.com/rackt/react-router
+Assuming you've already installed everything:
+```bash
+gulp serve
+```

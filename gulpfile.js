@@ -1,51 +1,108 @@
-/* gulpfile.js */
+var gulp        = require('gulp');
 
-// From: https://hacks.mozilla.org/2014/08/browserify-and-gulp-with-react/
+var $           = require('gulp-load-plugins')();
+var del         = require('del');
+var source      = require('vinyl-source-stream');
+var browserify  = require('browserify');
+var runSequence = require('run-sequence');
 
-// Load some modules which are installed through NPM.
-var gulp = require('gulp');
-var browserify = require('browserify');  // Bundles JS.
-var del = require('del');  // Deletes files.
-var reactify = require('reactify');  // Transforms React JSX to JS.
-var source = require('vinyl-source-stream');
+var env = 'dev';
 
-// Define some paths.
-var paths = {
-    // css:    ['src/css/**/*.styl'],
-    app_js: ['./app/js/app.jsx'],
-    js:     ['./app/js/**/*.js'],
-};
-
-// An example of a dependency task, it will be run before the css/js tasks.
-// Dependency tasks should call the callback to tell the parent task that
-// they're done.
-gulp.task('clean', function(done) {
-    del(['./app/build'], done);
+gulp.task('clean:dev', function() {
+  return del(['.tmp']);
 });
 
-// Our CSS task. It finds all our Stylus files and compiles them.
-// gulp.task('css', ['clean'], function() {
-    // return gulp.src(paths.css)
-        // .pipe(stylus())
-        // .pipe(gulp.dest('./src/css'));
-// });
-
-// Our JS task. It will Browserify our code and compile React JSX files.
-gulp.task('js', ['clean'], function() {
-    // Browserify/bundle the JS.
-    browserify(paths.app_js)
-        .transform(reactify)
-        .bundle()
-        .pipe(source('bundle.js'))
-        .pipe(gulp.dest('./app/build/js'));
+gulp.task('clean:dist', function() {
+  return del(['dist']);
 });
 
-// Rerun tasks whenever a file changes.
-gulp.task('watch', function() {
-    // gulp.watch(paths.css, ['css']);
-    gulp.watch(paths.js, ['js']);
+gulp.task('scripts', function() {
+  var bundler = browserify('./app/scripts/app.js', {
+    extensions: ['.jsx'],
+    debug: env == 'dev'
+  }).transform('reactify');
+
+  return bundler.bundle()
+    .pipe(source('app.js'))
+    .pipe(gulp.dest('.tmp/scripts'));
 });
 
-// The default task (called when we run `gulp` from cli)
-gulp.task('build', ['js']);
-gulp.task('default', ['watch', 'js']);
+gulp.task('compass', function() {
+  return gulp.src('app/styles/**/*.scss')
+    .pipe($.plumber())
+    .pipe($.compass({
+      css: '.tmp/styles',
+      sass: 'app/styles'
+    }));
+});
+
+gulp.task('imagemin', function() {
+  return gulp.src('app/images/*')
+    .pipe($.imagemin({
+            progressive: true,
+            svgoPlugins: [{removeViewBox: false}]
+    }))
+    .pipe(gulp.dest('dist/images'));
+});
+
+gulp.task('copy', function() {
+  return gulp.src(['app/*.txt', 'app/*.ico'])
+    .pipe(gulp.dest('dist'));
+})
+
+gulp.task('bundle', function () {
+  var assets = $.useref.assets({searchPath: '{.tmp,app}'});
+  var jsFilter = $.filter(['**/*.js']);
+  var cssFilter = $.filter(['**/*.css']);
+  var htmlFilter = $.filter(['*.html']);
+
+  return gulp.src('app/*.html')
+    .pipe(assets)
+    .pipe(assets.restore())
+    .pipe($.useref())
+    .pipe(jsFilter)
+    .pipe($.uglify())
+    .pipe(jsFilter.restore())
+    .pipe(cssFilter)
+    .pipe($.autoprefixer({
+      browsers: ['last 5 versions']
+    }))
+    .pipe($.minifyCss())
+    .pipe(cssFilter.restore())
+    .pipe(htmlFilter)
+    .pipe($.htmlmin({collapseWhitespace: true}))
+    .pipe(htmlFilter.restore())
+    .pipe($.revAll({ ignore: [/^\/favicon.ico$/g, '.html'] }))
+    .pipe($.revReplace())
+    .pipe(gulp.dest('dist'))
+    .pipe($.size());
+});
+
+gulp.task('webserver', function() {
+  return gulp.src(['.tmp', 'app'])
+    .pipe($.webserver({
+      host: '0.0.0.0', //change to 'localhost' to disable outside connections
+      livereload: true,
+      open: true
+    }));
+});
+
+gulp.task('serve', function() {
+  runSequence('clean:dev', ['scripts', 'compass'], 'webserver');
+
+  gulp.watch('app/*.html');
+
+  gulp.watch('app/scripts/**/*.js', ['scripts']);
+
+  gulp.watch('app/scripts/**/*.jsx', ['scripts']);
+  
+  gulp.watch('app/styles/**/*.scss', ['compass']);
+});
+
+gulp.task('build', function() {
+  env = 'prod';
+
+  runSequence(['clean:dev', 'clean:dist'],
+              ['scripts', 'compass', 'imagemin', 'copy'],
+              'bundle');
+});
