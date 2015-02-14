@@ -1,6 +1,10 @@
 language: python
 python: "2.7"
 install:
+    - "npm install"
+    - "bower install"
+    - "npm test"
     - "pip install django"
     - "pip install -r requirements.txt"
-script: "./manage.py test"
+script:
+    - "python manage.py test app"
