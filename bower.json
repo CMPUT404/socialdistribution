@@ -1,0 +1,22 @@
+{
+  "name": "ReactSports",
+  "version": "0.0.0",
+  "authors": [
+    "Derek Dowling"
+  ],
+  "moduleType": [
+    "node"
+  ],
+  "license": "None",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "app/vendor",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "modernizr": "~2.8.3",
+    "bootstrap": "~3.3.2"
+  }
+}
