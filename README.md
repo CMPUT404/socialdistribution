@@ -1,4 +1,4 @@
-## ReactSports
+## 404
 
 #### Installation
 
@@ -12,4 +12,10 @@ bower install
 Assuming you've already installed everything:
 ```bash
 gulp serve
+```
+
+#### How to test
+
+```bash
+npm test
 ```

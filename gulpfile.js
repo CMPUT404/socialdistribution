@@ -5,6 +5,7 @@ var del         = require('del');
 var source      = require('vinyl-source-stream');
 var browserify  = require('browserify');
 var runSequence = require('run-sequence');
+var to5ify      = require("6to5ify");
 
 var env = 'dev';
 
@@ -18,9 +19,9 @@ gulp.task('clean:dist', function() {
 
 gulp.task('scripts', function() {
   var bundler = browserify('./app/scripts/app.js', {
-    extensions: ['.jsx'],
-    debug: env == 'dev'
-  }).transform('reactify');
+    debug: true,
+    extensions: ['.es6','.jsx']
+  }).transform(to5ify);
 
   return bundler.bundle()
     .pipe(source('app.js'))
@@ -79,7 +80,7 @@ gulp.task('bundle', function () {
 });
 
 gulp.task('webserver', function() {
-  return gulp.src(['.tmp', 'app'])
+  return gulp.src(['.tmp', 'app', 'vendor'])
     .pipe($.webserver({
       host: '0.0.0.0', //change to 'localhost' to disable outside connections
       livereload: true,

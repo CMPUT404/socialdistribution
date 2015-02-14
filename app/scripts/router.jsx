@@ -4,14 +4,17 @@ var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
 
 var Layout = require('./components/layout');
-var Scoresheet = require('./components/scoresheet/scoresheet');
+var Timeline = require('./components/timeline');
+var Profile = require('./components/profile');
 
 var routes = (
 	<Route name="layout" path="/" handler={Layout}>
-		<DefaultRoute handler={Scoresheet} />
+		<DefaultRoute handler={Timeline} />
+		<Route name="profile" handler={Profile} />
 	</Route>
 );
 
+// Don't touch this, define routes above
 exports.start = function() {
   Router.run(routes, function (Handler) {
 		React.render(<Handler />, document.body);

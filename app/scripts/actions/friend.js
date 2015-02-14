@@ -1,8 +1,8 @@
 var Reflux = require('reflux');
 
 var Actions = Reflux.createActions([
-  "updateScore",
-  "addPlayer"
+  "follow",
+  "unfollow"
 ]);
 
 module.exports = Actions;

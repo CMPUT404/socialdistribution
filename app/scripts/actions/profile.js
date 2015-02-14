@@ -1,8 +1,7 @@
 var Reflux = require('reflux');
 
 var Actions = Reflux.createActions([
-  "triggerTimer",
-  "timerTick"
+  "update"
 ]);
 
 module.exports = Actions;
