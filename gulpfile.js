@@ -52,7 +52,7 @@ gulp.task('copy', function() {
 })
 
 gulp.task('bundle', function () {
-  var assets = $.useref.assets({searchPath: '{.tmp,app}'});
+  var assets = $.useref.assets({searchPath: '{.tmp,app,vendor}'});
   var jsFilter = $.filter(['**/*.js']);
   var cssFilter = $.filter(['**/*.css']);
   var htmlFilter = $.filter(['*.html']);

@@ -8,7 +8,7 @@ var Layout = React.createClass({
 
   render: function() {
     return (
-      <div className="container app">
+      <div className="container-fluid app">
         <Navbar />
         <RouteHandler />
       </div>

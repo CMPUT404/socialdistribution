@@ -2,6 +2,7 @@ var React = require('react');
 var Reflux = require('reflux');
 
 var PostStore = require('../stores/post');
+var ContentViewer = require('./contentviewer');
 
 var Profile = React.createClass({
 
@@ -18,7 +19,7 @@ var Profile = React.createClass({
 
     return (
       <div className="profile-view">
-        <PostViewer authorId={this.props.authorId} isProfile={profile} />
+        <ContentViewer authorId={this.props.authorId} isProfile={profile} />
       </div>
     );
   }

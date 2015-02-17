@@ -6,13 +6,13 @@ var NavItem = require('react-bootstrap').NavItem;
 var NavItem = require('react-bootstrap').NavItem;
 var AuthorStore = require('../stores/author');
 
-var Timeline = React.createClass({
+var Navbar = React.createClass({
 
   mixins: [Reflux.connect(AuthorStore)],
 
   getInitialState: function() {
     return {
-      author: AuthorStore.getAuthor()
+      author: AuthorStore.getCurrentAuthor()
     };
   },
 
@@ -28,4 +28,4 @@ var Timeline = React.createClass({
   }
 });
 
-module.exports = Timeline;
+module.exports = Navbar;
