@@ -31,24 +31,21 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
 
 class FollowerRelationshipSerializer(serializers.ModelSerializer):
     follower = AuthorSerializer(many=False, read_only=True)
-    followee = AuthorSerializer(many=False, read_only=True)
 
     class Meta:
         model = FollowerRelationship
-        fields = ('follower', 'followee')
+        fields = ('follower',)
 
 class FriendRelationshipSerializer(serializers.ModelSerializer):
     friendor = AuthorSerializer(many=False, read_only=True)
-    friend = AuthorSerializer(many=False, read_only=True)
 
     class Meta:
         model = FriendRelationship
-        fields = ('friendor', 'friend')
+        fields = ('friendor',)
 
 class FriendRequestSerializer(serializers.ModelSerializer):
     requestor = AuthorSerializer(many=False, read_only=True)
-    requestee = AuthorSerializer(many=False, read_only=True)
 
     class Meta:
         model = FriendRequest
-        fields = ('requestor', 'requestee')
+        fields = ('requestor', )

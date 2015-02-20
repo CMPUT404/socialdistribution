@@ -93,6 +93,7 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(response.status_code, 200)
 
         j = get_dict_response(response)
+
         self.assertEquals(j[0]['user']['email'], EMAIL)
 
     def test_retrieve_friends(self):
@@ -103,11 +104,8 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(response.status_code, 200)
 
         # TODO checking response content
-        # The response is sending lots of unecessary data. Rewrite serializer
-        # [{"friendor":{"user":2,"uuid":"a83948c3a1a3483d8a82540cafc33aea"},
-        #   "friend":{"user":1,"uuid":"d78c41cfdb934e078ae93f1d852673c0"}},
-        # {"friendor":{"user":3,"uuid":"04db8866d9bb4f5caebffb90a79daa80"},
-        #   "friend":{"user":1,"uuid":"d78c41cfdb934e078ae93f1d852673c0"}}]
+        # Response json can still be formatted better
+        # [{"friendor":{"user":2,"uuid":"399a137745c84722b66f4ed853befca0"}},{"friendor":{"user":3,"uuid":"5f0149272bc94d039fccd53376e748c6"}}]
 
     def test_retrieve_requests(self):
         FriendRequest.objects.create(requestor = self.author_a, requestee = self.author)

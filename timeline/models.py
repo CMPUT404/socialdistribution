@@ -16,3 +16,4 @@ class Comment(models.Model):
     """
     text = models.TextField(blank=False)
     date = models.DateField(auto_now_add=True)
+    post = models.ForeignKey('Post')

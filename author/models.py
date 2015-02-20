@@ -16,6 +16,7 @@ class Author(models.Model):
     uuid = UUIDField(auto=True, editable=False)
     github_username = models.CharField(max_length=40, blank=True)
     bio = models.TextField(blank=False, null=False)
+    server = models.ForeignKey('external.Server', null=True, blank=True)
 
 class FollowerRelationship(models.Model):
     """
@@ -23,7 +24,7 @@ class FollowerRelationship(models.Model):
     """
     created_on = models.DateField(auto_now_add=True)
     follower = models.ForeignKey('Author', null=True, related_name='follower')
-    followee = models.ForeignKey('Author', null=True, related_name='followee') # person being followed
+    followee = models.ForeignKey('Author', null=True, related_name='followee')
 
 class FriendRelationship(models.Model):
     """
