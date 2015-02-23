@@ -5,7 +5,7 @@ from author import views
 urlpatterns = [
 
     # GET  /author/:uuid
-    url(r'^author/(?P<uuid>[0-9a-f]{32}\Z)$', views.GetAuthorDetails.as_view()),
+    url(r'^author/(?P<uuid>[0-9a-f]{32}\Z)$', views.GetUserDetails.as_view()),
 
     # GET /author/friends/:uuid
     url(r'^author/friends/(?P<uuid>[0-9a-f]{32}\Z)$', views.GetAuthorFriends.as_view()),

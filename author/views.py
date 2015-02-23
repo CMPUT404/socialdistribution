@@ -5,13 +5,13 @@ from rest_framework import status, mixins, generics
 from rest_framework.response import Response
 
 from author.models import (
-    Author,
+    UserDetails,
     FollowerRelationship,
     FriendRelationship,
     FriendRequest )
 from author.serializers import (
-    AuthorSerializer,
-    AuthorDetailSerializer,
+    UserSerializer,
+    UserDetailSerializer,
     FollowerRelationshipSerializer,
     FriendRelationshipSerializer,
     FriendRequestSerializer )
@@ -27,9 +27,9 @@ class MultipleFieldLookupMixin(object):
         return get_object_or_404(queryset, **filter)
 
 # GET /author/:uuid
-class GetAuthorDetails(MultipleFieldLookupMixin, generics.ListAPIView):
-    queryset = Author.objects.all()
-    serializer_class = AuthorDetailSerializer
+class GetUserDetails(MultipleFieldLookupMixin, generics.ListAPIView):
+    queryset = UserDetails.objects.all()
+    serializer_class = UserDetailSerializer
     lookup_fields = ('uuid')
 
 # GET /author/friends/:uuid

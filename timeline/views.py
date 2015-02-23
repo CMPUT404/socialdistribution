@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import Http404
-
+from author.models import User
+from author.models import UserDetails
 from timeline.models import Post, Comment
 from timeline.serializers import PostSerializer, CommentSerializer
 
@@ -32,15 +33,20 @@ class MultipleFieldLookupMixin(object):
 #     lookup_fields = ('author')
 
 class GetPosts(APIView):
-    def get_object(self, aid):
+    def get_object(self, uuid):
         try:
             # return Post.objects.all().filter(author = aid)
-            return Post.objects.get(author=aid)
+            # convert from uuid to user
+            import pdb; pdb.set_trace()
+            user = User.objects.filter(userdetails__uuid=uuid)[0]
+            print user
+            return Post.objects.get(user=user)
         except Post.DoesNotExist:
             raise Http404
 
-    def get(self, request, aid, format=None):
-        post = self.get_object(aid)
+    def get(self, request, uuid, format=None):
+        import pdb; pdb.set_trace()
+        post = self.get_object(uuid)
         # serializer = PostSerializer(posts, many=True)
         serializer = PostSerializer(post)
 
