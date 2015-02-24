@@ -67,10 +67,7 @@ class TimelineAPITestCase(TestCase):
         # If this doesn't pass, then the following test will obviously fail
 
     def test_get_posts_by_author_with_http(self):
-        post = Post.objects.get(user = self.user)
-        print Post.objects.all()[0].user
-        print UserDetails.objects.get(user=self.user).uuid
-        response = c.get('/author/posts/%s' %UserDetails.objects.get(user=self.user).uuid, content_type="application/json")
-        print response
+        uuid = UserDetails.objects.get(user=self.user).uuid
+        response = c.get('/author/posts/%s' %uuid, content_type="application/json")
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.data['text'], TEXT, "Wrong post was retrieved")

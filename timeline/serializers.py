@@ -4,7 +4,7 @@ from timeline.models import Post, Comment
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ('author', 'id', 'text', 'date', 'acl', 'image')
+        fields = ('user', 'id', 'text', 'date', 'acl', 'image')
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:

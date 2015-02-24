@@ -37,19 +37,15 @@ class GetPosts(APIView):
         try:
             # return Post.objects.all().filter(author = aid)
             # convert from uuid to user
-            import pdb; pdb.set_trace()
             user = User.objects.filter(userdetails__uuid=uuid)[0]
-            print user
-            return Post.objects.get(user=user)
+            return Post.objects.filter(user=user)[0]
         except Post.DoesNotExist:
             raise Http404
 
     def get(self, request, uuid, format=None):
-        import pdb; pdb.set_trace()
         post = self.get_object(uuid)
         # serializer = PostSerializer(posts, many=True)
         serializer = PostSerializer(post)
-
         # Insert mock external server data into the response
         # No, this is not a good way of doing this and can actually be coded into PostSerializer
         # pl = json.dumps(serializer.data)
@@ -58,10 +54,10 @@ class GetPosts(APIView):
 
         return Response(serializer.data)
 
-    def get_extern_posts(self, aid):
+    def get_extern_posts(self, uuid):
         """Returns a list posts from external nodes"""
 
         # Pretend that we GET external posts here
         # Mock data with a date in the future for testing sorting
 
-        return [{'author': 1, 'date': '2015-02-25', 'text': u'Some other text', 'image': None, 'id': 99, 'acl': None}]
+        return [{'user': 1, 'date': '2015-02-25', 'text': u'Some other text', 'image': None, 'id': 99, 'acl': None}]
