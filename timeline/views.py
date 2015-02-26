@@ -38,7 +38,7 @@ class GetPosts(APIView):
             # return Post.objects.all().filter(author = aid)
             # convert from uuid to user
             user = User.objects.filter(userdetails__uuid=uuid)[0]
-            return Post.objects.filter(user=user)[0]
+            return Post.objects.filter(user=user)
         except Post.DoesNotExist:
             raise Http404
 

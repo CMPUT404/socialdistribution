@@ -5,7 +5,7 @@ from timeline import views
 urlpatterns = [
 
     # GET  /author/posts/:uuid
-    url(r'^author/posts/(?P<uuid>[0-9a-zA-Z]+)$', views.GetPosts.as_view()),
+    url(r'^author/(?P<uuid>[0-9a-zA-Z]+)/posts$', views.GetPosts.as_view()),
 
 ]
 

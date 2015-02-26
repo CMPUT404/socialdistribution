@@ -68,6 +68,14 @@ class TimelineAPITestCase(TestCase):
 
     def test_get_posts_by_author_with_http(self):
         uuid = UserDetails.objects.get(user=self.user).uuid
-        response = c.get('/author/posts/%s' %uuid, content_type="application/json")
+        response = c.get('/author/%s/posts' %uuid, content_type="application/json")
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.data['text'], TEXT, "Wrong post was retrieved")
+
+    def test_get_multiple_posts_by_author_with_http(self):
+        Post.objects.create(text = TEXT, user = self.user)
+        Post.objects.create(text = TEXT, user = self.user)
+        uuid = UserDetails.objects.get(user=self.user).uuid
+        response = c.get('/author/%s/posts' %uuid, content_type="application/json")
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.data['text'], TEXT, "Wrong post was retrieved")
