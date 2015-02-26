@@ -19,7 +19,7 @@ var AuthorStore = Reflux.createStore({
     getAuthors: function () {
         var author = {
           name: "Bert McGert",
-          author_id: "1234",
+          id: this.current_author,
           author_image: "images/bert.jpg",
           friend_request_count: 3
         };

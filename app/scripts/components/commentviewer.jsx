@@ -14,8 +14,6 @@ var CommentViewer = React.createClass({
     var forComment = true;
     comments.push();
 
-    console.log("comments", comments);
-
     return (
       <ul className="media-list">
         {comments}

@@ -2,17 +2,18 @@ var React = require('react');
 var Reflux = require('reflux');
 var Navbar = require('react-bootstrap').Navbar;
 var Nav = require('react-bootstrap').Nav;
-var NavItem = require('react-bootstrap').NavItem;
-var NavItem = require('react-bootstrap').NavItem;
+var ReactRouterBootstrap = require('react-router-bootstrap')
+  , NavItemLink = ReactRouterBootstrap.NavItemLink
+
 var AuthorStore = require('../stores/author');
 
-var Navbar = React.createClass({
+var Navigation = React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore)],
+  // mixins: [Reflux.connect(AuthorStore)],
 
   getInitialState: function() {
     return {
-      author: AuthorStore.getCurrentAuthor()
+      // author: AuthorStore.getCurrentAuthor()
     };
   },
 
@@ -20,12 +21,12 @@ var Navbar = React.createClass({
     return (
       <Navbar>
         <Nav>
-          <NavItem eventKey={1} href="/timeline">Home</NavItem>
-          <NavItem eventKey={2} href="/profile">Profile</NavItem>
+          <NavItemLink to="/">Timeline</NavItemLink>
+          <NavItemLink to="/profile">Profile</NavItemLink>
         </Nav>
       </Navbar>
     );
   }
 });
 
-module.exports = Navbar;
+module.exports = Navigation;

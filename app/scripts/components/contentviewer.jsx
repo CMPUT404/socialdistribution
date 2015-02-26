@@ -41,7 +41,7 @@ var ContentViewer = React.createClass({
 
     return (
       <div className="col-md-12 content-viewer">
-        <Button onClick={this.refresh} type="submit">Refresh</Button>
+        <Button onClick={this.refresh} type="submit">refresh</Button>
         <ul className="media-list">
           {posts}
         </ul>

@@ -8,9 +8,9 @@ var Timeline = require('./components/timeline');
 var Profile = require('./components/profile');
 
 var routes = (
-	<Route name="layout" path="/" handler={Layout}>
+	<Route name="timeline" path="/" handler={Layout}>
 		<DefaultRoute handler={Timeline} />
-		<Route name="profile" handler={Profile} />
+		<Route name="profile" path=""handler={Profile} />
 	</Route>
 );
 

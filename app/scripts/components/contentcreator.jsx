@@ -58,8 +58,8 @@ var ContentCreator = React.createClass({
                 </div>
                 <div className="media-body">
                     <h4 className="media-heading">New Post</h4>
-                    <Input type="textarea" label="Content" value={this.state.content} onChange={this.contentChange} />
-                    <Input type="select" label='Format' value={this.state.format} onChange={this.formatChange}>
+                    <Input type="textarea" label="Content" value={this.state.content.content} onChange={this.contentChange} />
+                    <Input type="select" label='Format' value={this.state.content.format} onChange={this.formatChange}>
                         <option value="markdown">Markdown</option>
                         <option value="text">Text</option>
                         <option value="HTML">HTML</option>

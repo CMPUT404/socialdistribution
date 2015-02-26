@@ -19,7 +19,7 @@ var Profile = React.createClass({
 
     return (
       <div className="profile-view">
-        <ContentViewer authorId={this.props.authorId} isProfile={profile} />
+        {/*<ContentViewer authorId={this.props.authorId} isProfile={profile} />*/}
       </div>
     );
   }

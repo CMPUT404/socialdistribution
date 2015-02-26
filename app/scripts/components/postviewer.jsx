@@ -4,6 +4,7 @@ var Reflux = require('reflux');
 var PostStore = require('../stores/post');
 var PostActions = require('../actions/post');
 var Content = require('./content');
+var Button = require('react-bootstrap').Button;
 
 var ContentViewer = React.createClass({
 
@@ -38,7 +39,7 @@ var ContentViewer = React.createClass({
 
     return (
       <div id="post-list">
-        <button type="button" onClick={this.refresh} value="Refresh"/>
+        <Button type="button" onClick={this.refresh}>Refresh</Button>
         {posts}
       </div>
     );

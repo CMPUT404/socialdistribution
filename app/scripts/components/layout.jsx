@@ -8,9 +8,11 @@ var Layout = React.createClass({
 
   render: function() {
     return (
-      <div className="container-fluid app">
+      <div className="container-fluid">
         <Navbar />
-        <RouteHandler />
+        <div id="app">
+          <RouteHandler />
+        </div>
       </div>
     );
   }

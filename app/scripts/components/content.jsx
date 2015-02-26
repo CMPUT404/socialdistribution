@@ -18,13 +18,11 @@ var Content = React.createClass({
 
     render: function() {
         var timestamp = Moment(this.props.data.timestamp).fromNow();
-console.log(this.props);
 
         // If we're dealing with a post, append comments and comment creator to
         // the bottom
         var commentViewer;
         if (typeof this.props.isPost === 'undefined') {
-            console.log("a post");
             commentViewer = <CommentViewer postId={this.props.data.id} comments={this.props.data.comments} />;
         }
 
