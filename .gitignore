@@ -1,3 +1,6 @@
+*.pyc
+*~
+
 # Django migrations
 author/migrations
 backend/migrations
