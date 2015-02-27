@@ -12,7 +12,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         model = UserDetails
         fields = ('user', 'uuid', 'github_username', 'bio', 'server')
 
-# Only to be used wuth UserDetailsSerializer
+# Only to be used with UserDetailsSerializer
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     email = serializers.EmailField()
@@ -21,6 +21,14 @@ class UserSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     last_login = serializers.DateTimeField()
     date_joined = serializers.DateTimeField()
+
+class CompactUserSerializer(serializers.Serializer):
+    """
+    A compact user serializer that returns only relevant information to posts/comments
+    """
+    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
 
 class UserDetailSerializer(serializers.ModelSerializer):
     user = UserSerializer(many=False, read_only=True)

@@ -3,7 +3,7 @@ from django.http import Http404
 from author.models import User
 from author.models import UserDetails
 from timeline.models import Post, Comment
-from timeline.serializers import PostSerializer, CommentSerializer
+from timeline.serializers import PostsSerializer, CommentSerializer
 
 from rest_framework.views import APIView
 from rest_framework import mixins, generics
@@ -34,18 +34,21 @@ class MultipleFieldLookupMixin(object):
 
 class GetPosts(APIView):
     def get_object(self, uuid):
+        """
+        Returns a list of Posts associated with a UserDetail's (User) uuid field.
+
+        See https://docs.djangoproject.com/en/1.7/topics/db/queries/#spanning-multi-valued-relationships
+        for information about quering foriegn keys that span multiple objects.
+        """
         try:
-            # return Post.objects.all().filter(author = aid)
-            # convert from uuid to user
-            user = User.objects.filter(userdetails__uuid=uuid)[0]
-            return Post.objects.filter(user=user)
+            return Post.objects.filter(user__userdetails__uuid=uuid)
         except Post.DoesNotExist:
             raise Http404
 
     def get(self, request, uuid, format=None):
-        post = self.get_object(uuid)
-        # serializer = PostSerializer(posts, many=True)
-        serializer = PostSerializer(post)
+        posts = self.get_object(uuid)
+        serializer = PostsSerializer(posts, many=True)
+
         # Insert mock external server data into the response
         # No, this is not a good way of doing this and can actually be coded into PostSerializer
         # pl = json.dumps(serializer.data)
@@ -58,6 +61,7 @@ class GetPosts(APIView):
         """Returns a list posts from external nodes"""
 
         # Pretend that we GET external posts here
+        # Will eventually be handled with threading in seperate module.
         # Mock data with a date in the future for testing sorting
 
-        return [{'user': 1, 'date': '2015-02-25', 'text': u'Some other text', 'image': None, 'id': 99, 'acl': None}]
+        return [{'user':{'username':'jmaguire', 'first_name':'Jerry', 'last_name':'Maguire'}, 'date': '2015-02-25', 'text': u'You complete me', 'image': None, 'id': 99,}]

@@ -69,13 +69,33 @@ class TimelineAPITestCase(TestCase):
     def test_get_posts_by_author_with_http(self):
         uuid = UserDetails.objects.get(user=self.user).uuid
         response = c.get('/author/%s/posts' %uuid, content_type="application/json")
+
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.data['text'], TEXT, "Wrong post was retrieved")
+        self.assertEquals(len(response.data), 1, "Only one post should have been retrieved")
+
+        post = response.data[0]
+        self.assertEquals(post['user']['username'], USERNAME, "Wrong post author")
+        self.assertEquals(post['text'], TEXT, "Wrong post content")
 
     def test_get_multiple_posts_by_author_with_http(self):
+        # Create two posts, in addition to the post created in setUp()
         Post.objects.create(text = TEXT, user = self.user)
         Post.objects.create(text = TEXT, user = self.user)
+
         uuid = UserDetails.objects.get(user=self.user).uuid
         response = c.get('/author/%s/posts' %uuid, content_type="application/json")
+
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.data['text'], TEXT, "Wrong post was retrieved")
+        self.assertEquals(len(response.data), 3, "Three posts should have been retrieved")
+
+        # Check to ensure each post has a different id number
+        diff_ids = True
+        prev_id = -1
+
+        # With the exception of post id, every post has the same text
+        for post in response.data:
+            diff_ids = False if post['id'] == prev_id else True
+            self.assertEquals(post['text'], TEXT, "Wrong post content")
+            prev_id = post['id']
+
+        self.assertEquals(diff_ids, True, "Post ids are the same for multiple posts!")

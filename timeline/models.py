@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+
 class Post(models.Model):
     """
     Post
@@ -8,7 +9,7 @@ class Post(models.Model):
     date = models.DateField(auto_now_add=True)
     acl = models.IntegerField(null=True)
     image = models.ImageField(null=True, blank=True)
-    user = models.ForeignKey(User, blank=False) # Prototyping without for now
+    user = models.ForeignKey(User, blank=False)
 
 class Comment(models.Model):
     """
