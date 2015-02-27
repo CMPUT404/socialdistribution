@@ -88,14 +88,12 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 3, "Three posts should have been retrieved")
 
-        # Check to ensure each post has a different id number
-        diff_ids = True
-        prev_id = -1
+        post_ids = []
 
         # With the exception of post id, every post has the same text
         for post in response.data:
-            diff_ids = False if post['id'] == prev_id else True
+            post_ids.append(post['id'])
             self.assertEquals(post['text'], TEXT, "Wrong post content")
-            prev_id = post['id']
 
-        self.assertEquals(diff_ids, True, "Post ids are the same for multiple posts!")
+        # Ensure each post has a different id
+        self.assertEquals(len(post_ids), len(set(post_ids)), "Post ids are the same for multiple posts!")
