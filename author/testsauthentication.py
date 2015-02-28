@@ -52,12 +52,12 @@ class UserDetailsAuthentication(TestCase):
         User.objects.all().delete()
 
     def test_registration(self):
-        body = {
+        response = c.post('/author/registration/', {
             'username':USERNAME,
             'password1':PASSWORD,
+            'password2':PASSWORD,
             'email':EMAIL,
-            }
-        response = c.post('/author/registration/', body=body, content_type="application/json")
+            })
 
         print response.status_code
 
