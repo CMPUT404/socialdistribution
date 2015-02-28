@@ -1,5 +1,5 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-
 from rest_framework import serializers
 from author.models import (
     UserDetails,
@@ -21,6 +21,12 @@ class UserSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     last_login = serializers.DateTimeField()
     date_joined = serializers.DateTimeField()
+
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = get_user_model()
+#         fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
+#         read_only_fields = ('email', )
 
 class CompactUserSerializer(serializers.Serializer):
     """

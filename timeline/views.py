@@ -47,6 +47,7 @@ class GetPosts(APIView):
 
     def get(self, request, uuid, format=None):
         posts = self.get_object(uuid)
+
         serializer = PostsSerializer(posts, many=True)
 
         # Insert mock external server data into the response

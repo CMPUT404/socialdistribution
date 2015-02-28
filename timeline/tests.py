@@ -73,6 +73,8 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 1, "Only one post should have been retrieved")
 
+        # print json.dumps(response.data)
+
         post = response.data[0]
         self.assertEquals(post['user']['username'], USERNAME, "Wrong post author")
         self.assertEquals(post['text'], TEXT, "Wrong post content")

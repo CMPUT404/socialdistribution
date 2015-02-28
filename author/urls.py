@@ -16,6 +16,8 @@ urlpatterns = [
     # GET /author/friendrequests/:uuid
     url(r'^author/friendrequests/(?P<uuid>[0-9a-fA-Z]{32}\Z)$', views.GetAuthorFriendRequests.as_view()),
 
+    # Authentication URI
+    url(r'^author/registration/$', views.AuthorRegistration),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
