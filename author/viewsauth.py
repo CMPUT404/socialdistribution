@@ -8,6 +8,10 @@ from author.models import UserDetails
 
 from author.serializers import RegistrationSerializer
 
+"""
+All views related to authentication
+"""
+
 @api_view(['POST'])
 @csrf_exempt
 def AuthorRegistration(request):

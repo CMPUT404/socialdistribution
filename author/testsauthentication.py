@@ -80,6 +80,14 @@ class UserDetailsAuthentication(TestCase):
         self.assertEquals(details.github_username, GITHUB_USERNAME, "Username doesn't match")
         self.assertEquals(len(details.uuid), 32, "UUID not 32 bits")
 
+    def test_registration_same_user(self):
+        """
+        Test registering the same user properties again
+        """
+        response = c.post('/author/registration/', self.user_dict)
+
+        print response
+
     def test_registration_without_username(self):
         """
         Should not be able to register without username
