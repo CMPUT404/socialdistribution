@@ -9,18 +9,18 @@ import json
 c = Client()
 
 # Values to be inserted and checked in the UserDetails model
-GITHUB_USERNAME = "mraypold"
-BIO = "This is my witty biography!"
+GITHUB_USERNAME = "jmaguire"
+BIO = "I'm the best sports agent around!"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
-USERNAME = "raypold"
+USERNAME = "jmaguire"
 PASSWORD = uuid.uuid4()
 
 # optional User model attributes
-FIRST_NAME = "Michael"
-LAST_NAME = "Raypold"
-EMAIL = "raypold@ualberta.ca"
+FIRST_NAME = "Jerry"
+LAST_NAME = "Maguire"
+EMAIL = "jmaguire@smi.com"
 
 # Main user in the tests
 USER = {
@@ -44,7 +44,15 @@ class UserDetailsAuthentication(TestCase):
     Basic testing of the UserDetails model creation and database insertion
     """
     def setUp(self):
-        return
+        self.user_dict = {
+            'username':USERNAME,
+            'first_name':FIRST_NAME,
+            'last_name':LAST_NAME,
+            'password':PASSWORD,
+            'email':EMAIL,
+            'github_username':GITHUB_USERNAME,
+            'bio':BIO
+            }
 
     def tearDown(self):
         """Remove all created objects from mock database"""
@@ -52,13 +60,56 @@ class UserDetailsAuthentication(TestCase):
         User.objects.all().delete()
 
     def test_registration(self):
-        response = c.post('/author/registration/', {
-            'username':USERNAME,
-            'password1':PASSWORD,
-            'password2':PASSWORD,
-            'email':EMAIL,
-            })
+        """
+        Test a registration where all values are given in the JSON body
+        """
+        response = c.post('/author/registration/', self.user_dict)
 
-        print response.status_code
+        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
-        print User.objects.all()
+        # Confirm that model and all attributes were inserted
+        user = User.objects.get(username = USERNAME)
+        self.assertEquals(user.username, USERNAME, "Usernames don't match")
+        self.assertEquals(user.first_name, FIRST_NAME, "Name doesn't match")
+        self.assertEquals(user.last_name, LAST_NAME, "Name doesn't match")
+
+        details = UserDetails.objects.get(user = user)
+        self.assertEquals(details.bio, BIO, "Bio doesn't match")
+        self.assertEquals(details.github_username, GITHUB_USERNAME, "Username doesn't match")
+        self.assertEquals(len(details.uuid), 32, "UUID not 32 bits")
+
+    def test_registration_without_username(self):
+        """
+        Should not be able to register without username
+        """
+        self.user_dict.pop('username', None)
+        response = c.post('/author/registration/', self.user_dict)
+
+        self.assertEquals(response.status_code, 400, "User should not be created")
+
+    def test_registration_without_email(self):
+        """
+        Should not be able to register without email
+        """
+        self.user_dict.pop('email', None)
+        response = c.post('/author/registration/', self.user_dict)
+
+        self.assertEquals(response.status_code, 400, "User should not be created")
+
+    def test_registration_without_name(self):
+        """
+        Should not be able to register without names
+        """
+        self.user_dict.pop('first_name', None)
+        response = c.post('/author/registration/', self.user_dict)
+
+        self.assertEquals(response.status_code, 400, "User should not be created")
+
+    def test_registration_without_github(self):
+        """
+        Should not be able to register without github
+        """
+        self.user_dict.pop('github_username', None)
+        response = c.post('/author/registration/', self.user_dict)
+
+        self.assertEquals(response.status_code, 400, "User should not be created")

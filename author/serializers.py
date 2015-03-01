@@ -7,6 +7,42 @@ from author.models import (
     FriendRelationship,
     FriendRequest )
 
+class RegistrationSerializer(serializers.Serializer):
+    """
+    Validates incoming form data for user registration
+
+    Use:
+        Call .is_valid() to confirm validation.
+        Call .create() to build/insert models after validation.
+    """
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField()
+    bio = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    github_username = serializers.CharField()
+
+    def create(self, validated_data):
+        """Returns a created UserDetails model after saving to the database"""
+        user = User(
+            email = validated_data['email'],
+            username = validated_data['username'],
+            first_name = validated_data['first_name'],
+            last_name = validated_data['last_name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+
+        details = UserDetails(
+            user = user,
+            github_username = validated_data['github_username'],
+            bio = validated_data['bio']
+        )
+        details.save()
+
+        return details
+
 class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDetails

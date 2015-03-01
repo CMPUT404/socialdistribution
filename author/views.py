@@ -1,52 +1,29 @@
-from django.utils.six import BytesIO
-
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
 
 from rest_framework.views import APIView
-from rest_framework import status, mixins, generics
+from rest_framework import status, mixins, generics, serializers
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
+
+from rest_framework.decorators import api_view
 
 from author.models import (
     UserDetails,
     FollowerRelationship,
     FriendRelationship,
     FriendRequest )
+
 from author.serializers import (
-    UserSerializer,
+    RegistrationSerializer,
     UserDetailSerializer,
     FollowerRelationshipSerializer,
     FriendRelationshipSerializer,
     FriendRequestSerializer )
-
-
-from django import forms
-from django.contrib.auth.models import User
-from django.utils.translation import ugettext_lazy as _
-
-class RegistrationForm(forms.Form):
-
-    username = forms.RegexField(regex=r'^\w+$', widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Username"), error_messages={ 'invalid': _("This value must contain only letters, numbers and underscores.") })
-    email = forms.EmailField(widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Email address"))
-    password1 = forms.CharField(widget=forms.PasswordInput(attrs=dict(required=True, max_length=30, render_value=False)), label=_("Password"))
-    password2 = forms.CharField(widget=forms.PasswordInput(attrs=dict(required=True, max_length=30, render_value=False)), label=_("Password (again)"))
-
-    def clean_username(self):
-        try:
-            user = User.objects.get(username__iexact=self.cleaned_data['username'])
-        except User.DoesNotExist:
-            return self.cleaned_data['username']
-        raise forms.ValidationError(_("The username already exists. Please try another one."))
-
-    def clean(self):
-        if 'password1' in self.cleaned_data and 'password2' in self.cleaned_data:
-            if self.cleaned_data['password1'] != self.cleaned_data['password2']:
-                raise forms.ValidationError(_("The two password fields did not match."))
-        return self.cleaned_data
 
 class JSONResponse(HttpResponse):
     """
@@ -92,43 +69,19 @@ class GetAuthorFriendRequests(MultipleFieldLookupMixin, generics.ListAPIView):
     lookup_fields = ('uuid')
 
 # PUT /author/update
+# TODO
 
-# Account registration
+@api_view(['POST'])
 @csrf_exempt
 def AuthorRegistration(request):
-    # permission_classes = (AllowAny,)
-    # user_serializer_class = UserDetailsSerializer
-    # allowed_methods = ('POST', 'OPTIONS', 'HEAD')
+    """
+    Takes incoming JSON, validates it and builds a UserDetails/User Model
+    """
+    serializer = RegistrationSerializer(data = request.DATA)
 
-    # try:
-    #     User.objects.get(username=request.post.get('username', ''))
-    # except:
-    #      return Response({"failed": "User already exists."}, status=status.HTTP_400_BAD_REQUEST)
+    if serializer.is_valid():
+        user_details = serializer.create(serializer.validated_data)
 
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            user = User.objects.create_user(
-                username=form.cleaned_data['username'],
-                password=form.cleaned_data['password1'],
-                email=form.cleaned_data['email']
-            )
-            return JSONResponse({'ok':'ok'}, status=201)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        form = RegistrationForm()
-        variables = RequestContext(request, {'form': form})
-
-    return JSONResponse({'ok':'ok'}, status=400)
-
-    # Create the user
-    # if request.method == "POST":
-    #     import pdb;pdb.set_trace()
-    #
-    #     stream = BytesIO(content)
-    #     data = JSONParser().parse(stream)
-    #     serializer = RegistrationSerializer(data=data)
-    #
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return JSONResponse(serializer.data, status=201)
-    #     return JSONResponse("BAD", status=400)
+        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
