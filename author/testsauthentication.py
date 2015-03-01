@@ -1,5 +1,9 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
+
+from django.db import transaction
+from django.db import IntegrityError
+
 from author.models import UserDetails
 from external.models import Server
 
@@ -67,8 +71,6 @@ class UserDetailsAuthentication(TestCase):
 
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
-        print response.data
-
         # Confirm that model and all attributes were inserted
         user = User.objects.get(username = USERNAME)
         self.assertEquals(user.username, USERNAME, "Usernames don't match")
@@ -82,11 +84,18 @@ class UserDetailsAuthentication(TestCase):
 
     def test_registration_same_user(self):
         """
-        Test registering the same user properties again
+        Test registering duplicate users
         """
-        response = c.post('/author/registration/', self.user_dict)
+        try:
+            with transaction.atomic():
+                response = c.post('/author/registration/', self.user_dict)
+                self.assertEquals(response.status_code, 201)
 
-        print response
+                response = c.post('/author/registration/', self.user_dict)
+                self.assertEquals(response.status_code, 400)
+            self.assertTrue(True, 'Duplicate users not allowed')
+        except IntegrityError:
+            pass
 
     def test_registration_without_username(self):
         """

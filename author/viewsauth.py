@@ -1,4 +1,5 @@
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -20,7 +21,7 @@ def AuthorRegistration(request):
     """
     serializer = RegistrationSerializer(data = request.DATA)
 
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception = True):
         user_details = serializer.create(serializer.validated_data)
 
         return Response({'uuid':user_details.uuid}, status=status.HTTP_201_CREATED)
