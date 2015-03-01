@@ -1,6 +1,6 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
-from author import views
+from author import views, viewsauth
 
 urlpatterns = [
 
@@ -17,7 +17,7 @@ urlpatterns = [
     url(r'^author/friendrequests/(?P<uuid>[0-9a-fA-Z]{32}\Z)$', views.GetAuthorFriendRequests.as_view()),
 
     # Authentication URI
-    url(r'^author/registration/$', views.AuthorRegistration),
+    url(r'^author/registration/$', viewsauth.AuthorRegistration),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

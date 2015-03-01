@@ -67,6 +67,8 @@ class UserDetailsAuthentication(TestCase):
 
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
+        print response.data
+
         # Confirm that model and all attributes were inserted
         user = User.objects.get(username = USERNAME)
         self.assertEquals(user.username, USERNAME, "Usernames don't match")

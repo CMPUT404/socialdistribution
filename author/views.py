@@ -1,16 +1,9 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 
-from rest_framework.views import APIView
-from rest_framework import status, mixins, generics, serializers
-from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
-
-from rest_framework.decorators import api_view
+from rest_framework import mixins, generics, serializers
 
 from author.models import (
     UserDetails,
@@ -19,20 +12,10 @@ from author.models import (
     FriendRequest )
 
 from author.serializers import (
-    RegistrationSerializer,
     UserDetailSerializer,
     FollowerRelationshipSerializer,
     FriendRelationshipSerializer,
     FriendRequestSerializer )
-
-class JSONResponse(HttpResponse):
-    """
-    An HttpResponse that renders its content into JSON.
-    """
-    def __init__(self, data, **kwargs):
-        content = JSONRenderer().render(data)
-        kwargs['content_type'] = 'application/json'
-        super(JSONResponse, self).__init__(content, **kwargs)
 
 class MultipleFieldLookupMixin(object):
     """Allows the lookup of multiple fields in an url for mixins"""
@@ -70,18 +53,3 @@ class GetAuthorFriendRequests(MultipleFieldLookupMixin, generics.ListAPIView):
 
 # PUT /author/update
 # TODO
-
-@api_view(['POST'])
-@csrf_exempt
-def AuthorRegistration(request):
-    """
-    Takes incoming JSON, validates it and builds a UserDetails/User Model
-    """
-    serializer = RegistrationSerializer(data = request.DATA)
-
-    if serializer.is_valid():
-        user_details = serializer.create(serializer.validated_data)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
