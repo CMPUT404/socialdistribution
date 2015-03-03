@@ -27,6 +27,9 @@ urlpatterns = [
     # POST /login
     url(r'^login/$', viewsauth.Login.as_view(), name='login'),
 
+    # GET /author/getid/:username
+    url(r'^author/getid/(?P<username>[0-9a-zA-Z]+)$', viewsauth.GetUserUUID,
+        name = 'user_uuid'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

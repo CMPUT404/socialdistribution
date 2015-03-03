@@ -130,6 +130,13 @@ class UserDetailsAuthentication(TestCase):
 
         self.assertEquals(response.status_code, 400, "User should not be created")
 
+    def test_get_uuid(self):
+        response = c.post('/author/registration/', self.user_dict)
+        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+        response = c.get('/author/getid/' + USERNAME)
+        print response
+        self.assertEquals(response.status_code, 200, "User does not exist")
+
     def test_login(self):
         # Create user to login with
         response = c.post('/author/registration/', self.user_dict)

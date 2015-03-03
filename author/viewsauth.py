@@ -18,6 +18,20 @@ from author.serializers import RegistrationSerializer
 All views related to authentication
 """
 
+@api_view(['GET'])
+@csrf_exempt
+def GetUserUUID(request, username):
+    """
+    Takes incoming username, returns corresponding UUID
+    """
+    try:
+        user = User.objects.get(username=username)
+        user_detail = UserDetails.objects.get(user=user)
+        return Response({'uuid':user_detail.uuid}, status=status.HTTP_200_OK)
+    except (User.DoesNotExist, UserDetails.DoesNotExist) as e:
+        return Response(None, status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['POST'])
 @csrf_exempt
 def AuthorRegistration(request):
