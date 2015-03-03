@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from rest_framework.urlpatterns import format_suffix_patterns
 from author import views, viewsauth
 
@@ -25,9 +25,13 @@ urlpatterns = [
         name = 'registration'),
 
     # POST /login
-    url(r'^login/$', viewsauth.Login.as_view(), name='login'),
+    url(r'^author/login/$', viewsauth.Login.as_view(), name='login'),
 
-    # GET /author/getid/:username
+    # POST /logout
+    url(r'^author/logout/$', viewsauth.Logout.as_view(), name='logout'),
+
+
+   # GET /author/getid/:username
     url(r'^author/getid/(?P<username>[0-9a-zA-Z]+)$', viewsauth.GetUserUUID,
         name = 'user_uuid'),
 ]

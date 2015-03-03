@@ -8,6 +8,8 @@ from author.models import UserDetails
 from external.models import Server
 
 import uuid
+import json
+import base64
 
 c = Client()
 
@@ -18,7 +20,7 @@ BIO = "I'm the best sports agent around!"
 # Values to be inserted and checked in the User model
 # required User model attributes
 USERNAME = "jmaguire"
-PASSWORD = uuid.uuid4()
+PASSWORD = str(uuid.uuid4())
 
 # optional User model attributes
 FIRST_NAME = "Jerry"
@@ -32,10 +34,6 @@ USER = {
     'last_name':LAST_NAME,
     'email':EMAIL,
     'password':PASSWORD }
-
-# For friend, follower, and request model testing
-USER_A = {'username':"User_A", 'password':uuid.uuid4()}
-USER_B = {'username':"User_B", 'password':uuid.uuid4()}
 
 class UserDetailsAuthentication(TestCase):
     """
@@ -54,6 +52,9 @@ class UserDetailsAuthentication(TestCase):
         self.login_dict = {
             'username':USERNAME,
             'password':PASSWORD }
+
+        self.auth_headers = {
+            'HTTP_AUTHORIZATION': "" }
 
     def tearDown(self):
         """Remove all created objects from mock database"""
@@ -134,17 +135,24 @@ class UserDetailsAuthentication(TestCase):
         response = c.post('/author/registration/', self.user_dict)
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
         response = c.get('/author/getid/' + USERNAME)
-        print response
         self.assertEquals(response.status_code, 200, "User does not exist")
 
     def test_login(self):
-        # Create user to login with
         response = c.post('/author/registration/', self.user_dict)
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
-        response = c.post('/login/', self.login_dict)
+        response = c.post('/author/login/', self.login_dict)
         self.assertEquals(response.status_code, 200, 'user not logged int')
 
-        token = response.data['token']
-        # Attempt to access private view
-        print token
+    def test_logout(self):
+        response = c.post('/author/registration/', self.user_dict)
+        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+
+        token = json.loads(response.content)['token']
+
+        user = User.objects.get(username = USERNAME)
+        self.assertTrue(user.is_authenticated(), "User not authenticated")
+
+        self.auth_headers['HTTP_AUTHORIZATION'] = "Token %s" % token
+        response = c.post('/author/logout/', **self.auth_headers)
+        self.assertEquals(response.status_code, 200, "User not logged out")

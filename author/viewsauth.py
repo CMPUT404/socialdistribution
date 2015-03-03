@@ -1,10 +1,11 @@
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
-
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.models import Token
 
@@ -42,8 +43,13 @@ def AuthorRegistration(request):
 
     if serializer.is_valid(raise_exception = True):
         user_details = serializer.create(serializer.validated_data)
+        token, created = Token.objects.get_or_create(user=user_details.user)
 
-        return Response({'uuid':user_details.uuid}, status=status.HTTP_201_CREATED)
+        return_dict = {
+            'uuid':user_details.uuid,
+            'token':str(token)}
+
+        return Response(return_dict, status=status.HTTP_201_CREATED)
     else:
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -59,6 +65,7 @@ class Login(APIView):
     }
     """
     serializer_class = AuthTokenSerializer
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         """Returns authentication token after validating JSON body data"""
@@ -67,12 +74,27 @@ class Login(APIView):
         if serializer.is_valid(raise_exception = True):
             user = serializer.validated_data['user']
             token, created = Token.objects.get_or_create(user=user)
+            login(request, user)
             return Response({'token': token.key})
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# class PasswordReset(GenericsAPIView):
-#     pass
-#
-# class PasswordChange(GenericsAPIView):
-#     pass
+# Token based
+class Logout(APIView):
+    """
+    Logs out and deletes the token for a given user
+
+    Requires HTTP Authorization header
+        Authorization: Token {token here}
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        """Logout user with given token"""
+        try:
+            request.user.auth_token.delete()
+        except:
+            pass
+        logout(request)
+        return Response({"success": "Successfully logged out."},
+            status=status.HTTP_200_OK)
