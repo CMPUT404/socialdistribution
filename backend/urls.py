@@ -11,5 +11,4 @@ urlpatterns = patterns('',
     url(r'^', include('timeline.urls')),
     url(r'^', include('author.urls')),
 
-
 )

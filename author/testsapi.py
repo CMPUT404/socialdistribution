@@ -13,18 +13,18 @@ import json
 c = Client()
 
 # Values to be inserted and checked in the UserDetails model
-GITHUB_USERNAME = "mraypold"
+GITHUB_USERNAME = "gituser"
 BIO = "This is my witty biography!"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
-USERNAME = "raypold"
+USERNAME = "username"
 PASSWORD = uuid.uuid4()
 
 # optional User model attributes
-FIRST_NAME = "Michael"
-LAST_NAME = "Raypold"
-EMAIL = "raypold@ualberta.ca"
+FIRST_NAME = "firstname"
+LAST_NAME = "lastname"
+EMAIL = "person@example.org"
 
 # Main user in the tests
 USER = {

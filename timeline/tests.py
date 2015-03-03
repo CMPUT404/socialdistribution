@@ -13,12 +13,12 @@ import json
 c = Client()
 
 # Values to be inserted and checked in the Author model
-GITHUB_USERNAME = "mraypold"
+GITHUB_USERNAME = "programmer"
 BIO = "This is my witty biography!"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
-USERNAME = "raypold"
+USERNAME = "username"
 PASSWORD = uuid.uuid4()
 
 # Post attributes
@@ -72,8 +72,6 @@ class TimelineAPITestCase(TestCase):
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 1, "Only one post should have been retrieved")
-
-        # print json.dumps(response.data)
 
         post = response.data[0]
         self.assertEquals(post['user']['username'], USERNAME, "Wrong post author")

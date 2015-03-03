@@ -8,7 +8,6 @@ from author.models import UserDetails
 from external.models import Server
 
 import uuid
-import json
 
 c = Client()
 
@@ -38,11 +37,6 @@ USER = {
 USER_A = {'username':"User_A", 'password':uuid.uuid4()}
 USER_B = {'username':"User_B", 'password':uuid.uuid4()}
 
-# Utility function to get around funky DRF responses that use nesting
-def get_dict_response(response):
-    """Returns a dictionary of the http response containing a list of ordered dictionaries"""
-    return json.loads(json.dumps(response.data))
-
 class UserDetailsAuthentication(TestCase):
     """
     Basic testing of the UserDetails model creation and database insertion
@@ -55,8 +49,11 @@ class UserDetailsAuthentication(TestCase):
             'password':PASSWORD,
             'email':EMAIL,
             'github_username':GITHUB_USERNAME,
-            'bio':BIO
-            }
+            'bio':BIO }
+
+        self.login_dict = {
+            'username':USERNAME,
+            'password':PASSWORD }
 
     def tearDown(self):
         """Remove all created objects from mock database"""
@@ -132,3 +129,15 @@ class UserDetailsAuthentication(TestCase):
         response = c.post('/author/registration/', self.user_dict)
 
         self.assertEquals(response.status_code, 400, "User should not be created")
+
+    def test_login(self):
+        # Create user to login with
+        response = c.post('/author/registration/', self.user_dict)
+        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+
+        response = c.post('/login/', self.login_dict)
+        self.assertEquals(response.status_code, 200, 'user not logged int')
+
+        token = response.data['token']
+        # Attempt to access private view
+        print token
