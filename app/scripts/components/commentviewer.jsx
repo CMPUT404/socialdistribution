@@ -6,19 +6,19 @@ var ContentCreator = require('./contentcreator');
 var CommentViewer = React.createClass({
 
   render: function() {
+
     var comments = [];
     this.props.comments.forEach(function (comment) {
       comments.push(<Content key={comment.id} data={comment} />);
     });
 
     var forComment = true;
-    comments.push();
 
     return (
-      <ul className="media-list">
+      <div className="comment-list">
         {comments}
         <ContentCreator key={this.props.postId} forComment={forComment} />
-      </ul>
+      </div>
     );
   }
 });

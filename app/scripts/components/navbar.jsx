@@ -19,8 +19,8 @@ var Navigation = React.createClass({
 
   render: function() {
     return (
-      <Navbar>
-        <Nav>
+      <Navbar brand="Social-Distribution">
+        <Nav right>
           <NavItemLink to="/">Timeline</NavItemLink>
           <NavItemLink to="/profile">Profile</NavItemLink>
         </Nav>

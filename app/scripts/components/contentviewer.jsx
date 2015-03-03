@@ -1,7 +1,6 @@
 var React = require('react');
 var Reflux = require('reflux');
-var Button= require('react-bootstrap').Button;
-
+var Button = require('react-bootstrap').Button;
 var PostStore = require('../stores/post');
 var PostActions = require('../actions/post');
 var Content = require('./content');
@@ -34,17 +33,17 @@ var ContentViewer = React.createClass({
     var isPost = true;
 
     this.state.posts.forEach(function (post, id) {
+      console.log(post);
       posts.push(<Content key={id} data={post} isPost={isPost} />);
     });
 
-    console.log(posts);
-
     return (
-      <div className="col-md-12 content-viewer">
-        <Button onClick={this.refresh} type="submit">refresh</Button>
-        <ul className="media-list">
+      <div className="content-viewer">
+        <h5>What's New:</h5>
+        <Button onClick={this.refresh} type="submit">Refresh</Button>
+        <div className="post-list">
           {posts}
-        </ul>
+        </div>
       </div>
     );
   }

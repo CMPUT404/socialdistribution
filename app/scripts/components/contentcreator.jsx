@@ -1,12 +1,11 @@
 var React = require('react');
 var Reflux = require('reflux');
 var Markdown = require('markdown').markdown;
-var TabbedArea = require('react-bootstrap').TabbedArea;
-var TabPane = require('react-bootstrap').TabPane;
 var Input = require('react-bootstrap').Input;
 var PostActions = require('../actions/post');
 var AuthorStore = require('../stores/author');
 var moment = require('moment');
+var Link = require('react-router').Link;
 
 var ContentCreator = React.createClass({
 
@@ -33,14 +32,18 @@ var ContentCreator = React.createClass({
     },
 
     submitContent: function() {
+
+        // capture the current content in our inputs
         var content = {
             content: this.state.content,
             format: this.state.format,
             timestamp: moment()
         };
 
+        // reset content state now that we have it stored
         this.setState(this.getInitialState());
 
+        // populate content with appropriate metadata
         if (this.props.forComment) {
             content["post_id"] = this.props.key;
             PostActions.newComment(content);
@@ -52,13 +55,14 @@ var ContentCreator = React.createClass({
 
     render: function() {
         return (
-            <li className="col-md-12 media">
+            <div className="media">
                 <div className="media-left">
-                    <img className="media-object" src={this.state.author.author_image}/>
+                    <Link to="profile">
+                        <img className="media-object author-image" src={this.state.author.author_image}/>
+                    </Link>
                 </div>
-                <div className="media-body">
-                    <h4 className="media-heading">New Post</h4>
-                    <Input type="textarea" label="Content" value={this.state.content.content} onChange={this.contentChange} />
+                <div className="media-body content-creator">
+                    <Input type="textarea" placeholder="Say something witty..." value={this.state.content.content} onChange={this.contentChange} />
                     <Input type="select" label='Format' value={this.state.content.format} onChange={this.formatChange}>
                         <option value="markdown">Markdown</option>
                         <option value="text">Text</option>
@@ -66,7 +70,7 @@ var ContentCreator = React.createClass({
                     </Input>
                     <Input type="submit" value="Post" onClick={this.submitContent} />
                 </div>
-            </li>
+            </div>
         );
     }
 });

@@ -5,22 +5,26 @@ var PostActions = require('../actions/post');
 // Deals with App State Machine state
 var PostStore = Reflux.createStore({
 
-    posts: {},
-
     init: function() {
-
         // fetches the list of most recent posts
-        this.posts = this.defaultPosts();
+        this.posts = this.getPosts();
 
         // Listeners
-        this.listenTo(PostActions.newPost, this.addPost);
-        this.listenTo(PostActions.refreshPosts, this.getPosts);
+        this.listenTo(PostActions.newPost, this.newPost);
+        this.listenTo(PostActions.newComment, this.newComment);
+        this.listenTo(PostActions.refreshPosts, this.refreshPosts);
     },
 
     // Handles fetching posts based on query.
     getPosts: function (query) {
-        // TODO: make this call the backend
-        this.trigger({posts: this.posts});
+        // TODO: AJAX and remove defaultPost placeholder
+        return this.defaultPosts();
+    },
+
+    refreshPosts: function (query) {
+        //TODO: ajax
+        console.log("adsa");
+        this.trigger(this.posts);
     },
 
     // Used to mock data out
@@ -61,11 +65,19 @@ var PostStore = Reflux.createStore({
         return map;
     },
 
-    addPost: function (post) {
+    newPost: function (post) {
         post["id"] = UUID.v4();
         this.posts.set(post["id"], post);
         // this.orderPosts();
-        this.trigger({posts: this.posts});
+        //TODO: ajax
+        this.trigger(this.posts);
+    },
+
+    newComment: function (comment) {
+        var post = this.posts.get(comment.post_id);
+        post.comments.push(comment);
+        //TODO: ajax
+        this.trigger(this.posts);
     },
 
     orderPosts: function () {

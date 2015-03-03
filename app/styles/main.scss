@@ -1,6 +1,17 @@
 @import '../../vendor/bootstrap/dist/css/bootstrap.min.css';
+@import './components/contentviewer';
+@import './components/contentcreator';
 @import './components/post';
 @import './components/comment';
+
+.author-image {
+    width: 64px;
+    height: 64px;
+}
+
+.timeline {
+    width: 700px;
+}
 
 body {
     background: #fafafa;

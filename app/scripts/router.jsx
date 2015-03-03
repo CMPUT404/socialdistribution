@@ -10,7 +10,8 @@ var Profile = require('./components/profile');
 var routes = (
 	<Route name="timeline" path="/" handler={Layout}>
 		<DefaultRoute handler={Timeline} />
-		<Route name="profile" path=""handler={Profile} />
+		<Route name="profile" path="" handler={Profile} />
+		<Route name="author" path=":authorId" handler={Profile} />
 	</Route>
 );
 
