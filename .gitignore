@@ -4,6 +4,9 @@ app/build
 # Pipeline Stuff
 node_modules
 app/build
+vendor
+.tmp
+.sass-cache
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

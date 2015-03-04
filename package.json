@@ -1,15 +1,19 @@
 {
-  "name": "ReactSports",
-  "version": "0.0.0",
-  "description": "An Electronic Scoresheet app built on React.js ",
+  "name": "Socshizzle",
+  "version": "0.0.1",
+  "description": "Node based social network",
   "author": "Derek Dowling",
   "license": "None",
   "dependencies": {
     "react": "~0.12.1",
     "react-router": "~0.11.4",
-    "reflux": "~0.2.1"
+    "react-router-bootstrap": "^0.9.1",
+    "reflux": "~0.2.1",
+    "uuid": "^2.0.1"
   },
   "devDependencies": {
+    "6to5-jest": "^3.0.0",
+    "6to5ify": "^4.1.1",
     "browserify": "~7.0.0",
     "del": "~1.1.0",
     "gulp": "~3.8.10",
@@ -28,8 +32,10 @@
     "gulp-useref": "~1.0.2",
     "gulp-webserver": "~0.8.8",
     "jest-cli": "~0.2.1",
+    "markdown": "^0.5.0",
+    "moment": "^2.9.0",
+    "react-bootstrap": "~0.15.0",
     "reactify": "~0.16.0",
-    "react-tools": "^0.12.0",
     "run-sequence": "~1.0.2",
     "vinyl-source-stream": "~1.0.0"
   },
@@ -42,14 +48,18 @@
     "build": "./node_modules/gulp/bin/gulp.js build"
   },
   "jest": {
-    "scriptPreprocessor": "./preprocessor.js",
+    "scriptPreprocessor": "./node_modules/6to5-jest",
+    "testFileExtensions": [
+      "es6",
+      "js"
+    ],
     "unmockedModulePathPatterns": [
       "./node_modules/react"
     ],
-    "testFileExtensions": [
-      "jsx",
+    "moduleFileExtensions": [
       "js",
-      "cjsx"
+      "es6",
+      "json"
     ]
   }
 }
