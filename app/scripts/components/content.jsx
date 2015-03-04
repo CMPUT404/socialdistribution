@@ -6,6 +6,7 @@ var ContentCreator = require('./contentcreator');
 var CommentViewer = require('./commentviewer');
 var Link = require('react-router').Link;
 
+// Represents an individual comment or post.
 var Content = React.createClass({
 
     convertMarkdown: function(markdown) {

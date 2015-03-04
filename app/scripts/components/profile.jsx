@@ -5,6 +5,9 @@ var PostStore = require('../stores/post');
 var ContentViewer = require('./contentviewer');
 var ContentCreator = require('./contentcreator');
 
+// Represents a user's Profile view. It should only display a list
+// of posts created by the author. If no authorId has been specified in the
+// uri, this will display the logged in user's profile.
 var Profile = React.createClass({
 
   mixins: [Reflux.connect(PostStore), RouterState],
@@ -16,8 +19,10 @@ var Profile = React.createClass({
 
   render: function() {
 
-    var profile = true;
+    // this comes from the RouterState mixin and lets us pull an author id out
+    // of the uri so we can fetch their posts.
     var authorId = this.getParams().authorId;
+    var profile = true;
 
     if (typeof authorId === 'undefined') {
       profile = false;

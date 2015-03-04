@@ -5,6 +5,8 @@ var PostStore = require('../stores/post');
 var PostActions = require('../actions/post');
 var Content = require('./content');
 
+// This is used to bundle up user content we wish to display. Namely posts and
+// comments. It listens to and updates based on changes in the Post Store.
 var ContentViewer = React.createClass({
 
   mixins: [Reflux.connect(PostStore)],
@@ -32,6 +34,7 @@ var ContentViewer = React.createClass({
     var posts = [];
     var isPost = true;
 
+    // create an array of posts or comments
     this.state.posts.forEach(function (post, id) {
       console.log(post);
       posts.push(<Content key={id} data={post} isPost={isPost} />);

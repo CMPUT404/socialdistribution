@@ -1,7 +1,8 @@
 var Reflux = require('reflux');
 var UUID = require('uuid');
 
-// Deals with App State Machine state
+// Deals with store Author information. Both for the logged in user and other
+// author's we need to load with their content.
 var AuthorStore = Reflux.createStore({
 
     current_author: "1234",

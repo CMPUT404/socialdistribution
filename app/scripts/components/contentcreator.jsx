@@ -7,6 +7,8 @@ var AuthorStore = require('../stores/author');
 var moment = require('moment');
 var Link = require('react-router').Link;
 
+// Responsible for creating posts/comments and notifying the Post store when
+// this happens.
 var ContentCreator = React.createClass({
 
     getInitialState: function() {

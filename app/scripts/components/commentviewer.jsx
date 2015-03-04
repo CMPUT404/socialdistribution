@@ -3,6 +3,8 @@ var Reflux = require('reflux');
 var Content = require('./content');
 var ContentCreator = require('./contentcreator');
 
+// Slightly differen than the contentviewer, this could probably be merged with
+// it.
 var CommentViewer = React.createClass({
 
   render: function() {

@@ -5,6 +5,7 @@ var AuthorStore = require('../stores/author');
 var ContentCreator = require('./contentcreator');
 var ContentViewer = require('./contentviewer');
 
+// Represents a collection of posts within the logged in user's social network.
 var Timeline = React.createClass({
 
   getInitialState: function() {
