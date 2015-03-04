@@ -36,7 +36,6 @@ var ContentViewer = React.createClass({
 
     // create an array of posts or comments
     this.state.posts.forEach(function (post, id) {
-      console.log(post);
       posts.push(<Content key={id} data={post} isPost={isPost} />);
     });
 

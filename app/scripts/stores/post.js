@@ -23,8 +23,7 @@ var PostStore = Reflux.createStore({
 
     refreshPosts: function (query) {
         //TODO: ajax
-        console.log("adsa");
-        this.trigger(this.posts);
+        this.trigger({"posts": this.posts});
     },
 
     // Used to mock data out
