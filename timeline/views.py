@@ -4,6 +4,7 @@ from author.models import User
 from author.models import UserDetails
 from timeline.models import Post, Comment
 from timeline.serializers import PostsSerializer, CommentSerializer
+from timeline.permissions import IsFriend, IsOwner
 
 from rest_framework.views import APIView
 from rest_framework import mixins, generics
@@ -33,6 +34,8 @@ class MultipleFieldLookupMixin(object):
 #     lookup_fields = ('author')
 
 class GetPosts(APIView):
+    permission_classes = (IsOwner, IsFriend,)
+
     def get_object(self, uuid):
         """
         Returns a list of Posts associated with a UserDetail's (User) uuid field.
