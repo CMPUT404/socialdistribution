@@ -23,7 +23,7 @@ var PostStore = Reflux.createStore({
 
     refreshPosts: function (query) {
         //TODO: ajax
-        this.trigger({"posts": this.posts});
+        this.trigger({"posts": this.orderPosts(this.posts) });
     },
 
     // Used to mock data out
@@ -69,26 +69,39 @@ var PostStore = Reflux.createStore({
         this.posts.set(post["id"], post);
         // this.orderPosts();
         //TODO: ajax
-        this.trigger(this.posts);
+        this.trigger({"posts": this.orderPosts(this.posts) });
     },
 
     newComment: function (comment) {
-      var post = comment.post;
-      post.comments.push(comment);
-      //TODO: ajax
-      this.trigger(this.posts);
+        var post = comment.post;
+        post.comments.push(comment);
+        //TODO: ajax
+        this.trigger({"posts": this.orderPosts(this.posts) });
     },
 
-    orderPosts: function () {
-        var ordered = this.posts.keys().sort(function(a, b) {
-            a = this.posts[a];
-            b = this.posts[b];
+    // sorts posts into reverse chronological order. Aka, newest first.
+    orderPosts: function (posts) {
+
+        var postArr = [];
+        if (posts.size == 0) {
+            return postArr;
+        }
+
+        for (var value of posts.values()) {
+            postArr.push(value);
+        }
+
+        postArr.sort(function(a, b) {
             if (a.timestamp < b.timestamp) {
                 return -1;
+            } if (a.timestamp == b.timestamp) {
+                return 0;
             } else {
                 return 1;
             }
         });
+
+        return postArr;
     }
 
 });
