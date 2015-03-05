@@ -93,7 +93,7 @@ class TimelineAPITestCase(TestCase):
         # If this doesn't pass, then the following test will obviously fail
 
     def test_get_posts_by_author_with_http(self):
-        username = UserDetails.objects.get(user=self.user_a).user.username
+        username = self.user_a.username
         response = c.get('/author/%s/posts' %username, content_type="application/json")
 
         self.assertEquals(response.status_code, 200)
@@ -108,7 +108,7 @@ class TimelineAPITestCase(TestCase):
         Post.objects.create(text = TEXT, user = self.user_a)
         Post.objects.create(text = TEXT, user = self.user_a)
 
-        username = UserDetails.objects.get(user=self.user_a).user.username
+        username = self.user_a.username
         response = c.get('/author/%s/posts' %username, content_type="application/json")
 
         self.assertEquals(response.status_code, 200)
@@ -132,7 +132,7 @@ class TimelineAPITestCase(TestCase):
         # Add Posts
         Post.objects.create(text = TEXT, user = self.user_a)
         Post.objects.create(text = TEXT, user = self.user_a)
-        username = UserDetails.objects.get(user=self.user_a).user.username
+        username = self.user_a.username
 
         response = c.post('/author/registration/', self.user_dict)
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
