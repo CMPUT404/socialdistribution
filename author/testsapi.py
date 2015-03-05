@@ -86,7 +86,7 @@ class UserDetailsModelAPITests(TestCase):
         self.assertEquals(user.email, EMAIL)
 
     def test_retrieve_details(self):
-        response = c.get('/author/%s' %self.user_details.uuid, content_type="application/json")
+        response = c.get('/author/%s' %self.user.username, content_type="application/json")
         self.assertEquals(response.status_code, 200)
 
         user_dict = get_dict_response(response)
@@ -97,7 +97,7 @@ class UserDetailsModelAPITests(TestCase):
         FriendRelationship.objects.create(friendor = self.user_a, friend = self.user)
         FriendRelationship.objects.create(friendor = self.user_b, friend = self.user)
 
-        response = c.get('/author/friends/%s' %self.user_details.uuid)
+        response = c.get('/author/friends/%s' %self.user.username)
         self.assertEquals(response.status_code, 200)
 
         # TODO checking response content
@@ -108,7 +108,7 @@ class UserDetailsModelAPITests(TestCase):
         FriendRequest.objects.create(requestor = self.user_a, requestee = self.user)
         FriendRequest.objects.create(requestor = self.user_b, requestee = self.user)
 
-        response = c.get('/author/friendrequests/%s' %self.user_details.uuid)
+        response = c.get('/author/friendrequests/%s' %self.user.username)
         self.assertEquals(response.status_code, 200)
 
         # TODO, same as above
@@ -117,7 +117,7 @@ class UserDetailsModelAPITests(TestCase):
         FollowerRelationship.objects.create(follower = self.user_a, followee = self.user)
         FollowerRelationship.objects.create(follower = self.user_b, followee = self.user)
 
-        response = c.get('/author/followers/%s' %self.user_details.uuid)
+        response = c.get('/author/followers/%s' %self.user.username)
         self.assertEquals(response.status_code, 200)
 
         # TODO, same as above

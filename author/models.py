@@ -13,7 +13,6 @@ class UserDetails(models.Model):
     https://docs.djangoproject.com/en/1.7/topics/auth/customizing/
     """
     user = models.OneToOneField(User)
-    uuid = UUIDField(auto=True, editable=False)
     github_username = models.CharField(max_length=40, blank=True)
     bio = models.TextField(blank=False, null=False)
     server = models.ForeignKey('external.Server', null=True, blank=True)

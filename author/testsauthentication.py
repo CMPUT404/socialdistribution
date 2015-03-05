@@ -78,7 +78,6 @@ class UserDetailsAuthentication(TestCase):
         details = UserDetails.objects.get(user = user)
         self.assertEquals(details.bio, BIO, "Bio doesn't match")
         self.assertEquals(details.github_username, GITHUB_USERNAME, "Username doesn't match")
-        self.assertEquals(len(details.uuid), 32, "UUID not 32 bits")
 
     def test_registration_same_user(self):
         """
@@ -131,11 +130,11 @@ class UserDetailsAuthentication(TestCase):
 
         self.assertEquals(response.status_code, 400, "User should not be created")
 
-    def test_get_uuid(self):
-        response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
-        response = c.get('/author/getid/' + USERNAME)
-        self.assertEquals(response.status_code, 200, "User does not exist")
+    #def test_get_uuid(self):
+    #    response = c.post('/author/registration/', self.user_dict)
+    #    self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+    #    response = c.get('/author/getid/' + USERNAME)
+    #    self.assertEquals(response.status_code, 200, "User does not exist")
 
     def test_login(self):
         response = c.post('/author/registration/', self.user_dict)

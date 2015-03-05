@@ -60,7 +60,7 @@ class RegistrationSerializer(serializers.Serializer):
 class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDetails
-        fields = ('user', 'uuid', 'github_username', 'bio', 'server')
+        fields = ('user', 'github_username', 'bio', 'server')
 
 # Only to be used with UserDetailsSerializer
 class UserSerializer(serializers.Serializer):
@@ -91,7 +91,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserDetails
-        fields = ('user', 'uuid', 'github_username', 'bio')
+        fields = ('user', 'github_username', 'bio')
 
 class FollowerRelationshipSerializer(serializers.ModelSerializer):
     follower = UserSerializer(many=False, read_only=True)

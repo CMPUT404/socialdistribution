@@ -36,7 +36,7 @@ class MultipleFieldLookupMixin(object):
 class GetPosts(APIView):
     permission_classes = (IsOwner, IsFriend,)
 
-    def get_object(self, uuid):
+    def get_object(self, username):
         """
         Returns a list of Posts associated with a UserDetail's (User) uuid field.
 
@@ -44,12 +44,12 @@ class GetPosts(APIView):
         for information about quering foriegn keys that span multiple objects.
         """
         try:
-            return Post.objects.filter(user__userdetails__uuid=uuid)
+            return Post.objects.filter(user__username=username)
         except Post.DoesNotExist:
             raise Http404
 
-    def get(self, request, uuid, format=None):
-        posts = self.get_object(uuid)
+    def get(self, request, username, format=None):
+        posts = self.get_object(username)
 
         serializer = PostsSerializer(posts, many=True)
 

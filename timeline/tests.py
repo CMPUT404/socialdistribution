@@ -93,8 +93,8 @@ class TimelineAPITestCase(TestCase):
         # If this doesn't pass, then the following test will obviously fail
 
     def test_get_posts_by_author_with_http(self):
-        uuid = UserDetails.objects.get(user=self.user_a).uuid
-        response = c.get('/author/%s/posts' %uuid, content_type="application/json")
+        username = UserDetails.objects.get(user=self.user_a).user.username
+        response = c.get('/author/%s/posts' %username, content_type="application/json")
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 1, "Only one post should have been retrieved")
@@ -108,8 +108,8 @@ class TimelineAPITestCase(TestCase):
         Post.objects.create(text = TEXT, user = self.user_a)
         Post.objects.create(text = TEXT, user = self.user_a)
 
-        uuid = UserDetails.objects.get(user=self.user_a).uuid
-        response = c.get('/author/%s/posts' %uuid, content_type="application/json")
+        username = UserDetails.objects.get(user=self.user_a).user.username
+        response = c.get('/author/%s/posts' %username, content_type="application/json")
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 3, "Three posts should have been retrieved")
@@ -132,9 +132,9 @@ class TimelineAPITestCase(TestCase):
         # Add Posts
         Post.objects.create(text = TEXT, user = self.user_a)
         Post.objects.create(text = TEXT, user = self.user_a)
-        uuid = UserDetails.objects.get(user=self.user_a).uuid
+        username = UserDetails.objects.get(user=self.user_a).user.username
 
         response = c.post('/author/registration/', self.user_dict)
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
-        response = c.get('/author/' + str(uuid) + '/posts')
+        response = c.get('/author/%s/posts' %username)
         print response
