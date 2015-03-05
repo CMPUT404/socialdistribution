@@ -24,7 +24,7 @@ var Content = React.createClass({
         }
 
         if (this.props.isPost) {
-          comments.push(<ContentCreator post={this.props.data} forComment={!isPost} />);
+          comments.push(<ContentCreator key="comment-creator" post={this.props.data} forComment={!isPost} />);
         }
 
         var timestamp = Moment.unix(this.props.data.timestamp).fromNow();
