@@ -62,21 +62,10 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         model = UserDetails
         fields = ('user', 'github_username', 'bio', 'server')
 
-# Only to be used with UserDetailsSerializer
-class UserSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    email = serializers.EmailField()
-    username = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    last_login = serializers.DateTimeField()
-    date_joined = serializers.DateTimeField()
-
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = get_user_model()
-#         fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
-#         read_only_fields = ('email', )
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('username', 'email', 'first_name', 'last_name')
 
 class CompactUserSerializer(serializers.Serializer):
     """

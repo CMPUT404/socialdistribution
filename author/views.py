@@ -1,4 +1,11 @@
+from django.contrib.auth.models import User
+
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework import generics
+from rest_framework.generics import ListAPIView
+
+from rest_framework.views import APIView
 
 from author.models import (
     UserDetails,
@@ -6,11 +13,7 @@ from author.models import (
     FriendRelationship,
     FriendRequest )
 
-from author.serializers import (
-    UserDetailSerializer,
-    FollowerRelationshipSerializer,
-    FriendRelationshipSerializer,
-    FriendRequestSerializer )
+from author.serializers import UserDetailSerializer
 
 class MultipleFieldLookupMixin(object):
     """Allows the lookup of multiple fields in an url for mixins"""
@@ -28,23 +31,111 @@ class GetUserDetails(MultipleFieldLookupMixin, generics.ListAPIView):
     serializer_class = UserDetailSerializer
     lookup_fields = ('user')
 
+def create_relationship_list(queryset, lookup):
+    """
+    Return a list of relationships, given a queryset and lookup value
+    """
+    relationships = []
+
+    for relation in queryset:
+        relationships.append(relation[lookup])
+
+    return relationships
+
+# Keeping it DRY
+def get_user(username):
+    try:
+        return User.objects.get(username = username)
+    except:
+        return None
+
 # GET /author/friends/:username
-class GetAuthorFriends(MultipleFieldLookupMixin, generics.ListAPIView):
-    queryset = FriendRelationship.objects.all()
-    serializer_class = FriendRelationshipSerializer
-    lookup_fields = ('user')
+class GetAuthorFriends(ListAPIView):
+    """
+    Returns a JSON object containing a friend and a list of friendors
+
+    Expected Return JSON:
+        {
+            friend:"username"
+            friendors: [
+                "friendor_username",
+                ...
+            ]
+        }
+    """
+
+    def list(self, request, *args, **kwargs):
+
+        user = get_user(kwargs['username'])
+
+        if user:
+            # Retrieve only the usernames of the friendors for a given friend
+            friendors = FriendRelationship.objects.filter(friend = user)\
+                .values('friendor__username')
+
+            relations = create_relationship_list(friendors, 'friendor__username')
+            return Response({'friend':user.username, 'friendors':relations})
+        else:
+            return Response("User not found",
+                status=status.HTTP_400_BAD_REQUEST)
 
 # GET /author/followers/:username
-class GetAuthorFollowers(MultipleFieldLookupMixin, generics.ListAPIView):
-    queryset = FollowerRelationship.objects.all()
-    serializer_class = FollowerRelationshipSerializer
-    lookup_fields = ('user')
+class GetAuthorFollowers(ListAPIView):
+    """
+    Returns a JSON object containing a followee and a list of followers
+
+    Expected Return JSON:
+        {
+            followee:"username"
+            followers: [
+                "follower_username",
+                ...
+            ]
+        }
+    """
+
+    def list(self, request, *args, **kwargs):
+        user = get_user(kwargs['username'])
+
+        if user:
+            # Retrieve only the usernames of the followers for a given user
+            followers = FollowerRelationship.objects.filter(followee = user)\
+                .values('follower__username')
+
+            relations = create_relationship_list(followers, 'follower__username')
+            return Response({'followee':user.username, 'followers':relations})
+        else:
+            return Response("User not found",
+                status=status.HTTP_400_BAD_REQUEST)
 
 # GET /author/friendrequests/:username
-class GetAuthorFriendRequests(MultipleFieldLookupMixin, generics.ListAPIView):
-    queryset = FriendRequest.objects.all()
-    serializer_class = FriendRequestSerializer
-    lookup_fields = ('user')
+class GetAuthorFriendRequests(ListAPIView):
+    """
+    Returns a JSON object containing a requestee and a list of requestor
+
+    Expected Return JSON:
+        {
+            requestee:"username"
+            requestors: [
+                "requestor_username",
+                ...
+            ]
+        }
+    """
+
+    def list(self, request, *args, **kwargs):
+        user = get_user(kwargs['username'])
+
+        if user:
+            # Retrieve only the usernames of the requestor for a given user
+            requestors = FriendRequest.objects.filter(requestee = user)\
+                .values('requestor__username')
+
+            relations = create_relationship_list(requestors, 'requestor__username')
+            return Response({'requestee':user.username, 'requestors':relations})
+        else:
+            return Response("User not found",
+                status=status.HTTP_400_BAD_REQUEST)
 
 # PUT /author/update
 # TODO
