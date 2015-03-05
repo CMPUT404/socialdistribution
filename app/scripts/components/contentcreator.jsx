@@ -4,7 +4,7 @@ var Markdown = require('markdown').markdown;
 var Input = require('react-bootstrap').Input;
 var PostActions = require('../actions/post');
 var AuthorStore = require('../stores/author');
-var moment = require('moment');
+var Moment = require('moment');
 var Link = require('react-router').Link;
 
 // Responsible for creating posts/comments and notifying the Post store when
@@ -39,7 +39,7 @@ var ContentCreator = React.createClass({
         var content = {
             content: this.state.content,
             format: this.state.format,
-            timestamp: moment()
+            timestamp: Moment.unix()
         };
 
         // reset content state now that we have it stored
@@ -47,7 +47,7 @@ var ContentCreator = React.createClass({
 
         // populate content with appropriate metadata
         if (this.props.forComment) {
-            content["post_id"] = this.props.key;
+            content["post"] = this.props.post;
             PostActions.newComment(content);
         } else {
             content["comments"] = [];

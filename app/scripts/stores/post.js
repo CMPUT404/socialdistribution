@@ -73,10 +73,10 @@ var PostStore = Reflux.createStore({
     },
 
     newComment: function (comment) {
-        var post = this.posts.get(comment.post_id);
-        post.comments.push(comment);
-        //TODO: ajax
-        this.trigger(this.posts);
+      var post = comment.post;
+      post.comments.push(comment);
+      //TODO: ajax
+      this.trigger(this.posts);
     },
 
     orderPosts: function () {
