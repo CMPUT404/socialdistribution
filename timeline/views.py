@@ -22,17 +22,6 @@ class MultipleFieldLookupMixin(object):
             filter[field] = self.kwargs[field]
         return get_object_or_404(queryset, **filter)
 
-# This method is simple, but its going to present a problem when adding external
-# data to our json response
-# class GetPosts(MultipleFieldLookupMixin, generics.ListAPIView):
-#     queryset = Post.objects.all()
-#
-#     # Before sending data back we add external server data to the queryset here
-#     # http://stackoverflow.com/questions/13603027/django-rest-framework-non-model-serializer
-#
-#     serializer_class = PostSerializer
-#     lookup_fields = ('author')
-
 class GetPosts(APIView):
     permission_classes = (IsOwner, IsFriend,)
 

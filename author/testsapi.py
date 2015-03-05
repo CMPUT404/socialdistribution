@@ -102,7 +102,7 @@ class UserDetailsModelAPITests(TestCase):
         FriendRelationship.objects.create(friendor = self.user_b, friend = self.user)
 
         response = c.get('/author/friends/%s' %self.user.username)
-        print response
+
         self.assertEquals(response.status_code, 200)
         self.usernames_in_response(response.data['friendors'])
 
@@ -111,7 +111,6 @@ class UserDetailsModelAPITests(TestCase):
         FriendRequest.objects.create(requestor = self.user_b, requestee = self.user)
 
         response = c.get('/author/friendrequests/%s' %self.user.username)
-        print response
 
         self.assertEquals(response.status_code, 200)
         self.usernames_in_response(response.data['requestors'])
@@ -121,7 +120,6 @@ class UserDetailsModelAPITests(TestCase):
         FollowerRelationship.objects.create(follower = self.user_b, followee = self.user)
 
         response = c.get('/author/followers/%s' %self.user.username)
-        print response
                 
         self.assertEquals(response.status_code, 200)
         self.usernames_in_response(response.data['followers'])
