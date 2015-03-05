@@ -18,7 +18,7 @@ BIO = "This is my witty biography!"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
-USERNAME = "username"
+USERNAME = "nameuser"
 PASSWORD = uuid.uuid4()
 
 # optional User model attributes

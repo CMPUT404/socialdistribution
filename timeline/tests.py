@@ -137,4 +137,3 @@ class TimelineAPITestCase(TestCase):
         response = c.post('/author/registration/', self.user_dict)
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
         response = c.get('/author/%s/posts' %username)
-        print response

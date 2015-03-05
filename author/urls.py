@@ -17,7 +17,7 @@ urlpatterns = [
         name = 'user_followers'),
 
     # GET /author/friendrequests/:username
-    url(r'^friendrequests/(?P<username>[0-9a-fA-Z_]+)$', views.GetAuthorFriendRequests.as_view(),
+    url(r'^friendrequests/(?P<username>[0-9a-zA-Z_]+)$', views.GetAuthorFriendRequests.as_view(),
         name = 'user_friend_requests'),
 
     # POST /author/registration/
