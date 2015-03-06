@@ -36,7 +36,9 @@ export default React.createClass({
 
     return (
       <Col md={12}>
+        <div className="jumbotron">
         {contentCreator}
+        </div>
         <ContentViewer authorId={authorId} isProfile={profile} />
       </Col>
     );

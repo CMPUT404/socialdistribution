@@ -32,6 +32,35 @@ export default Reflux.createStore({
     var map = new Map();
     var uuid = UUID.v4();
 
+    map.set(UUID.v4(), {
+        id: uuid,
+        author_id: "452267",
+        author_name: "Benny Bennassi",
+        author_image: "images/benny.jpg",
+        content: "Check out my new hit satisfaction",
+        type: "raw",
+        timestamp: "1422950298",
+        comments: [{
+          id: UUID.v4(),
+          author_name: "Kanye West",
+          author_id: "92876",
+          author_image: "images/kanye.jpg",
+          content: "Wow, that's fly dude!",
+          type: "raw",
+          timestamp: "1424032698"
+        },
+        {
+          id: UUID.v4(),
+          author_name: "David Guetta",
+          author_id: "219222",
+          author_image: "images/david.jpg",
+          content: "I dunno man, needs more Dub...",
+          type: "markdown",
+          timestamp: "1424209198"
+        }]
+      }
+    );
+
     map.set(uuid, {
         id: uuid,
         author_id: "4567",
