@@ -49,7 +49,7 @@ gulp.task('imagemin', function() {
 gulp.task('copy', function() {
   return gulp.src(['app/*.txt', 'app/*.ico'])
     .pipe(gulp.dest('dist'));
-})
+});
 
 gulp.task('bundle', function () {
   var assets = $.useref.assets({searchPath: '{.tmp,app,vendor}'});
@@ -96,7 +96,7 @@ gulp.task('serve', function() {
   gulp.watch('app/scripts/**/*.js', ['scripts']);
 
   gulp.watch('app/scripts/**/*.jsx', ['scripts']);
-  
+
   gulp.watch('app/styles/**/*.scss', ['compass']);
 });
 
