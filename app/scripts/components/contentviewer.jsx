@@ -2,6 +2,7 @@ import React from 'react';
 import Reflux from 'reflux';
 import Content from './content';
 import { Button } from 'react-bootstrap';
+import ContentCreator from './contentcreator';
 
 import PostStore from '../stores/post';
 import PostActions from '../actions/post';
@@ -33,20 +34,29 @@ export default React.createClass({
 
   render: function() {
     var posts = [];
-    var isPost = true;
 
     // create an array of posts or comments
     this.state.posts.forEach(function (post, id) {
-      posts.push(<Content key={id} data={post} isPost={isPost} />);
+      posts.push(
+                <div className="panel panel-default" key={id}>
+                  <div className="panel-body">
+                    <ul className="media-list">
+                      <li className="media">
+                        <Content data={post} isPost={true} />
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="panel-footer">
+                    <ContentCreator key="comment-creator" post={post} forComment={true} />
+                  </div>
+                </div>
+                );
     });
 
     return (
-      <div className="content-viewer">
-        <h5>What is New:</h5>
-        <Button onClick={this.refresh} type="submit">Refresh</Button>
-        <div className="post-list">
-          {posts}
-        </div>
+      <div className="content-viewer well">
+        <h3>Recent Posts:<Button className="badge pull-right" onClick={this.refresh} type="submit">Refresh</Button></h3>
+        {posts}
       </div>
     );
   }

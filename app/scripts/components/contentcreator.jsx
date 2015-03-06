@@ -71,7 +71,7 @@ export default React.createClass({
             <option value="text">Text</option>
             <option value="HTML">HTML</option>
           </Input>
-          <Input type="submit" value="Post" onClick={this.submitContent} />
+          <Input className="pull-right" type="submit" value="Post" onClick={this.submitContent} />
         </div>
       </div>
     );

@@ -42,7 +42,10 @@ export default React.createClass({
   render: function() {
     return (
       <Col md={12}>
-        <ContentCreator authorId={this.state.currentAuthor.id} />
+        <div className="jumbotron">
+          <h3>Mood?</h3>
+          <ContentCreator authorId={this.state.currentAuthor.id} />
+        </div>
         <ContentViewer authorId={this.state.currentAuthor.id} />
       </Col>
     );
