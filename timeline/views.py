@@ -4,6 +4,7 @@ from author.models import User
 from author.models import UserDetails
 from timeline.models import Post, Comment
 from timeline.serializers import PostsSerializer, CommentSerializer
+from timeline.permissions import IsFriend, IsOwner
 
 from rest_framework.views import APIView
 from rest_framework import mixins, generics
@@ -21,19 +22,10 @@ class MultipleFieldLookupMixin(object):
             filter[field] = self.kwargs[field]
         return get_object_or_404(queryset, **filter)
 
-# This method is simple, but its going to present a problem when adding external
-# data to our json response
-# class GetPosts(MultipleFieldLookupMixin, generics.ListAPIView):
-#     queryset = Post.objects.all()
-#
-#     # Before sending data back we add external server data to the queryset here
-#     # http://stackoverflow.com/questions/13603027/django-rest-framework-non-model-serializer
-#
-#     serializer_class = PostSerializer
-#     lookup_fields = ('author')
-
 class GetPosts(APIView):
-    def get_object(self, uuid):
+    permission_classes = (IsOwner, IsFriend,)
+
+    def get_object(self, username):
         """
         Returns a list of Posts associated with a UserDetail's (User) uuid field.
 
@@ -41,12 +33,12 @@ class GetPosts(APIView):
         for information about quering foriegn keys that span multiple objects.
         """
         try:
-            return Post.objects.filter(user__userdetails__uuid=uuid)
+            return Post.objects.filter(user__username=username)
         except Post.DoesNotExist:
             raise Http404
 
-    def get(self, request, uuid, format=None):
-        posts = self.get_object(uuid)
+    def get(self, request, username, format=None):
+        posts = self.get_object(username)
 
         serializer = PostsSerializer(posts, many=True)
 

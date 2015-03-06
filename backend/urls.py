@@ -9,7 +9,6 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^', include('timeline.urls')),
-    url(r'^', include('author.urls')),
-
+    url(r'^author/', include('author.urls')),
 
 )
