@@ -1,12 +1,11 @@
-var React = require('react');
-var Router = require('react-router');
-var RouteHandler = Router.RouteHandler;
-var Navbar = require('./navbar')
+import React from 'react';
+import Navbar from './navbar';
 import { Grid, Col } from 'react-bootstrap';
+import { default as Router, RouteHandler} from 'react-router';
 
 // This layout is used by React-Router to layout the base container of the app.
 // We shouldn't really be putting anything here other than the Navbar.
-var Layout = React.createClass({
+export default React.createClass({
 
   render: function() {
     return (
@@ -21,5 +20,3 @@ var Layout = React.createClass({
     );
   }
 });
-
-module.exports = Layout;

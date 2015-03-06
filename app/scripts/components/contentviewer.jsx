@@ -1,13 +1,14 @@
-var React = require('react');
-var Reflux = require('reflux');
-var Button = require('react-bootstrap').Button;
-var PostStore = require('../stores/post');
-var PostActions = require('../actions/post');
-var Content = require('./content');
+import React from 'react';
+import Reflux from 'reflux';
+import Content from './content';
+import { Button } from 'react-bootstrap';
+
+import PostStore from '../stores/post';
+import PostActions from '../actions/post';
 
 // This is used to bundle up user content we wish to display. Namely posts and
 // comments. It listens to and updates based on changes in the Post Store.
-var ContentViewer = React.createClass({
+export default React.createClass({
 
   mixins: [Reflux.connect(PostStore)],
 
@@ -41,7 +42,7 @@ var ContentViewer = React.createClass({
 
     return (
       <div className="content-viewer">
-        <h5>What's New:</h5>
+        <h5>What is New:</h5>
         <Button onClick={this.refresh} type="submit">Refresh</Button>
         <div className="post-list">
           {posts}
@@ -50,5 +51,3 @@ var ContentViewer = React.createClass({
     );
   }
 });
-
-module.exports = ContentViewer;

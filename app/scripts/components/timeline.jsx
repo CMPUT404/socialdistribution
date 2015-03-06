@@ -1,16 +1,17 @@
-var React = require('react');
-var Reflux = require('reflux');
-var Check = require('check-types');
-var Router = require('react-router');
+import React from 'react';
+import Reflux from 'reflux';
+import Check from 'check-types';
+import { Col } from 'react-bootstrap';
+import ContentViewer from './contentviewer';
+import { State, Navigation } from 'react-router';
 
-var AuthorStore = require('../stores/author');
-var ContentCreator = require('./contentcreator');
-var ContentViewer = require('./contentviewer');
+import AuthorStore from '../stores/author';
+import ContentCreator from './contentcreator';
 
 // Represents a collection of posts within the logged in user's social network.
-var Timeline = React.createClass({
+export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), Router.State, Router.Navigation],
+  mixins: [Reflux.connect(AuthorStore), State, Navigation],
 
   getInitialState: function() {
     return {
@@ -21,11 +22,11 @@ var Timeline = React.createClass({
   statics: {
     // Because this is a static method that's called before render
     // We have to use the gloabal store get the state
-      willTransitionTo: function (transition, params) {
-        if (Check.undefined(AuthorStore.getCurrentAuthor())) {
-          transition.redirect('login');
-        }
+    willTransitionTo: function (transition, params) {
+      if (Check.undefined(AuthorStore.getCurrentAuthor())) {
+        transition.redirect('login');
       }
+    }
   },
 
   // If a user logs out and causes a state change within
@@ -40,12 +41,10 @@ var Timeline = React.createClass({
 
   render: function() {
     return (
-      <div className="col-md-12" id="timeline">
+      <Col md={12}>
         <ContentCreator authorId={this.state.currentAuthor.id} />
         <ContentViewer authorId={this.state.currentAuthor.id} />
-      </div>
+      </Col>
     );
   }
 });
-
-module.exports = Timeline;

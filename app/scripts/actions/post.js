@@ -1,6 +1,6 @@
-var Reflux = require('reflux');
+import Reflux from 'reflux';
 
-var Actions = Reflux.createActions([
+export default Reflux.createActions([
   "newPost",
   "editPost",
   "deletePost",
@@ -9,5 +9,3 @@ var Actions = Reflux.createActions([
   "deleteComment",
   "refreshPosts"
 ]);
-
-module.exports = Actions;

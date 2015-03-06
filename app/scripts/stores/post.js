@@ -1,109 +1,108 @@
-var Reflux = require('reflux');
-var UUID = require('uuid');
-var PostActions = require('../actions/post');
+import Reflux from 'reflux';
+import UUID from 'uuid';
+import PostActions from '../actions/post';
 
 // Deals with App State Machine state
-var PostStore = Reflux.createStore({
+export default Reflux.createStore({
 
-    init: function() {
-        // fetches the list of most recent posts
-        this.posts = this.getPosts();
+  init: function() {
+    // fetches the list of most recent posts
+    this.posts = this.getPosts();
 
-        // Listeners
-        this.listenTo(PostActions.newPost, this.newPost);
-        this.listenTo(PostActions.newComment, this.newComment);
-        this.listenTo(PostActions.refreshPosts, this.refreshPosts);
-    },
+    // Listeners
+    this.listenTo(PostActions.newPost, this.newPost);
+    this.listenTo(PostActions.newComment, this.newComment);
+    this.listenTo(PostActions.refreshPosts, this.refreshPosts);
+  },
 
-    // Handles fetching posts based on query.
-    getPosts: function (query) {
-        // TODO: AJAX and remove defaultPost placeholder
-        return this.defaultPosts();
-    },
+  // Handles fetching posts based on query.
+  getPosts: function (query) {
+    // TODO: AJAX and remove defaultPost placeholder
+    return this.defaultPosts();
+  },
 
-    refreshPosts: function (query) {
-        //TODO: ajax
-        this.trigger({"posts": this.orderPosts(this.posts) });
-    },
+  refreshPosts: function (query) {
+    //TODO: ajax
+    this.trigger({"posts": this.orderPosts(this.posts) });
+  },
 
-    // Used to mock data out
-    defaultPosts: function (query) {
+  // Used to mock data out
+  defaultPosts: function (query) {
 
-        var map = new Map();
-        var uuid = UUID.v4();
+    var map = new Map();
+    var uuid = UUID.v4();
 
-        map.set(uuid, {
-            id: uuid,
-            author_id: "4567",
-            author_name: "Benny Bennassi",
-            author_image: "images/benny.jpg",
-            content: "Check out my new hit satisfaction",
-            type: "raw",
-            timestamp: "1423950298",
-            comments: [{
-                id: UUID.v4(),
-                author_name: "Kanye West",
-                author_id: "9876",
-                author_image: "images/kanye.jpg",
-                content: "Wow, that's fly dude!",
-                type: "raw",
-                timestamp: "1424036698"
-              },
-              {
-                id: UUID.v4(),
-                author_name: "David Guetta",
-                author_id: "2192",
-                author_image: "images/david.jpg",
-                content: "I dunno man, needs more Dub...",
-                type: "markdown",
-                timestamp: "1424209498"
-              },
-            ]}
-        );
+    map.set(uuid, {
+        id: uuid,
+        author_id: "4567",
+        author_name: "Benny Bennassi",
+        author_image: "images/benny.jpg",
+        content: "Check out my new hit satisfaction",
+        type: "raw",
+        timestamp: "1423950298",
+        comments: [{
+          id: UUID.v4(),
+          author_name: "Kanye West",
+          author_id: "9876",
+          author_image: "images/kanye.jpg",
+          content: "Wow, that's fly dude!",
+          type: "raw",
+          timestamp: "1424036698"
+        },
+        {
+          id: UUID.v4(),
+          author_name: "David Guetta",
+          author_id: "2192",
+          author_image: "images/david.jpg",
+          content: "I dunno man, needs more Dub...",
+          type: "markdown",
+          timestamp: "1424209498"
+        }]
+      }
+    );
 
-        return map;
-    },
+    return map;
+  },
 
-    newPost: function (post) {
-        post["id"] = UUID.v4();
-        this.posts.set(post["id"], post);
-        // this.orderPosts();
-        //TODO: ajax
-        this.trigger({"posts": this.orderPosts(this.posts) });
-    },
+  newPost: function (post) {
+    post["id"] = UUID.v4();
+    this.posts.set(post["id"], post);
+    // this.orderPosts();
+    //TODO: ajax
+    this.trigger({"posts": this.orderPosts(this.posts) });
+  },
 
-    newComment: function (comment) {
-        var post = comment.post;
-        post.comments.push(comment);
-        //TODO: ajax
-        this.trigger({"posts": this.orderPosts(this.posts) });
-    },
+  newComment: function (post, comment) {
+    // <Content> complains when this is missing, used as "key"
+    comment.id = UUID.v4();
+    post.comments.push(comment);
+    //TODO: ajax
+    this.trigger({"posts": this.orderPosts(this.posts) });
+  },
 
-    // sorts posts into reverse chronological order. Aka, newest first.
-    orderPosts: function (posts) {
+  // sorts posts into reverse chronological order. Aka, newest first.
+  orderPosts: function (posts) {
 
-        var postArr = [];
-        if (posts.size == 0) {
-            return postArr;
-        }
-
-        for (var value of posts.values()) {
-            postArr.push(value);
-        }
-
-        postArr.sort(function(a, b) {
-            if (a.timestamp < b.timestamp) {
-                return -1;
-            } if (a.timestamp == b.timestamp) {
-                return 0;
-            } else {
-                return 1;
-            }
-        });
-
-        return postArr;
+    var postArr = [];
+    if (posts.size == 0) {
+      return postArr;
     }
 
-});
+    for (var value of posts.values()) {
+      postArr.push(value);
+    }
 
-module.exports = PostStore;
+    postArr.sort(function(a, b) {
+      if (a.timestamp < b.timestamp) {
+        return -1;
+      } if (a.timestamp == b.timestamp) {
+        return 0;
+      } else {
+        return 1;
+      }
+    });
+
+    return postArr;
+  }
+
+});
