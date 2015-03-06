@@ -21,7 +21,7 @@ export default React.createClass({
 
   statics: {
     // Because this is a static method that's called before render
-    // We have to use the gloabal store get the state
+    // We have to use the global store get the state
     willTransitionTo: function (transition, params) {
       if (Check.undefined(AuthorStore.getCurrentAuthor())) {
         transition.redirect('login');
