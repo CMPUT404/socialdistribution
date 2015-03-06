@@ -1,18 +1,15 @@
-var React = require('react');
-var Reflux = require('reflux');
-var Navbar = require('react-bootstrap').Navbar;
-var Nav = require('react-bootstrap').Nav;
-var NavItem = require('react-bootstrap').NavItem;
-var ReactRouterBootstrap = require('react-router-bootstrap')
-  , NavItemLink = ReactRouterBootstrap.NavItemLink
-var AuthorStore = require('../stores/author');
-var Router = require('react-router');
+import React from 'react';
+import Reflux from 'reflux';
+import { Navigation } from 'react-router';
+import { NavItemLink } from 'react-router-bootstrap';
+import { Navbar, Nav, NavItem} from 'react-bootstrap';
+
+import AuthorStore from '../stores/author';
 
 //TODO: Display the logged in author name with author_image in the navbar.
-var Navigation = React.createClass({
+export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore),
-           Router.Navigation],
+  mixins: [Reflux.connect(AuthorStore), Navigation],
 
   getInitialState: function() {
     return {
@@ -32,8 +29,8 @@ var Navigation = React.createClass({
 
     if (currentAuthor) {
       navList = [<NavItemLink key="timeline" to="/">Timeline</NavItemLink>,
-                <NavItemLink key="author" to="author" params={{authorId: currentAuthor.id}}>Profile</NavItemLink>,
-                <NavItem key="logout" href="" onClick={this.logOut}>Logout</NavItem>]
+                  <NavItemLink key="author" to="author" params={{authorId: currentAuthor.id}}>Profile</NavItemLink>,
+                  <NavItem key="logout" href="" onClick={this.logOut}>Logout</NavItem>]
     } else {
       navList = <NavItemLink key="logout" to="login">login</NavItemLink>;
     }
@@ -47,5 +44,3 @@ var Navigation = React.createClass({
     );
   }
 });
-
-module.exports = Navigation;

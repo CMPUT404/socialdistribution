@@ -1,19 +1,19 @@
-var React = require('react');
-var Reflux = require('reflux');
-var Check = require('check-types');
-var RouterState = require('react-router').State;
+import React from 'react';
+import Reflux from 'reflux';
+import Check from 'check-types';
+import { State } from 'react-router';
+import { Col } from 'react-bootstrap';
 
-var PostStore = require('../stores/post');
-var AuthorStore = require('../stores/author');
-var ContentViewer = require('./contentviewer');
-var ContentCreator = require('./contentcreator');
+import PostStore from '../stores/post';
+import AuthorStore from '../stores/author';
+import ContentViewer from './contentviewer';
+import ContentCreator from './contentcreator';
 
-// Represents a user's Profile view. It should only display a list
-// of posts created by the author. If no authorId has been specified in the
-// uri, this will display the logged in user's profile.
-var Author = React.createClass({
+// Represents a prfoile page.
+// It should only display a list of posts created by the author
+export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), RouterState],
+  mixins: [Reflux.connect(AuthorStore), State],
 
   getInitialState: function() {
     return {
@@ -35,12 +35,10 @@ var Author = React.createClass({
     }
 
     return (
-      <div className="col-md-12" id="author">
+      <Col md={12}>
         {contentCreator}
         <ContentViewer authorId={authorId} isProfile={profile} />
-      </div>
+      </Col>
     );
   }
 });
-
-module.exports = Author;

@@ -6,26 +6,24 @@ import { Grid, Row, Col, Input, PageHeader } from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
 
-
-
 export default React.createClass({
 
   mixins: [Reflux.connect(AuthorStore), State],
 
   getInitialState: function() {
-      return {
-        currentAuthor: AuthorStore.getCurrentAuthor()
-      };
+    return {
+      currentAuthor: AuthorStore.getCurrentAuthor()
+    };
   },
 
   statics: {
-      // When an authenticated user tries to re-login
-      willTransitionTo: function (transition, params) {
-        if (Check.object(AuthorStore.getCurrentAuthor())) {
-          //TODO: validate token
-          transition.redirect('timeline');
-        }
+    // When an authenticated user tries to re-login
+    willTransitionTo: function (transition, params) {
+      if (Check.object(AuthorStore.getCurrentAuthor())) {
+        //TODO: validate token
+        transition.redirect('timeline');
       }
+    }
   },
 
   render: function() {

@@ -1,7 +1,6 @@
-var Reflux = require('reflux');
-var UUID = require('uuid');
-var AuthorActions = require('../actions/author');
-
+import Reflux from 'reflux';
+import UUID from 'uuid';
+import AuthorActions from '../actions/author';
 
 var FIXTURE = {
   name: "Bert McGert",
@@ -12,26 +11,24 @@ var FIXTURE = {
 
 // Deals with store Author information. Both for the logged in user and other
 // author's we need to load with their content.
-var AuthorStore = Reflux.createStore({
+export default Reflux.createStore({
 
-    currentAuthor: FIXTURE,
+  currentAuthor: FIXTURE,
 
-    init: function() {
-      this.listenTo(AuthorActions.login, this.logIn);
-      this.listenTo(AuthorActions.logout, this.logOut);
-    },
+  init: function() {
+    this.listenTo(AuthorActions.login, this.logIn);
+    this.listenTo(AuthorActions.logout, this.logOut);
+  },
 
-    getCurrentAuthor: function () {
-        return this.currentAuthor;
-    },
+  getCurrentAuthor: function () {
+    return this.currentAuthor;
+  },
 
-    logIn: function() {
+  logIn: function() {
 
-    },
-    logOut: function() {
-      this.currentAuthor = undefined;
-      this.trigger( {"currentAuthor": undefined} );
-    }
+  },
+  logOut: function() {
+    this.currentAuthor = undefined;
+    this.trigger( {"currentAuthor": undefined} );
+  }
 });
-
-module.exports = AuthorStore;
