@@ -1,10 +1,11 @@
+from backend.utils import UsernameNotFound
+
 from django.contrib.auth.models import User
 
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
-
 from rest_framework.views import APIView
 
 from author.models import (
@@ -76,8 +77,7 @@ class GetAuthorFriends(ListAPIView):
             relations = create_relationship_list(friendors, 'friendor__username')
             return Response({'friend':user.username, 'friendors':relations})
         else:
-            return Response("User not found",
-                status=status.HTTP_400_BAD_REQUEST)
+            raise UsernameNotFound()
 
 # GET /author/followers/:username
 class GetAuthorFollowers(ListAPIView):
@@ -105,8 +105,7 @@ class GetAuthorFollowers(ListAPIView):
             relations = create_relationship_list(followers, 'follower__username')
             return Response({'followee':user.username, 'followers':relations})
         else:
-            return Response("User not found",
-                status=status.HTTP_400_BAD_REQUEST)
+            raise UsernameNotFound()
 
 # GET /author/friendrequests/:username
 class GetAuthorFriendRequests(ListAPIView):
@@ -134,8 +133,7 @@ class GetAuthorFriendRequests(ListAPIView):
             relations = create_relationship_list(requestors, 'requestor__username')
             return Response({'requestee':user.username, 'requestors':relations})
         else:
-            return Response("User not found",
-                status=status.HTTP_400_BAD_REQUEST)
+            raise UsernameNotFound()
 
 # PUT /author/update
 # TODO

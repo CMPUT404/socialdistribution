@@ -135,13 +135,21 @@ class UserDetailsAuthentication(TestCase):
     #    self.assertEquals(response.status_code, 201, "User and UserDetails not created")
     #    response = c.get('/author/getid/' + USERNAME)
     #    self.assertEquals(response.status_code, 200, "User does not exist")
-
+    #
     def test_login(self):
         response = c.post('/author/registration/', self.user_dict)
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
         response = c.post('/author/login/', self.login_dict)
-        self.assertEquals(response.status_code, 200, 'user not logged int')
+        self.assertEquals(response.status_code, 200, 'user not logged in')
+
+    def test_bad_login(self):
+        response = c.post('/author/registration/', self.user_dict)
+        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+
+        self.login_dict['password'] = 'basepassword'
+        response = c.post('/author/login/', self.login_dict)
+        self.assertEquals(response.status_code, 400, 'user not logged in')
 
     def test_logout(self):
         response = c.post('/author/registration/', self.user_dict)
@@ -150,8 +158,7 @@ class UserDetailsAuthentication(TestCase):
         token = json.loads(response.content)['token']
 
         user = User.objects.get(username = USERNAME)
-        self.assertTrue(user.is_authenticated(), "User not authenticated")
-
         self.auth_headers['HTTP_AUTHORIZATION'] = "Token %s" % token
+
         response = c.post('/author/logout/', **self.auth_headers)
         self.assertEquals(response.status_code, 200, "User not logged out")

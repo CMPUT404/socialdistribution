@@ -1,3 +1,5 @@
+from backend.utils import UsernameNotFound
+
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
@@ -77,7 +79,8 @@ class Login(APIView):
             login(request, user)
             return Response({'token': token.key})
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # likely never called as raise_exception = true
+        return AuthenticationFailure
 
 # Token based
 class Logout(APIView):

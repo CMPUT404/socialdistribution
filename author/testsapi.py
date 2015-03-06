@@ -96,6 +96,7 @@ class UserDetailsModelAPITests(TestCase):
     def test_relation_user_dne(self):
         response = c.get('/author/friends/%s' %'bogus_user')
         self.assertEquals(response.status_code, 400)
+        # self.assertEquals(response.content['error'], 'Username not found')
 
     def test_retrieve_friends(self):
         FriendRelationship.objects.create(friendor = self.user_a, friend = self.user)
@@ -120,7 +121,7 @@ class UserDetailsModelAPITests(TestCase):
         FollowerRelationship.objects.create(follower = self.user_b, followee = self.user)
 
         response = c.get('/author/followers/%s' %self.user.username)
-                
+
         self.assertEquals(response.status_code, 200)
         self.usernames_in_response(response.data['followers'])
 
