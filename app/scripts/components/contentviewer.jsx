@@ -24,7 +24,7 @@ var ContentViewer = React.createClass({
   refresh: function() {
     var query = {author_id: this.props.authorId, author_only: false};
     if (this.props.isProfile) {
-      query["author_only"] = true;
+      query.author_only = true;
     }
 
     PostActions.refreshPosts(query);

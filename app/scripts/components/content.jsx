@@ -13,18 +13,18 @@ var Content = React.createClass({
     },
 
     render: function() {
-        var comments = [], isPost = false;
+        var comments = [];
 
         if (this.props.data.comments) {
           comments = this.props.data.comments.map(function (comment) {
             return (
-               <Content key={comment.id} data={comment} isPost={isPost} />
+               <Content key={comment.id} data={comment} isPost={false} />
             );
           });
         }
 
         if (this.props.isPost) {
-          comments.push(<ContentCreator key="comment-creator" post={this.props.data} forComment={!isPost} />);
+          comments.push(<ContentCreator key="comment-creator" post={this.props.data} forComment={true} />);
         }
 
         var timestamp = Moment.unix(this.props.data.timestamp).fromNow();
@@ -32,7 +32,7 @@ var Content = React.createClass({
         return (
             <div className="media post">
                 <div className="media-left">
-                    <Link to="profile">
+                    <Link to="author" params={{authorId: this.props.data.id}}>
                         <img className="media-object author-image" src={this.props.data.author_image}/>
                     </Link>
                 </div>

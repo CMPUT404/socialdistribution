@@ -39,7 +39,7 @@ var PostStore = Reflux.createStore({
             author_image: "images/benny.jpg",
             content: "Check out my new hit satisfaction",
             type: "raw",
-            timestamp: "1423952298",
+            timestamp: "1423950298",
             comments: [{
                 id: UUID.v4(),
                 author_name: "Kanye West",
@@ -47,7 +47,7 @@ var PostStore = Reflux.createStore({
                 author_image: "images/kanye.jpg",
                 content: "Wow, that's fly dude!",
                 type: "raw",
-                timestamp: "1423961198"
+                timestamp: "1424036698"
               },
               {
                 id: UUID.v4(),
@@ -56,7 +56,7 @@ var PostStore = Reflux.createStore({
                 author_image: "images/david.jpg",
                 content: "I dunno man, needs more Dub...",
                 type: "markdown",
-                timestamp: "1423962198"
+                timestamp: "1424209498"
               },
             ]}
         );

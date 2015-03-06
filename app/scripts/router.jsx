@@ -5,19 +5,22 @@ var DefaultRoute = Router.DefaultRoute;
 
 var Layout = require('./components/layout');
 var Timeline = require('./components/timeline');
-var Profile = require('./components/profile');
+var Author = require('./components/author');
+var Login = require('./components/login');
 
 var routes = (
 	<Route name="timeline" path="/" handler={Layout}>
 		<DefaultRoute handler={Timeline} />
-		<Route name="profile" path="" handler={Profile} />
-		<Route name="author" path=":authorId" handler={Profile} />
+		<Route name="author" path="/author/:authorId" handler={Author} />
+		<Route name="login" handler={Login} />
 	</Route>
 );
 
 // Don't touch this, define routes above
 exports.start = function() {
+	// TODO: Use Router.HistoryLocation for prod
+	// Gulp webserver doesn't support this properly for dev
   Router.run(routes, function (Handler) {
-		React.render(<Handler />, document.getElementById("app"));
+		React.render(<Handler />, document.body);
 	});
 }

@@ -47,10 +47,10 @@ var ContentCreator = React.createClass({
 
         // populate content with appropriate metadata
         if (this.props.forComment) {
-            content["post"] = this.props.post;
+            content.post = this.props.post;
             PostActions.newComment(content);
         } else {
-            content["comments"] = [];
+            content.comments = [];
             PostActions.newPost(content);
         }
     },
@@ -59,9 +59,9 @@ var ContentCreator = React.createClass({
         return (
             <div className="media">
                 <div className="media-left">
-                    <Link to="profile">
+                  <Link to="author" params={{authorId: this.state.author.id}}>
                         <img className="media-object author-image" src={this.state.author.author_image}/>
-                    </Link>
+                  </Link>
                 </div>
                 <div className="media-body content-creator">
                     <Input type="textarea" placeholder="Say something witty..." value={this.state.content.content} onChange={this.contentChange} />
