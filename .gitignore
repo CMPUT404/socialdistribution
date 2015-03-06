@@ -22,6 +22,7 @@ build/
 develop-eggs/
 dist/
 downloads/
+.eggs/
 eggs/
 lib/
 lib64/
@@ -38,6 +39,12 @@ var/
 # before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+
+# Django migrations
+*/migrations
+
+# Django database
+*db.sqlite3
 
 # Installer logs
 pip-log.txt
