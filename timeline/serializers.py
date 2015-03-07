@@ -4,11 +4,6 @@ from timeline.models import Post, Comment
 from author.serializers import CompactUserSerializer
 
 class PostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Post
-        fields = ('user', 'id', 'text', 'date', 'image')
-
-class PostsSerializer(serializers.ModelSerializer):
     """
     Multiple posts are deserialized as a list object
 
@@ -29,7 +24,10 @@ class PostsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('user', 'id', 'text', 'date', 'image')
+        fields = ('user', 'id', 'text', 'public', 'fof', 'date', 'image')
+
+        # Fields that must not be set in HTTP request body
+        read_only_fields = ('user' 'id', 'date',)
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:

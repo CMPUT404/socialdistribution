@@ -6,6 +6,8 @@ from author.models import UserDetails, FriendRelationship
 
 from timeline.models import Post, Comment
 
+from rest_framework.authtoken.models import Token
+
 import uuid
 import json
 
@@ -67,11 +69,17 @@ class TimelineAPITestCase(TestCase):
         self.post = Post.objects.create(text = TEXT,
             user = self.user_a)
 
+        # Set login headers for test use, or force authentication to bypass
+        token, created = Token.objects.get_or_create(user=self.user_a)
+        self.auth_headers = {
+            'HTTP_AUTHORIZATION': "Token %s" %token }
+
     def tearDown(self):
         """Remove all created objects from mock database"""
         UserDetails.objects.all().delete()
         User.objects.all().delete()
         Post.objects.all().delete()
+        Token.objects.all().delete()
 
     def test_set_up(self):
         """Assert that that the models were created in setUp()"""
@@ -134,6 +142,56 @@ class TimelineAPITestCase(TestCase):
         Post.objects.create(text = TEXT, user = self.user_a)
         username = self.user_a.username
 
-        response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
-        response = c.get('/author/%s/posts' %username)
+        response = c.get('/author/%s/posts' %username, **self.auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        # TODO this test needs to be completed when auth is fully setup
+        # Check content received by response
+        # Should conform to IsOwner and IsFriend permission classes
+        # See milestone 1 on issue tracker
+
+    def test_create_post(self):
+        ptext = TEXT + ' message'
+        response = c.post('/author/post', {'text':ptext}, **self.auth_headers)
+        self.assertEquals(response.status_code, 201)
+
+        # Retrieve post manually to confirm
+        result = Post.objects.get(text = ptext)
+        self.assertEquals(result.text, ptext, 'wrong post text')
+        self.assertEquals(result.user, self.user_a, 'wrong user')
+
+    def test_attempt_set_read_only_fields(self):
+        """Read only fields should be ignored in POST request"""
+        post = {'text':TEXT, 'id':4, 'date':'2015-01-01'}
+        response = c.post('/author/post', data = post, **self.auth_headers)
+        self.assertEquals(response.status_code, 201)
+
+        # Ensure that fields were not set
+        self.assertTrue(response.data['id'] != 4, 'ID was set; should not have been')
+        self.assertTrue(response.data['date'] != '2015-01-01')
+
+    def test_create_blank_post(self):
+        """Should not be able to create post with no text"""
+        response = c.post('/author/post', {}, **self.auth_headers)
+        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.data['error'], u"This field is required.")
+
+    def test_public_post_set(self):
+        """public and fof are False by default"""
+        post = Post.objects.create(text = TEXT,
+            user = self.user_a)
+
+        self.assertEquals(post.public, False)
+        self.assertEquals(post.fof, False)
+
+    def test_create_public_post_http(self):
+        post = {'text':TEXT, 'public':True, 'fof':True}
+        response = c.post('/author/post', data = post, **self.auth_headers)
+        self.assertEquals(response.status_code, 201)
+
+        self.assertTrue(response.data['public'], 'privacy not marked public')
+        self.assertTrue(response.data['fof'], "fof not marked public")
+
+    def test_create_post_no_auth(self):
+        response = c.post('/author/post', {'text':TEXT})
+        self.assertEquals(response.status_code, 401)
