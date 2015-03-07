@@ -222,7 +222,6 @@ class UserDetailsModelAPITests(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTrue(self.user_b.username not in response.data['friendors'])
         # but user_b should now follow user_a again
-        import pdb; pdb.set_trace()
         response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 200)
         self.assertTrue(self.user_b.username in response.data['followers'])
