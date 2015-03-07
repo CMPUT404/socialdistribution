@@ -15,7 +15,7 @@ def custom_exception_handler(exc):
     # Debug exceptions
     print 'EXCEPTION DEBUG %s' %exc
 
-    if not isinstance(exc.detail, str):
+    if not isinstance(exc.detail, unicode):
         try:
             # original error message is {'detail':[list of messages]}
             # Get values from dictionary and take first list element
