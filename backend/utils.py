@@ -12,9 +12,17 @@ def custom_exception_handler(exc):
             "error":"message body"
         }
     """
+    # Debug exceptions
+    print 'EXCEPTION DEBUG %s' %exc
 
     if not isinstance(exc.detail, str):
-        exc = GenericException()
+        try:
+            # original error message is {'detail':[list of messages]}
+            # Get values from dictionary and take first list element
+            msg = exc.detail.values()[0][0]
+            exc = GenericException(msg)
+        except:
+            exc = GenericException()
 
     response = exception_handler(exc)
 
