@@ -56,20 +56,19 @@ class GetPosts(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsOwner, IsFriend,)
 
-    def get_object(self, username):
+    def get_queryset(self, username):
         """
-        Returns a list of Posts associated with a UserDetail's (User) uuid field.
-
-        See https://docs.djangoproject.com/en/1.7/topics/db/queries/#spanning-multi-valued-relationships
-        for information about quering foriegn keys that span multiple objects.
+        This view should return a list of all the posts
+        for the specified user.
         """
-        try:
-            return Post.objects.filter(user__username=username)
-        except Post.DoesNotExist:
-            raise Http404
+        result = Post.objects.filter(user__username=username)
+        for post in result:
+            print 'checking permissions'
+            self.check_object_permissions(self.request, post)
+        return result
 
     def get(self, request, username, format=None):
-        posts = self.get_object(username)
+        posts = self.get_queryset(username)
 
         serializer = PostSerializer(posts, many=True)
 

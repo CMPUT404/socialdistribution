@@ -1,18 +1,18 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, RequestFactory
 from django.contrib.auth.models import User
 
 from external.models import Server
 from author.models import UserDetails, FriendRelationship
-
 from timeline.models import Post, Comment
-
+from timeline.views import GetPosts, CreatePost
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 
 import uuid
 import json
 
 # To send HTTP requests
-c = Client()
+c = APIClient()
 
 # Values to be inserted and checked in the Author model
 USERNAME = 'programmer'
@@ -43,6 +43,7 @@ class TimelineAPITestCase(TestCase):
     Testing Timeline API Prototypes
     """
     def setUp(self):
+        self.factory = APIRequestFactory()
 
         self.user_a = User.objects.create_user(**USER_A)
         self.user_a.save()
@@ -135,14 +136,17 @@ class TimelineAPITestCase(TestCase):
     def test_get_posts_of_friend(self):
         # Add Friends
         FriendRelationship.objects.create(friendor = self.user_a, friend = self.user_b)
-        FriendRelationship.objects.create(friendor = self.user_a, friend = self.user_c)
 
         # Add Posts
         Post.objects.create(text = TEXT, user = self.user_a)
         Post.objects.create(text = TEXT, user = self.user_a)
-        username = self.user_a.username
 
-        response = c.get('/author/%s/posts' %username, **self.auth_headers)
+        username = self.user_a.username
+        getposts = GetPosts.as_view()
+        request = self.factory.get('/author/%s/posts' %username, **self.auth_headers)
+        force_authenticate(request, user=self.user_b)
+
+        response = getposts(request, self.user_a.username)
         self.assertEquals(response.status_code, 200)
 
         # TODO this test needs to be completed when auth is fully setup
