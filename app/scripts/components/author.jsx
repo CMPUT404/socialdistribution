@@ -15,6 +15,12 @@ export default React.createClass({
 
   mixins: [Reflux.connect(AuthorStore), State],
 
+  // willTransitionTo: function (transition, params) {
+    // if(!Check.null(params.id)) {
+
+    // }
+  // }
+
   getInitialState: function() {
     return {
       currentAuthor: AuthorStore.getCurrentAuthor()
@@ -24,7 +30,7 @@ export default React.createClass({
   render: function() {
     // this comes from the RouterState mixin and lets us pull an author id out
     // of the uri so we can fetch their posts.
-    var authorId = this.getParams().authorId;
+    var authorId = this.getParams().id;
     var currentAuthor = this.state.currentAuthor;
     var profile = false, contentCreator;
 

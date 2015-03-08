@@ -1,0 +1,22 @@
+.typeahead-options {
+  position: absolute; top: 35px;
+  list-style-type: none;
+  padding: 0;
+  display: block;
+  width: 100%;
+
+  li {
+    background-color: white;
+    border: 1px solid black;
+    padding-left: 5px;
+
+    &:hover {
+      background-color: grey;
+      color: white;
+    }
+    &.selected {
+      background-color: grey;
+      color: white;
+    }
+  }
+}

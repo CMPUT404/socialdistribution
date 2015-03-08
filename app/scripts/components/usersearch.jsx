@@ -1,20 +1,20 @@
 import React from 'react';
 import Reflux from 'reflux';
 import { Navigation } from 'react-router';
-import { Combobox as AutoComplete, ComboboxOption as Option } from 'react-autocomplete';
 
+import Typeahead from './typeahead';
 import AuthorStore from '../stores/author';
+import AuthorActions from '../actions/author';
 
 // Creates our UserSearch input
 // Adapted from:
 // https://github.com/rackt/react-autocomplete/blob/master/examples/basic/main.js
 export default React.createClass({
 
-  mixins: [Navigation, Reflux.connect(AuthorStore, "authorList")],
+  mixins: [Navigation, Reflux.connect(AuthorStore)],
 
   getInitialState: function () {
     return {
-      searchResults: [],
       authorList: [],
       search: "",
       selectedAuthor: null
@@ -22,65 +22,22 @@ export default React.createClass({
   },
 
   componentDidMount: function () {
-    AuthorActions.getAuthorList();
-  },
-
-  filterByInput: function (search) {
-    this.setState({selectedAuthorId: null}, function () {
-      this.filterAuthors(search);
-    }.bind(this));
-  },
-
-  // Handles Fuzzy Filtering Search Results
-  filterAuthors: function (search) {
-
-    // if empty search, no filtering
-    if (search === '') {
-      return this.setState({authors: this.state.authorList});
-    } else {
-      // Regex based on search that ignores case
-      var filter = new RegExp('^' + search, 'i');
-
-      // wait a little bit so that we don't waste ajax calls if the user keeps
-      // typing
-      setTimeout(function() {
-        // not at all optimized, assumes we have the full list of authors
-        // cached clientside
-        this.setState({searchResults: this.state.authorList.filter(function (author) {
-          return filter.test(author.name);
-        })});
-      }.bind(this), 300);
-    }
+    AuthorActions.getAuthorNameList();
   },
 
   // Handles transitioning the app to the author view if a user selects an
   // author from the search results
-  onSelect: function (authorId) {
+  onSelect: function (authorName) {
+    var authorId = AuthorStore.getAuthorIdByName(authorName);
     this.transitionTo('author', {id: authorId});
   },
 
-  renderSearchOptions: function () {
-    return this.state.searchResults.map(function (author) {
-      return (
-        <Option key={author.id} value={author.id}>{author.name}</Option>
-      );
-    });
-  },
-
   render: function () {
-
-    // render search options
-    var options;
-    if (this.state.searchResults.length === 0) {
-      options = <div className="empty-user-search" aria-live="polite">No matches.</div>;
-    } else {
-      options = this.renderSearchOptions();
-    }
-
     return (
-      <AutoComplete onInput={this.filterByInput} onSelect={this.onSelect} value={this.state.search}>
-        {options}
-      </AutoComplete>
+      <Typeahead
+        options={this.state.authorList}
+        onSelect={this.onSelect}
+        placeholder="Find friends..." />
     );
   }
 });

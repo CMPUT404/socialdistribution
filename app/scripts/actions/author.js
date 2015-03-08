@@ -4,5 +4,5 @@ export default Reflux.createActions([
   "update",
   "logout",
   "login",
-  "getAuthorList"
+  "getAuthorNameList"
 ]);

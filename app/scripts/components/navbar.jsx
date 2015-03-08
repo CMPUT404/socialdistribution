@@ -30,9 +30,8 @@ export default React.createClass({
 
     if (currentAuthor) {
       navList = [
-        <UserSearch />,
         <NavItemLink key="timeline" to="/">Timeline</NavItemLink>,
-        <NavItemLink key="author" to="author" params={{authorId: currentAuthor.id}}>Profile</NavItemLink>,
+        <NavItemLink key="author" to="author" params={{id: currentAuthor.id}}>Profile</NavItemLink>,
         <NavItem key="logout" href="" onClick={this.logOut}>Logout</NavItem>
       ];
     } else {

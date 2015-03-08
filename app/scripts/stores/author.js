@@ -10,15 +10,18 @@ var FIXTURE = {
   notifications: {}
 };
 
-var AUTHORLIST = [{
+var ALIST = [
+{
   id: "4567",
   name: "Benny Bennassi",
   image: "images/benny.jpg"
-}, {
+},
+{
   id: "9876",
   name: "Kanye West",
   image: "images/kanye.jpg",
-}, {
+},
+{
   id: "2192",
   name: "David Guetta",
   image: "images/david.jpg",
@@ -30,18 +33,29 @@ export default Reflux.createStore({
 
   currentAuthor: FIXTURE,
 
-  authorList: AUTHORLIST,
+  authorList: ALIST,
 
   init: function() {
     this.listenTo(AuthorActions.login, this.logIn);
     this.listenTo(AuthorActions.logout, this.logOut);
-    this.listenTo(AuthorActions.getAuthorList, this.getAuthorList);
+    this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
   },
 
   // gets a list of all authors from the server for search purposes
   // TODO: ajax this
-  getAuthorList: function () {
-    return this.trigger({"authorList": this.authorList});
+  getAuthorNameList: function () {
+    return this.trigger({authorList: this.authorList.map(function(author) {
+      return author.name;
+    })});
+  },
+
+  getAuthorIdByName: function (name) {
+    for (let author of this.authorList) {
+      if (author.name == name) {
+        return author.id;
+      }
+    }
+    return null;
   },
 
   getCurrentAuthor: function () {

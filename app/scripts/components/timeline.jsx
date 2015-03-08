@@ -7,6 +7,7 @@ import { State, Navigation } from 'react-router';
 
 import AuthorStore from '../stores/author';
 import ContentCreator from './contentcreator';
+import UserSearch from './usersearch';
 
 // Represents a collection of posts within the logged in user's social network.
 export default React.createClass({
@@ -42,6 +43,7 @@ export default React.createClass({
   render: function() {
     return (
       <Col md={12}>
+        <UserSearch key="search" />
         <div className="jumbotron">
           <h3>Mood?</h3>
           <ContentCreator authorId={this.state.currentAuthor.id} />
