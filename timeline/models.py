@@ -52,7 +52,7 @@ class ACL(models.Model):
     def __setattr__(self, attrname, val):
         if attrname == 'permissions':
             if val not in ALLOWED_ACL_FLAGS:
-                raise("Invalid permission flag")
+                raise ValueError ("Invalid permission flag")
 
         super(ACL, self).__setattr__(attrname, val)
 

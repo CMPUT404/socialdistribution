@@ -28,9 +28,9 @@ class PostSerializer(serializers.ModelSerializer):
         [
             {
                 user:{username:'', first_name:'', last_name:''},
-                acl:{'permissions':300}
                 id:'',
                 text:'',
+                acl:{'permissions':300, 'shared_users':[]},
                 date:'',
                 image:''
             }
@@ -40,6 +40,7 @@ class PostSerializer(serializers.ModelSerializer):
     """
     user = CompactUserSerializer(many=False, read_only=True)
     date = UnixDateTimeField(read_only=True)
+    acl = ACLSerializer(many = False)
     class Meta:
         model = Post
         fields = ('user', 'id', 'text', 'acl', 'date', 'image')

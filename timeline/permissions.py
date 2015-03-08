@@ -36,7 +36,7 @@ def isFoF(request, obj):
 
 def isPrivateList(request, obj):
     # if obj.acl["permissions"] == 302:
-    if str(request.user) in obj.acl["shared_users"]:
+    if str(request.user) in obj.acl.shared_users:
         return True
     return False
 
@@ -67,6 +67,7 @@ class Custom(permissions.BasePermission):
     Custom permission to encompass weird edge cases
     """
     def has_object_permission(self, request, view, obj):
+        # Author always has permissions
         if isAuthor(request, obj):
             return True
 

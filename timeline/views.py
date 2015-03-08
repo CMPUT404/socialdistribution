@@ -48,7 +48,7 @@ class CreatePost(APIView):
         serializer = PostSerializer(data = request.data)
 
         if serializer.is_valid(raise_exception = True):
-            acl = ACL.objects.create({'permissions':300})
+            acl = ACL.objects.create(request.data['acl'])
             serializer.save(user = request.user, acl=acl)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 

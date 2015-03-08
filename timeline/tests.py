@@ -176,7 +176,7 @@ class TimelineAPITestCase(TestCase):
         """Read only fields should be ignored in POST request"""
         post = {'text':TEXT, 'id':4, 'date':'2015-01-01'}
         response = c.post('/author/post', data = post, **self.auth_headers)
-        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.status_code, 201)
 
         # Ensure that fields were not set
         self.assertTrue(response.data['id'] != 4, 'ID was set; should not have been')
