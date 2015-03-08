@@ -1,9 +1,7 @@
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import APIException, AuthenticationFailed
 
-checks = ['Username not found', 'Username already exists', 'Authentication failed']
-
-def custom_exception_handler(exc):
+def custom_exception_handler(exc, context):
     """
     Exception handler called by all raised exceptions during HTTP requests.
 
@@ -12,10 +10,8 @@ def custom_exception_handler(exc):
             "error":"message body"
         }
     """
-    # Debug exceptions
-    print 'EXCEPTION DEBUG %s' %exc
 
-    if not isinstance(exc.detail, unicode):
+    if hasattr(exc, 'detail') and not isinstance(exc.detail, unicode):
         try:
             # original error message is {'detail':[list of messages]}
             # Get values from dictionary and take first list element
@@ -24,7 +20,7 @@ def custom_exception_handler(exc):
         except:
             exc = GenericException()
 
-    response = exception_handler(exc)
+    response = exception_handler(exc, context)
 
     if response is not None:
         # Uncomment to add status code in message body

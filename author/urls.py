@@ -1,5 +1,4 @@
 from django.conf.urls import url, include
-from rest_framework.urlpatterns import format_suffix_patterns
 from author import views, viewsauth
 
 urlpatterns = [
@@ -21,18 +20,12 @@ urlpatterns = [
         name = 'user_friend_requests'),
 
     # POST /author/registration/
-    url(r'^registration/$', viewsauth.AuthorRegistration,
+    url(r'^registration/$', viewsauth.AuthorRegistration.as_view(),
         name = 'registration'),
 
-    # POST /login
+    # GET /login
     url(r'^login/$', viewsauth.Login.as_view(), name='login'),
 
     # POST /logout
-    url(r'^logout/$', viewsauth.Logout.as_view(), name='logout'),
-
-   # GET /author/getid/:username
-   # url(r'^getid/(?P<username>[0-9a-zA-Z]+)$', viewsauth.GetUserUUID,
-   #     name = 'user_uuid'),
+    url(r'^logout/$', viewsauth.Logout.as_view(), name='logout')
 ]
-
-urlpatterns = format_suffix_patterns(urlpatterns)

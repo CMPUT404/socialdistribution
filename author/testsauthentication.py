@@ -27,13 +27,9 @@ FIRST_NAME = "Jerry"
 LAST_NAME = "Maguire"
 EMAIL = "jmaguire@smi.com"
 
-# Main user in the tests
-USER = {
-    'username':USERNAME,
-    'first_name':FIRST_NAME,
-    'last_name':LAST_NAME,
-    'email':EMAIL,
-    'password':PASSWORD }
+auth_headers = {
+    'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode('%s:%s' %(USERNAME, PASSWORD)),
+}
 
 class UserDetailsAuthentication(TestCase):
     """
@@ -130,26 +126,23 @@ class UserDetailsAuthentication(TestCase):
 
         self.assertEquals(response.status_code, 400, "User should not be created")
 
-    #def test_get_uuid(self):
-    #    response = c.post('/author/registration/', self.user_dict)
-    #    self.assertEquals(response.status_code, 201, "User and UserDetails not created")
-    #    response = c.get('/author/getid/' + USERNAME)
-    #    self.assertEquals(response.status_code, 200, "User does not exist")
-    #
     def test_login(self):
         response = c.post('/author/registration/', self.user_dict)
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
-        response = c.post('/author/login/', self.login_dict)
+        response = c.get('/author/login/', **auth_headers)
         self.assertEquals(response.status_code, 200, 'user not logged in')
 
     def test_bad_login(self):
         response = c.post('/author/registration/', self.user_dict)
+
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
-        self.login_dict['password'] = 'basepassword'
-        response = c.post('/author/login/', self.login_dict)
-        self.assertEquals(response.status_code, 400, 'user not logged in')
+        new_auth_headers = {
+            'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode('%s:%s' %(USERNAME, 'basepassword')),
+        }
+        response = c.get('/author/login/', **new_auth_headers)
+        self.assertEquals(response.status_code, 401, 'user not logged in')
 
     def test_logout(self):
         response = c.post('/author/registration/', self.user_dict)
@@ -161,4 +154,5 @@ class UserDetailsAuthentication(TestCase):
         self.auth_headers['HTTP_AUTHORIZATION'] = "Token %s" % token
 
         response = c.post('/author/logout/', **self.auth_headers)
+
         self.assertEquals(response.status_code, 200, "User not logged out")
