@@ -57,15 +57,17 @@ class RegistrationSerializer(serializers.Serializer):
 
             return details
 
-class UserDetailsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserDetails
-        fields = ('user', 'github_username', 'bio', 'server')
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('username', 'email', 'first_name', 'last_name')
+
+class UserDetailsSerializer(serializers.ModelSerializer):
+    user = UserSerializer(many = False, read_only = True)
+
+    class Meta:
+        model = UserDetails
+        fields = ('user', 'github_username', 'bio', 'server')
 
 class CompactUserSerializer(serializers.Serializer):
     """

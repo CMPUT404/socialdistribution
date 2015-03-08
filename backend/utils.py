@@ -1,7 +1,8 @@
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import APIException, AuthenticationFailed
+from rest_framework import status
 
-def custom_exception_handler(exc, context):
+def custom_exception_handler(exc):
     """
     Exception handler called by all raised exceptions during HTTP requests.
 
@@ -10,6 +11,10 @@ def custom_exception_handler(exc, context):
             "error":"message body"
         }
     """
+
+    # Preserve the original status_code for the new exception
+    status_code = exc.status_code if exc.status_code else \
+        status.HTTP_500_INTERNAL_SERVER_ERROR
 
     if hasattr(exc, 'detail') and not isinstance(exc.detail, unicode):
         try:
@@ -20,11 +25,10 @@ def custom_exception_handler(exc, context):
         except:
             exc = GenericException()
 
-    response = exception_handler(exc, context)
+    exc.status_code = status_code
+    response = exception_handler(exc)
 
     if response is not None:
-        # Uncomment to add status code in message body
-        # response.data['status_code'] = response.status_code
         if response.data['detail']:
             response.data['error'] = response.data['detail']
             del response.data['detail']
@@ -32,17 +36,17 @@ def custom_exception_handler(exc, context):
     return response
 
 class GenericException(APIException):
-    status_code = 400
+    status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Error encountered'
 
 class UsernameNotFound(APIException):
-    status_code = 400
+    status_code = status.HTTP_404_NOT_FOUND
     default_detail = 'Username not found'
 
 class UsernameAlreadyExists(APIException):
-    status_code = 400
+    status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Username already exists'
 
 class AuthenticationFailure(AuthenticationFailed):
-    status_code = 401
+    status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = 'Authentication failed'

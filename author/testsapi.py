@@ -92,17 +92,21 @@ class UserDetailsModelAPITests(TestCase):
         self.assertEquals(user.email, EMAIL)
 
     def test_retrieve_details(self):
-        response = c.get('/author/%s' %self.user.username, content_type="application/json")
+        response = c.get('/author/%s' %self.user.username,
+            content_type="application/json", **self.auth_headers)
+
         self.assertEquals(response.status_code, 200)
 
         user_dict = get_dict_response(response)
+        self.assertEquals(user_dict['user']['email'], EMAIL)
 
-        self.assertEquals(user_dict[0]['user']['email'], EMAIL)
+    def test_invalid_retrieve_details(self):
+        response = c.get('/author/no_user_here', **self.auth_headers)
+        self.assertEquals(response.status_code, 404)
 
     def test_relation_user_dne(self):
         response = c.get('/author/friends/%s' %'bogus_user')
-        self.assertEquals(response.status_code, 400)
-        # self.assertEquals(response.content['error'], 'Username not found')
+        self.assertEquals(response.status_code, 404)
 
     def test_retrieve_friends(self):
         FriendRelationship.objects.create(friendor = self.user_a, friend = self.user)
