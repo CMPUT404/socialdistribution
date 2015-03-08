@@ -1,18 +1,18 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, RequestFactory
 from django.contrib.auth.models import User
 
 from external.models import Server
 from author.models import UserDetails, FriendRelationship
-
 from timeline.models import Post, Comment
-
+from timeline.views import GetPosts, CreatePost
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 
 import uuid
 import json
 
 # To send HTTP requests
-c = Client()
+c = APIClient()
 
 # Values to be inserted and checked in the Author model
 USERNAME = 'programmer'
@@ -43,6 +43,7 @@ class TimelineAPITestCase(TestCase):
     Testing Timeline API Prototypes
     """
     def setUp(self):
+        self.factory = APIRequestFactory()
 
         self.user_a = User.objects.create_user(**USER_A)
         self.user_a.save()
@@ -102,7 +103,7 @@ class TimelineAPITestCase(TestCase):
 
     def test_get_posts_by_author_with_http(self):
         username = self.user_a.username
-        response = c.get('/author/%s/posts' %username, content_type="application/json")
+        response = c.get('/author/%s/posts' %username, content_type="application/json", **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 1, "Only one post should have been retrieved")
@@ -117,7 +118,7 @@ class TimelineAPITestCase(TestCase):
         Post.objects.create(text = TEXT, user = self.user_a)
 
         username = self.user_a.username
-        response = c.get('/author/%s/posts' %username, content_type="application/json")
+        response = c.get('/author/%s/posts' %username, content_type="application/json", **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 3, "Three posts should have been retrieved")
@@ -134,14 +135,14 @@ class TimelineAPITestCase(TestCase):
 
     def test_get_posts_of_friend(self):
         # Add Friends
-        FriendRelationship.objects.create(friendor = self.user_a, friend = self.user_b)
-        FriendRelationship.objects.create(friendor = self.user_a, friend = self.user_c)
+        FriendRelationship.objects.create(friend = self.user_b, friendor = self.user_a)
+        FriendRelationship.objects.create(friend = self.user_a, friendor = self.user_b)
 
         # Add Posts
-        Post.objects.create(text = TEXT, user = self.user_a)
-        Post.objects.create(text = TEXT, user = self.user_a)
-        username = self.user_a.username
+        Post.objects.create(text = TEXT, user = self.user_b)
+        Post.objects.create(text = TEXT, user = self.user_b)
 
+        username = self.user_b.username
         response = c.get('/author/%s/posts' %username, **self.auth_headers)
         self.assertEquals(response.status_code, 200)
 
@@ -149,6 +150,15 @@ class TimelineAPITestCase(TestCase):
         # Check content received by response
         # Should conform to IsOwner and IsFriend permission classes
         # See milestone 1 on issue tracker
+
+    def test_get_posts_of_non_friend(self):
+        # Add Posts
+        Post.objects.create(text = TEXT, user = self.user_b)
+        Post.objects.create(text = TEXT, user = self.user_b)
+
+        username = self.user_b.username
+        response = c.get('/author/%s/posts' %username, **self.auth_headers)
+        self.assertEquals(response.status_code, 403)
 
     def test_create_post(self):
         ptext = TEXT + ' message'
