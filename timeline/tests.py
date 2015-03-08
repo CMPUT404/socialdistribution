@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 from external.models import Server
 from author.models import UserDetails, FriendRelationship
-from timeline.models import Post, Comment
+from timeline.models import Post, Comment, ACL
 from timeline.views import GetPosts, CreatePost
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
@@ -25,7 +25,7 @@ BIO = "This is my witty biography!"
 USER_A = {'username':"User_A", 'password':uuid.uuid4()}
 USER_B = {'username':"User_B", 'password':uuid.uuid4()}
 USER_C = {'username':"User_C", 'password':uuid.uuid4()}
-
+ACL_DEFAULT = {'permissions':300}
 # Values to be inserted and checked in the UserDetails model
 
 # optional User model attributes
@@ -45,6 +45,7 @@ class TimelineAPITestCase(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
 
+        self.acl = ACL.objects.create(**ACL_DEFAULT)
         self.user_a = User.objects.create_user(**USER_A)
         self.user_a.save()
         self.user_b = User.objects.create_user(**USER_B)
@@ -68,7 +69,7 @@ class TimelineAPITestCase(TestCase):
             'bio':BIO }
 
         self.post = Post.objects.create(text = TEXT,
-            user = self.user_a)
+            user = self.user_a, acl=self.acl)
 
         # Set login headers for test use, or force authentication to bypass
         token, created = Token.objects.get_or_create(user=self.user_a)
@@ -80,6 +81,7 @@ class TimelineAPITestCase(TestCase):
         UserDetails.objects.all().delete()
         User.objects.all().delete()
         Post.objects.all().delete()
+        ACL.objects.all().delete()
         Token.objects.all().delete()
 
     def test_set_up(self):
@@ -114,8 +116,8 @@ class TimelineAPITestCase(TestCase):
 
     def test_get_multiple_posts_by_author_with_http(self):
         # Create two posts, in addition to the post created in setUp()
-        Post.objects.create(text = TEXT, user = self.user_a)
-        Post.objects.create(text = TEXT, user = self.user_a)
+        Post.objects.create(text = TEXT, user = self.user_a, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, user = self.user_a, acl=ACL.objects.create(**ACL_DEFAULT))
 
         username = self.user_a.username
         response = c.get('/author/%s/posts' %username, content_type="application/json", **self.auth_headers)
@@ -139,8 +141,8 @@ class TimelineAPITestCase(TestCase):
         FriendRelationship.objects.create(friend = self.user_a, friendor = self.user_b)
 
         # Add Posts
-        Post.objects.create(text = TEXT, user = self.user_b)
-        Post.objects.create(text = TEXT, user = self.user_b)
+        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
 
         username = self.user_b.username
         response = c.get('/author/%s/posts' %username, **self.auth_headers)
@@ -153,8 +155,8 @@ class TimelineAPITestCase(TestCase):
 
     def test_get_posts_of_non_friend(self):
         # Add Posts
-        Post.objects.create(text = TEXT, user = self.user_b)
-        Post.objects.create(text = TEXT, user = self.user_b)
+        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
 
         username = self.user_b.username
         response = c.get('/author/%s/posts' %username, **self.auth_headers)
@@ -162,7 +164,7 @@ class TimelineAPITestCase(TestCase):
 
     def test_create_post(self):
         ptext = TEXT + ' message'
-        response = c.post('/author/post', {'text':ptext}, **self.auth_headers)
+        response = c.post('/author/post', {'text':ptext, 'acl': {'permissions':300}}, **self.auth_headers)
         self.assertEquals(response.status_code, 201)
 
         # Retrieve post manually to confirm
@@ -174,7 +176,7 @@ class TimelineAPITestCase(TestCase):
         """Read only fields should be ignored in POST request"""
         post = {'text':TEXT, 'id':4, 'date':'2015-01-01'}
         response = c.post('/author/post', data = post, **self.auth_headers)
-        self.assertEquals(response.status_code, 201)
+        self.assertEquals(response.status_code, 400)
 
         # Ensure that fields were not set
         self.assertTrue(response.data['id'] != 4, 'ID was set; should not have been')
@@ -189,18 +191,16 @@ class TimelineAPITestCase(TestCase):
     def test_public_post_set(self):
         """public and fof are False by default"""
         post = Post.objects.create(text = TEXT,
-            user = self.user_a)
+            user = self.user_a, acl = ACL.objects.create(**ACL_DEFAULT))
 
-        self.assertEquals(post.public, False)
-        self.assertEquals(post.fof, False)
+        self.assertEquals(post.acl.permissions, 300)
 
     def test_create_public_post_http(self):
-        post = {'text':TEXT, 'public':True, 'fof':True}
+        post = {'text':TEXT, 'acl':{"permissions": "300"}}
         response = c.post('/author/post', data = post, **self.auth_headers)
         self.assertEquals(response.status_code, 201)
-
-        self.assertTrue(response.data['public'], 'privacy not marked public')
-        self.assertTrue(response.data['fof'], "fof not marked public")
+        print response.data['acl']
+        self.assertTrue(response.data['acl']['permissions'] == 200, 'privacy not marked public')
 
     def test_create_post_no_auth(self):
         response = c.post('/author/post', {'text':TEXT})

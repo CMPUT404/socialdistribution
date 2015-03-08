@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from timeline.models import Post, Comment
+from timeline.models import Post, Comment, ACL
 import time
 import datetime
 from author.serializers import CompactUserSerializer
@@ -15,6 +15,10 @@ class UnixDateTimeField(serializers.DateTimeField):
         except(AttributeError, TypeError):
             return None
 
+class ACLSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ACL
+        fields = ('permissions', 'shared_users')
 
 class PostSerializer(serializers.ModelSerializer):
     """
@@ -24,6 +28,7 @@ class PostSerializer(serializers.ModelSerializer):
         [
             {
                 user:{username:'', first_name:'', last_name:''},
+                acl:{'permissions':300}
                 id:'',
                 text:'',
                 date:'',
@@ -37,7 +42,7 @@ class PostSerializer(serializers.ModelSerializer):
     date = UnixDateTimeField(read_only=True)
     class Meta:
         model = Post
-        fields = ('user', 'id', 'text', 'public', 'fof', 'date', 'image')
+        fields = ('user', 'id', 'text', 'acl', 'date', 'image')
 
         # Fields that must not be set in HTTP request body
         read_only_fields = ('user' 'id', 'date',)

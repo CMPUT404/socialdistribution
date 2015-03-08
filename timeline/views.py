@@ -44,10 +44,12 @@ class CreatePost(APIView):
     permission_classes = (IsAuthenticated, IsAuthor,)
 
     def post(self, request, format=None):
+        print request.data
         serializer = PostSerializer(data = request.data)
 
         if serializer.is_valid(raise_exception = True):
-            serializer.save(user = request.user)
+            acl = ACL.objects.create({'permissions':300})
+            serializer.save(user = request.user, acl=acl)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
