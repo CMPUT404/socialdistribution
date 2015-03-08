@@ -14,6 +14,7 @@ def custom_exception_handler(exc):
     """
     # Debug exceptions
     print 'EXCEPTION DEBUG %s' %exc
+
     if not isinstance(exc.detail, unicode):
         try:
             # original error message is {'detail':[list of messages]}
