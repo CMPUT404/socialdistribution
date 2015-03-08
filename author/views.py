@@ -15,23 +15,7 @@ from author.models import (
     FriendRelationship,
     FriendRequest )
 
-from author.serializers import UserDetailSerializer
-
-class MultipleFieldLookupMixin(object):
-    """Allows the lookup of multiple fields in an url for mixins"""
-    def get_object(self):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        filter = {}
-        for field in self.lookup_fields:
-            filter[field] = self.kwargs[field]
-        return get_object_or_404(queryset, **filter)
-
-# GET /author/:username
-class GetUserDetails(MultipleFieldLookupMixin, generics.ListAPIView):
-    queryset = UserDetails.objects.all()
-    serializer_class = UserDetailSerializer
-    lookup_fields = ('user')
+from author.serializers import UserDetailsSerializer
 
 def create_relationship_list(queryset, lookup):
     """
@@ -50,6 +34,36 @@ def get_user(username):
         return User.objects.get(username = username)
     except:
         return None
+
+# GET /author/:username
+class GetUserDetails(APIView):
+    """
+    Retrieve user details, given a valid username.
+
+    JSON Response
+    {
+        user:{username:"", email:"", first_name:"", last_name:""},
+        github_username:"",
+        bio:"",
+        server:""
+    }
+    """
+
+    # TODO complete authorization permissions
+    # Can anyone authenticated user access profile, or must be marked public?
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        user = get_user(kwargs['username'])
+
+        if user:
+            details = UserDetails.objects.get(user = user)
+            serializer = UserDetailsSerializer(details)
+
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        else:
+            raise UsernameNotFound()
 
 # GET /author/friends/:username
 class GetAuthorFriends(ListAPIView):
@@ -96,6 +110,7 @@ class GetAuthorFollowers(APIView):
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+
     def get(self, request, *args, **kwargs):
         user = get_user(kwargs['username'])
         if user:
