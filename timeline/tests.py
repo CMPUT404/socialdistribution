@@ -184,7 +184,7 @@ class TimelineAPITestCase(TestCase):
         """Should not be able to create post with no text"""
         response = c.post('/author/post', {}, **self.auth_headers)
         self.assertEquals(response.status_code, 400)
-        self.assertEquals(response.data['error'], u"This field is required.")
+        self.assertEquals(response.data['error'], {'text': [u"This field is required."]})
 
     def test_public_post_set(self):
         """public and fof are False by default"""
