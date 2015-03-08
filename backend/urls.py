@@ -8,7 +8,7 @@ urlpatterns = patterns('',
     url(r'^$', 'backend.views.home', name='home'), # Homepage for now
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^', include('timeline.urls')),
+    url(r'^author/', include('timeline.urls')),
     url(r'^author/', include('author.urls')),
 
 )

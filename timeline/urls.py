@@ -5,10 +5,8 @@ from timeline import views
 urlpatterns = [
 
     # GET  /author/:username/posts
-    url(r'^author/(?P<username>[0-9a-zA-Z_]+)/posts$', views.GetPosts.as_view()),
+    url(r'^(?P<username>[0-9a-zA-Z_]+)/posts/?$', views.GetPosts.as_view()),
 
     # POST /author/post
-    url(r'^author/post$', views.CreatePost.as_view()),
+    url(r'^post/?$', views.CreatePost.as_view()),
 ]
-
-urlpatterns = format_suffix_patterns(urlpatterns)
