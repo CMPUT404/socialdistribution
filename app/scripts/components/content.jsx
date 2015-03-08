@@ -35,7 +35,7 @@ var Content = React.createClass({
     return (
       <div className="media">
         <div className="media-left">
-          <Link to="author" params={{authorId: this.props.data.author_id}}>
+          <Link to="author" params={{id: this.props.data.author_id}}>
             <img className="media-object" src={this.props.data.author_image} style={Content.imgStyle} />
           </Link>
         </div>
