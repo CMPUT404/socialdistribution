@@ -9,7 +9,8 @@ from rest_framework.authtoken.models import Token
 
 from rest_framework import status
 
-from author.serializers import RegistrationSerializer
+from author.serializers import RegistrationSerializer, UserDetailsSerializer
+from author.models import UserDetails
 
 """
 All views related to authentication
@@ -39,7 +40,24 @@ class AuthorRegistration(APIView):
 # Token based
 class Login(APIView):
     """
-    Handles a GET with a Basic Auth and passes back a token.
+    Handles a GET with a Basic Auth and passes back a token and profile information.
+
+    Response format:
+
+    {
+      "profile": {
+          "user": {
+              "username": "Steve",
+              "email": "steve@steves.com",
+              "first_name": "stevie",
+              "last_name": "steve"
+          },
+          "github_username": "steviesteve",
+          "bio": "It's Stev!",
+          "server": null
+      },
+      "token": "steve's token hash"
+    }
     """
     authentication_classes = (BasicAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -49,7 +67,10 @@ class Login(APIView):
       token, created = Token.objects.get_or_create(user=request.user)
       login(request, request.user)
 
-      return Response({'token': token.key})
+      details = UserDetails.objects.get(user = request.user)
+      serializer = UserDetailsSerializer(details)
+
+      return Response({'token': token.key, 'profile': serializer.data})
 
 
 # Token based

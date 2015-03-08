@@ -16,6 +16,7 @@ c = Client()
 # Values to be inserted and checked in the UserDetails model
 GITHUB_USERNAME = "jmaguire"
 BIO = "I'm the best sports agent around!"
+SERVER = None
 
 # Values to be inserted and checked in the User model
 # required User model attributes
@@ -43,7 +44,8 @@ class UserDetailsAuthentication(TestCase):
             'password':PASSWORD,
             'email':EMAIL,
             'github_username':GITHUB_USERNAME,
-            'bio':BIO }
+            'bio':BIO,
+            'server': SERVER }
 
         self.login_dict = {
             'username':USERNAME,
@@ -131,6 +133,21 @@ class UserDetailsAuthentication(TestCase):
         self.assertEquals(response.status_code, 201, "User and UserDetails not created")
 
         response = c.get('/author/login/', **auth_headers)
+        content = json.loads(response.content)
+
+        # TODO: maybe validate the token?
+        self.assertIsNot(content['token'], '', 'Empty Token')
+        self.assertIsNotNone(content['token'], 'Empty Token')
+
+        profile_keys = content['profile'].keys()
+        profile_keys.remove('user')
+
+        for key in profile_keys:
+            self.assertEquals(content['profile'][key], self.user_dict[key])
+
+        for key in content['profile']['user']:
+            self.assertEquals(content['profile']['user'][key], self.user_dict[key])
+
         self.assertEquals(response.status_code, 200, 'user not logged in')
 
     def test_bad_login(self):
