@@ -9,6 +9,7 @@ from author.models import (
 
 import uuid
 import json
+from rest_framework.authtoken.models import Token
 
 c = Client()
 
@@ -66,6 +67,11 @@ class UserDetailsModelAPITests(TestCase):
             bio = BIO,
             server = self.server)
 
+
+        token, created = Token.objects.get_or_create(user=self.user_a)
+        self.auth_headers = {
+            'HTTP_AUTHORIZATION': "Token %s" %token }
+
     def tearDown(self):
         """Remove all created objects from mock database"""
         UserDetails.objects.all().delete()
@@ -120,7 +126,7 @@ class UserDetailsModelAPITests(TestCase):
         FollowerRelationship.objects.create(follower = self.user_a, followee = self.user)
         FollowerRelationship.objects.create(follower = self.user_b, followee = self.user)
 
-        response = c.get('/author/followers/%s' %self.user.username)
+        response = c.get('/author/followers/%s' %self.user.username, **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
         self.usernames_in_response(response.data['followers'])

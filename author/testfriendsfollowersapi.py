@@ -110,7 +110,7 @@ class UserDetailsModelAPITests(TestCase):
         post = {'follower':self.user_b.username}
         response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username)
+        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.usernames_in_response(response.data['followers'], [self.user_b.username])
 
     def test_not_friends_yet(self):
@@ -120,9 +120,9 @@ class UserDetailsModelAPITests(TestCase):
         post = {'follower':self.user_b.username}
         response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username)
+        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username)
+        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.assertTrue(self.user_b.username not in response.data['friendors'])
 
     def test_follow_back(self):
@@ -133,9 +133,9 @@ class UserDetailsModelAPITests(TestCase):
         post = {'follower':self.user_b.username}
         response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username)
+        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_a)
         self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username)
+        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_a)
         self.assertTrue(self.user_b.username not in response.data['friendors'])
         post = {'follower':self.user_a.username}
         response = c.post('/author/followers/%s' %self.user_b.username, post, **self.auth_headers_user_a)
@@ -148,9 +148,9 @@ class UserDetailsModelAPITests(TestCase):
         post = {'follower':self.user_b.username}
         response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username)
+        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username)
+        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.assertTrue(self.user_b.username not in response.data['friendors'])
         post = {'follower':self.user_a.username}
         response = c.post('/author/followers/%s' %self.user_b.username, post, **self.auth_headers_user_a)
@@ -167,9 +167,9 @@ class UserDetailsModelAPITests(TestCase):
         post = {'follower':self.user_b.username}
         response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username)
+        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username)
+        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.assertTrue(self.user_b.username not in response.data['friendors'])
         post = {'follower':self.user_a.username}
         response = c.post('/author/followers/%s' %self.user_b.username, post, **self.auth_headers_user_a)
@@ -191,7 +191,7 @@ class UserDetailsModelAPITests(TestCase):
         post = {'follower':self.user_b.username}
         response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username)
+        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
         self.usernames_in_response(response.data['followers'], [self.user_b.username])
         response = c.get('/author/friends/%s' %self.user_a.username)
         self.assertTrue(self.user_b.username not in response.data['friendors'])

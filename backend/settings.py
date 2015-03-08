@@ -101,5 +101,5 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': (
     #     'rest_framework.permissions.IsAuthenticated',
     # )
-    # 'EXCEPTION_HANDLER': 'backend.utils.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'backend.utils.custom_exception_handler'
 }
