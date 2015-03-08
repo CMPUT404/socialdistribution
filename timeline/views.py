@@ -2,13 +2,13 @@ from django.shortcuts import render
 from django.http import Http404
 
 from author.models import User
-from author.models import UserDetails
+from author.models import UserDetails, FriendRelationship
 
 from timeline.models import Post, Comment
 from timeline.serializers import (
     PostSerializer,
     CommentSerializer )
-from timeline.permissions import IsFriend, IsOwner
+from timeline.permissions import IsFriend, IsAuthor
 
 from rest_framework.views import APIView
 from rest_framework import mixins, generics, status
@@ -41,7 +41,7 @@ class CreatePost(APIView):
     Out JSON Data: Full Post model (see PostSerializer)
     """
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsAuthor,)
 
     def post(self, request, format=None):
         serializer = PostSerializer(data = request.data)
@@ -54,7 +54,7 @@ class CreatePost(APIView):
 
 class GetPosts(APIView):
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsOwner, IsFriend,)
+    permission_classes = (IsAuthenticated, IsFriend,)
 
     def get_queryset(self, username):
         """
@@ -63,13 +63,11 @@ class GetPosts(APIView):
         """
         result = Post.objects.filter(user__username=username)
         for post in result:
-            print 'checking permissions'
             self.check_object_permissions(self.request, post)
         return result
 
     def get(self, request, username, format=None):
         posts = self.get_queryset(username)
-
         serializer = PostSerializer(posts, many=True)
 
         # Insert mock external server data into the response
