@@ -98,7 +98,7 @@ class UserDetailsModelAPITests(TestCase):
         self.assertEquals(response.status_code, 200)
 
         user_dict = get_dict_response(response)
-        self.assertEquals(user_dict['user']['email'], EMAIL)
+        self.assertEquals(user_dict['email'], EMAIL)
 
     def test_invalid_retrieve_details(self):
         response = c.get('/author/no_user_here', **self.auth_headers)

@@ -15,7 +15,7 @@ from author.models import (
     FriendRelationship,
     FriendRequest )
 
-from author.serializers import UserDetailsSerializer
+from author.serializers import AuthorSerializer
 
 def create_relationship_list(queryset, lookup):
     """
@@ -59,7 +59,7 @@ class GetUserDetails(APIView):
 
         if user:
             details = UserDetails.objects.get(user = user)
-            serializer = UserDetailsSerializer(details)
+            serializer = AuthorSerializer(details)
 
             return Response(serializer.data, status = status.HTTP_200_OK)
         else:

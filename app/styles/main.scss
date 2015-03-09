@@ -7,6 +7,16 @@
 @import './components/typeahead';
 @import './components/author';
 
+body {
+  background: #fafafa;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #333;
+}
+
+.container-fluid {
+  padding: 0;
+}
+
 .author-image {
   width: 64px;
   height: 64px;
@@ -16,12 +26,7 @@
   width: 700px;
 }
 
-body {
-  background: #fafafa;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: #333;
-}
-
-.container-fluid {
-  padding: 0;
+.alertify-logs {
+	top: 10px;
+	right: 10px;
 }

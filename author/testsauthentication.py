@@ -39,6 +39,7 @@ class UserDetailsAuthentication(TestCase):
     def setUp(self):
         self.user_dict = {
             'username':USERNAME,
+            'displayname':USERNAME,
             'first_name':FIRST_NAME,
             'last_name':LAST_NAME,
             'password':PASSWORD,
@@ -94,9 +95,9 @@ class UserDetailsAuthentication(TestCase):
 
     def test_registration_without_username(self):
         """
-        Should not be able to register without username
+        Should not be able to register without displayname
         """
-        self.user_dict.pop('username', None)
+        self.user_dict.pop('displayname', None)
         response = c.post('/author/registration/', self.user_dict)
 
         self.assertEquals(response.status_code, 400, "User should not be created")
@@ -139,14 +140,11 @@ class UserDetailsAuthentication(TestCase):
         self.assertIsNot(content['token'], '', 'Empty Token')
         self.assertIsNotNone(content['token'], 'Empty Token')
 
-        profile_keys = content['profile'].keys()
-        profile_keys.remove('user')
+        profile = content['author']
+        keys    =  set(profile.keys()).intersection(self.user_dict.keys());
 
-        for key in profile_keys:
-            self.assertEquals(content['profile'][key], self.user_dict[key])
-
-        for key in content['profile']['user']:
-            self.assertEquals(content['profile']['user'][key], self.user_dict[key])
+        for key in keys:
+            self.assertEquals(profile[key], self.user_dict[key])
 
         self.assertEquals(response.status_code, 200, 'user not logged in')
 

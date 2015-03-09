@@ -15,6 +15,20 @@ class UserDetails(models.Model):
     bio = models.TextField(blank=False, null=False)
     server = models.ForeignKey('external.Server', null=True, blank=True)
 
+    @property
+    def host(self):
+      if self.server:
+        return self.server.address
+      else:
+        return None
+
+    @property
+    def url(self):
+      if self.server.address:
+        return self.server.address + 'author/' + str(self.user.pk)
+      else:
+        return None
+
 class FollowerRelationship(models.Model):
     """
     Follower

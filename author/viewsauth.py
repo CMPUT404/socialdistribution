@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 
 from rest_framework import status
 
-from author.serializers import RegistrationSerializer, UserDetailsSerializer
+from author.serializers import RegistrationSerializer, AuthorSerializer
 from author.models import UserDetails
 
 """
@@ -27,12 +27,9 @@ class AuthorRegistration(APIView):
       if serializer.is_valid(raise_exception = True):
           user_details = serializer.create(serializer.validated_data)
           token, created = Token.objects.get_or_create(user=user_details.user)
+          serializer = AuthorSerializer(user_details)
 
-          return_dict = {
-              # 'uuid':user_details.uuid,
-              'token':str(token)}
-
-          return Response(return_dict, status=status.HTTP_201_CREATED)
+          return Response({'token': token.key, 'author': serializer.data}, status=status.HTTP_201_CREATED)
       else:
           return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -45,17 +42,17 @@ class Login(APIView):
     Response format:
 
     {
-      "profile": {
-          "user": {
-              "username": "Steve",
-              "email": "steve@steves.com",
-              "first_name": "stevie",
-              "last_name": "steve"
-          },
-          "github_username": "steviesteve",
-          "bio": "It's Stev!",
-          "server": null
-      },
+      "author": {
+        "id": "1",
+        "displayname": "Steve",
+        "email": "steve@steves.com",
+        "first_name": "steve",
+        "last_name": "steve",
+        "github_username": "steve",
+        "bio": "It's Steve",
+        "host": "http://some-host.com/",
+        "url": "http://some-host.com/author/1"
+        }
       "token": "steve's token hash"
     }
     """
@@ -68,9 +65,9 @@ class Login(APIView):
       login(request, request.user)
 
       details = UserDetails.objects.get(user = request.user)
-      serializer = UserDetailsSerializer(details)
+      serializer = AuthorSerializer(details)
 
-      return Response({'token': token.key, 'profile': serializer.data})
+      return Response({'token': token.key, 'author': serializer.data})
 
 
 # Token based

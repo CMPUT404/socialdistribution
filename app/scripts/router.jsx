@@ -5,12 +5,14 @@ import Layout from './components/layout';
 import Timeline from './components/timeline';
 import Author from './components/author';
 import Login from './components/login';
+import Register from './components/register';
 
 var routes = (
 	<Route path="/" name="timeline" handler={Layout}>
-    <DefaultRoute handler={Timeline} />
-    <Route name="author" path="/author/:id?" handler={Author} />
-    <Route name="login" handler={Login} />
+		<DefaultRoute handler={Timeline} />
+		<Route name="author" path="/author/:id?" handler={Author} />
+		<Route name="login" handler={Login} />
+		<Route name="register" handler={Register} />
 	</Route>
 );
 
