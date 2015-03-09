@@ -4,10 +4,11 @@ import Request from '../utils/request';
 var Author = Reflux.createActions({
   'update': {},
   'register': { asyncResult: true},
-  'logout': { asyncResult: true },
+  'logout': {},
   'login': { asyncResult: true},
   'getAuthorNameList': {},
-  'checkAuth': {}
+  'checkAuth': {},
+  'getAuthorViewData': {}
 });
 
 Author.login.listen(function(username, password) {

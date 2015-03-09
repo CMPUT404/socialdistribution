@@ -20,14 +20,21 @@ var Content = React.createClass({
   },
 
   render: function() {
+    var content;
     var comments;
 
     if (this.props.data.comments) {
       comments = this.props.data.comments.map(function (comment) {
         return (
-          <Content key={comment.id} data={comment} isPost={false} />
+          <Content key={"comment-"+comment.id} data={comment} />
         );
       });
+    }
+
+    if (this.props.data.type == 'markdown') {
+      content = Content.convertMarkdown(this.props.data.content);
+    } else {
+      content = this.props.data.content;
     }
 
     var timestamp = Moment.unix(this.props.data.timestamp).fromNow();
@@ -35,13 +42,13 @@ var Content = React.createClass({
     return (
       <div className="media">
         <div className="media-left">
-          <Link to="author" params={{id: this.props.data.author_id}}>
-            <img className="media-object" src={this.props.data.author_image} style={Content.imgStyle} />
+          <Link to="author" params={{id: this.props.data.author.id}}>
+            <img className="media-object" src={this.props.data.author.image} style={Content.imgStyle} />
           </Link>
         </div>
         <div className="media-body">
-          <h4 className="media-heading">{this.props.data.author_name}</h4>
-          <p>{this.props.data.content}</p>
+          <h4 className="media-heading">{this.props.data.author.name}</h4>
+          <p>{content}</p>
           <h6 className="timestamp">{timestamp}</h6>
           {comments}
         </div>
