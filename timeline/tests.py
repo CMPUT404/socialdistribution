@@ -256,9 +256,7 @@ class TimelineAPITestCase(TestCase):
             "acl":acl}
         response = c.post("/author/post", json.dumps(post), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
-        #print response
         # Ensure that fields were not set
-        print response.data
         self.assertTrue(response.data["id"] != 4, "ID was set; should not have been")
         self.assertTrue(response.data["date"] != "2015-01-01")
 
@@ -277,7 +275,6 @@ class TimelineAPITestCase(TestCase):
         acl = {"permissions":200, "shared_users":[]}
         post = {"text":TEXT, "acl":acl}
         response = c.post("/author/post", json.dumps(post), content_type="application/json", **self.auth_headers)
-        # print response
 
         self.assertEquals(response.status_code, 201)
         #self.assertTrue(response.data["acl"]["permissions"] == 200, "privacy not marked public")
