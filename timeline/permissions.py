@@ -71,14 +71,17 @@ class Custom(permissions.BasePermission):
         if isAuthor(request, obj):
             return True
 
-        switch = {
-            100: isAuthor,
-            200: isPublic,
-            300: isFriend,
-            301: isFriendOnSameHost,
-            302: isFoF,
-            500: isPrivateList,
-        }
+        # we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in (permissions.SAFE_METHODS):
+            switch = {
+                100: isAuthor,
+                200: isPublic,
+                300: isFriend,
+                301: isFriendOnSameHost,
+                302: isFoF,
+                500: isPrivateList,
+            }
 
-        return switch[obj.acl.permission](request, obj)
-        #return (isPublic(request, obj) or isAuthor(request, obj) or isFriend(request, obj) or isFoF(request, obj))
+            return switch[obj.acl.permissions](request, obj)
+            #return (isPublic(request, obj) or isAuthor(request, obj) or isFriend(request, obj) or isFoF(request, obj))
+        return False

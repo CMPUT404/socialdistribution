@@ -16,6 +16,8 @@ class UnixDateTimeField(serializers.DateTimeField):
             return None
 
 class ACLSerializer(serializers.ModelSerializer):
+    # permissions = serializers.CharField()
+    # shared_users = ListField()
     class Meta:
         model = ACL
         fields = ('permissions', 'shared_users')
@@ -48,7 +50,12 @@ class PostSerializer(serializers.ModelSerializer):
         # Fields that must not be set in HTTP request body
         read_only_fields = ('user' 'id', 'date',)
 
-
+    # def create(self, validated_data):
+    #     acl_data = validated_data.pop('acl')
+    #     acl = ACL.objects.create(**acl_data)
+    #     post = Post.objects.create(**validated_data)
+    #     Profile.objects.create(user=user, **profile_data)
+    #     return user
 class CommentSerializer(serializers.ModelSerializer):
     date = UnixDateTimeField(read_only=True)
     class Meta:
