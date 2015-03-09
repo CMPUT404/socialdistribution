@@ -11,13 +11,12 @@ import AuthorActions from '../actions/author';
 // https://github.com/rackt/react-autocomplete/blob/master/examples/basic/main.js
 export default React.createClass({
 
-  mixins: [Navigation, Reflux.connect(AuthorStore)],
+  mixins: [Navigation, Reflux.connect(AuthorStore, "authorNameList")],
 
   getInitialState: function () {
     return {
-      authorList: [],
-      search: "",
-      selectedAuthor: null
+      authorNameList: [],
+      search: ""
     };
   },
 

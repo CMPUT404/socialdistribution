@@ -17,18 +17,24 @@ export default React.createClass({
 
   getInitialState: function() {
     return {
-      currentAuthor: {}
+      currentAuthor: {},
+      initialLoad: true // helper to avoid bug when devving
     };
   },
 
   checkAuthResult: function(state) {
-    // on successful login, set logged in state and transition to base timeline
-    if (Check.object(state.currentAuthor)) {
-      this.setState({currentAuthor: state.currentAuthor});
-      this.transitionTo('timeline');
-    // otherwise ensure the user is at the login view if not already
-    } else if(!this.isActive('login')) {
-      this.transitionTo('login');
+
+    // only perform updates if our currentAuthor is being changed
+    if (!Check.undefined(state.currentAuthor)) {
+
+      // set state, then transition
+      this.setState({currentAuthor: state.currentAuthor, initialLoad: false});
+
+      if (Check.emptyObject(state.currentAuthor) && !this.isActive('login')) {
+        this.transitionTo('login');
+      } else {
+        this.transitionTo('timeline');
+      }
     }
   },
 
@@ -39,13 +45,17 @@ export default React.createClass({
 
   render: function() {
 
+    if (Check.emptyObject(this.state.currentAuthor && this.state.intialLoad)) {
+      return (<div></div>);
+    }
+
     // we do this so we can pass essentially a global prop into the app in the
     // form of the currently logged in user
     // see http://stackoverflow.com/questions/27864720/react-router-pass-props-to-handler-component
     var AppHandler = this.getRouteHandler({currentAuthor: this.state.currentAuthor});
     return (
       <Grid fluid={true}>
-        <Navbar author={this.state.currentAuthor} />
+        <Navbar currentAuthor={this.state.currentAuthor} />
         <Grid>
           <Col md={8} mdOffset={2}>
             {AppHandler}

@@ -1,6 +1,8 @@
 import Reflux from 'reflux';
 import UUID from 'uuid';
+
 import PostActions from '../actions/post';
+import AuthorActions from '../actions/author';
 
 // Deals with App State Machine state
 export default Reflux.createStore({
@@ -14,6 +16,7 @@ export default Reflux.createStore({
     this.listenTo(PostActions.newComment, this.newComment);
     this.listenTo(PostActions.getTimeline, this.getTimeline);
     this.listenTo(PostActions.getAuthorPosts, this.getAuthorPosts);
+    this.listenTo(AuthorActions.getAuthorViewData, this.getAuthorPosts);
   },
 
   // Handles fetching posts based on query.
@@ -32,8 +35,8 @@ export default Reflux.createStore({
     //TODO: ajax
     // this is just temporary for testing
     var authorPosts = [];
-    for(var value of this.posts.values()) {
-      if (value.author_id == authorId) {
+    for(var post of this.posts.values()) {
+      if (post.author.id == authorId) {
         authorPosts.push(value);
       }
     }
@@ -46,57 +49,34 @@ export default Reflux.createStore({
     var map = new Map();
     var uuid = UUID.v4();
 
-    map.set(UUID.v4(), {
-        id: uuid,
-        author_id: "452267",
-        author_name: "Benny Bennassi",
-        author_image: "images/benny.jpg",
-        content: "Check out my new hit satisfaction",
-        type: "raw",
-        timestamp: "1422950298",
-        comments: [{
-          id: UUID.v4(),
-          author_name: "Kanye West",
-          author_id: "92876",
-          author_image: "images/kanye.jpg",
-          content: "Wow, that's fly dude!",
-          type: "raw",
-          timestamp: "1424032698"
-        },
-        {
-          id: UUID.v4(),
-          author_name: "David Guetta",
-          author_id: "219222",
-          author_image: "images/david.jpg",
-          content: "I dunno man, needs more Dub...",
-          type: "markdown",
-          timestamp: "1424209198"
-        }]
-      }
-    );
-
     map.set(uuid, {
         id: uuid,
-        author_id: "4567",
-        author_name: "Benny Bennassi",
-        author_image: "images/benny.jpg",
+        author: {
+          id: "4567",
+          name: "Benny Bennassi",
+          image: "images/benny.jpg"
+        },
         content: "Check out my new hit satisfaction",
         type: "raw",
         timestamp: "1423950298",
         comments: [{
           id: UUID.v4(),
-          author_name: "Kanye West",
-          author_id: "9876",
-          author_image: "images/kanye.jpg",
+          author: {
+            name: "Kanye West",
+            id: "9876",
+            image: "images/kanye.jpg"
+          },
           content: "Wow, that's fly dude!",
           type: "raw",
           timestamp: "1424036698"
         },
         {
           id: UUID.v4(),
-          author_name: "David Guetta",
-          author_id: "2192",
-          author_image: "images/david.jpg",
+          author: {
+            name: "David Guetta",
+            id: "2192",
+            image: "images/david.jpg"
+          },
           content: "I dunno man, needs more Dub...",
           type: "markdown",
           timestamp: "1424209498"

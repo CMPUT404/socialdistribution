@@ -10,23 +10,27 @@ export default React.createClass({
   render: function() {
     var posts = [];
 
-    // create an array of posts or comments
-    this.props.posts.forEach(function (post, id) {
-      posts.push(
-        <div className="panel panel-default" key={id}>
-          <div className="panel-body">
-            <ul className="media-list">
-              <li className="media">
-                <Content data={post} isPost={true} />
-              </li>
-            </ul>
+    if (this.props.posts.length > 0) {
+      // create an array of posts or comments
+      for (var post of this.props.posts) {
+        posts.push(
+          <div className="panel panel-default" key={"post-"+post.id}>
+            <div className="panel-body">
+              <ul className="media-list">
+                <li className="media">
+                  <Content data={post} isPost={true} />
+                </li>
+              </ul>
+            </div>
+            <div className="panel-footer">
+              <ContentCreator key="comment-creator" currentAuthor={this.props.currentAuthor} post={post} forComment={true} />
+            </div>
           </div>
-          <div className="panel-footer">
-            <ContentCreator key="comment-creator" currentAuthor={this.props.currentAuthor} post={post} forComment={true} />
-          </div>
-        </div>
-      );
-    }.bind(this));
+        );
+      }
+    } else {
+      posts = <h3 className="text-center">No posts to see!</h3>;
+    }
 
     return (
       <div className="content-viewer well">

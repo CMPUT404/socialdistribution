@@ -12,8 +12,8 @@ export default React.createClass({
     willTransitionTo: function (transition, params) {
       // Using the author store is a hack, but until
       // https://github.com/rackt/react-router/pull/590 is merged/closed
-      if (AuthorStore.loggedIn) {
-        transition.abort();
+      if (!Check.emptyObject(AuthorStore.currentAuthor)) {
+        transition.redirect("timeline");
       }
     }
   },

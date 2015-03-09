@@ -1,5 +1,6 @@
 import React from 'react';
 import Reflux from 'reflux';
+import Check from 'check-types';
 import { Navigation } from 'react-router';
 import { NavItemLink } from 'react-router-bootstrap';
 import { Navbar, Nav, NavItem} from 'react-bootstrap';
@@ -12,21 +13,20 @@ export default React.createClass({
 
   mixins: [Navigation],
 
-  logOut: function(evt) {
+  // fires the logout action, transition is handled in layout
+  logout: function(evt) {
     evt.preventDefault();
-    AuthorActions.logOut();
-    this.transitionTo('login');
+    AuthorActions.logout();
   },
 
   render: function() {
-    var currentAuthor  = this.props.author;
     var navList;
 
-    if (currentAuthor) {
+    if (!Check.emptyObject(this.props.currentAuthor)) {
       navList = [
         <NavItemLink key="timeline" to="/">Timeline</NavItemLink>,
-        <NavItemLink key="author" to="author" params={{id: currentAuthor.id}}>Profile</NavItemLink>,
-        <NavItem key="logout" href="" onClick={this.logOut}>Logout</NavItem>
+        <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>Profile</NavItemLink>,
+        <NavItem key="logout" href="" onClick={this.logout}>Logout</NavItem>
       ];
     } else {
       navList = <NavItemLink key="logout" to="login">login</NavItemLink>;
