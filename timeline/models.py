@@ -51,6 +51,10 @@ class ACL(models.Model):
 
     def __setattr__(self, attrname, val):
         if attrname == 'permissions':
+            try:
+                val = int(val)
+            except:
+                raise TypeError ("Permissions must be of type int or string representation of an int")
             if val not in ALLOWED_ACL_FLAGS:
                 raise ValueError ("Invalid permission flag")
 

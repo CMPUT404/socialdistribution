@@ -2,6 +2,7 @@ from rest_framework import serializers
 from timeline.models import Post, Comment, ACL
 import time
 import datetime
+from copy import deepcopy
 from author.serializers import CompactUserSerializer
 
 
@@ -16,8 +17,8 @@ class UnixDateTimeField(serializers.DateTimeField):
             return None
 
 class ACLSerializer(serializers.ModelSerializer):
-    # permissions = serializers.CharField()
-    # shared_users = ListField()
+    permissions = serializers.CharField()
+    shared_users = serializers.ListField(child=serializers.CharField())
     class Meta:
         model = ACL
         fields = ('permissions', 'shared_users')
@@ -40,22 +41,27 @@ class PostSerializer(serializers.ModelSerializer):
 
     Only for retrieval. Should not be used for insertion.
     """
+    acl = ACLSerializer(many=False)
     user = CompactUserSerializer(many=False, read_only=True)
     date = UnixDateTimeField(read_only=True)
-    acl = ACLSerializer(many = False)
+    # text = serializers.CharField()
+    # id = serializers.CharField(read_only=True)
+    # date = serializers.CharField(read_only=True)
+
     class Meta:
         model = Post
         fields = ('user', 'id', 'text', 'acl', 'date', 'image')
 
         # Fields that must not be set in HTTP request body
-        read_only_fields = ('user' 'id', 'date',)
+        read_only_fields = ('user', 'id', 'date')
 
-    # def create(self, validated_data):
-    #     acl_data = validated_data.pop('acl')
-    #     acl = ACL.objects.create(**acl_data)
-    #     post = Post.objects.create(**validated_data)
-    #     Profile.objects.create(user=user, **profile_data)
-    #     return user
+    def create(self, validated_data):
+        data = deepcopy(validated_data)
+        acl_data = data.pop('acl', {"permissions": 300,"shared_users": []})
+        acl_object = ACL.objects.create(**acl_data)
+        post = Post.objects.create(acl=acl_object, user=self.context['user'], **data)
+        return post
+
 class CommentSerializer(serializers.ModelSerializer):
     date = UnixDateTimeField(read_only=True)
     class Meta:
