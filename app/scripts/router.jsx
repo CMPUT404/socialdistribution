@@ -10,7 +10,7 @@ var routes = (
 	<Route name="timeline" path="/" handler={Layout}>
 		<DefaultRoute handler={Timeline} />
 		<Route name="author" path="/author/?:id?" handler={Author} />
-		Route name="login" handler={Login} />
+    <Route name="login" handler={Login} />
 	</Route>
 );
 
