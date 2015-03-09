@@ -29,18 +29,7 @@ export default React.createClass({
     PostActions.getTimeline(this.props.currentAuthor.id);
   },
 
-  // If a user logs out and causes a state change within
-  // The current page then make sure render() doesn't update.
-  // A transition will eventually occure...
-  // shouldComponentUpdate: function(nextProps, nextState) {
-    // if (Check.undefined(nextState.currentAuthor)) {
-      // return false;
-    // }
-    // return true;
-  // },
-
   render: function() {
-    console.log("made it");
     return (
       <Col md={12}>
         <UserSearch key="search" />

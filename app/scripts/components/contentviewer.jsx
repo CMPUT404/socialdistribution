@@ -22,11 +22,11 @@ export default React.createClass({
             </ul>
           </div>
           <div className="panel-footer">
-            <ContentCreator key="comment-creator" currentAuthor={currentAuthor} post={post} forComment={true} />
+            <ContentCreator key="comment-creator" currentAuthor={this.props.currentAuthor} post={post} forComment={true} />
           </div>
         </div>
       );
-    });
+    }.bind(this));
 
     return (
       <div className="content-viewer well">
