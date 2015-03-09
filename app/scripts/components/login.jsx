@@ -1,19 +1,26 @@
 import React from 'react';
 import Reflux from 'reflux';
 import Check from 'check-types';
-import { State } from 'react-router';
+import { State, Navigation } from 'react-router';
 import { Grid, Row, Col, Input, PageHeader } from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
+import AuthorActions from '../actions/author';
 
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), State],
+  mixins: [Reflux.listenTo(AuthorStore, "onUserChange"), State, Navigation],
 
   getInitialState: function() {
     return {
       currentAuthor: AuthorStore.getCurrentAuthor()
     };
+  },
+
+  onUserChange: function(state) {
+    if (Check.object(state.currentAuthor)) {
+      this.transitionTo('timeline');
+    }
   },
 
   statics: {
@@ -26,19 +33,35 @@ export default React.createClass({
     }
   },
 
+  usernameChange: function(evt) {
+    this.setState({username: evt.target.value});
+  },
+
+  passwordChange: function(evt) {
+    this.setState({password: evt.target.value});
+  },
+
+  logIn: function(evt) {
+    evt.preventDefault();
+
+    var username = this.state.username;
+    var password = this.state.password;
+
+    this.setState(this.getInitialState());
+
+    AuthorActions.login(username, password);
+  },
+
   render: function() {
     return (
       <Col md={6} mdOffset={3}>
         <Row><PageHeader>Login</PageHeader></Row>
         <Row>
-          <form>
-            <Input type="text" label='Text' defaultValue="Username" />
-            <Input type="password" label='Password' defaultValue="secret" />
-            <Input type="select" label='Server... Maybe' defaultValue="server">
-              <option value="select">select</option>
-              <option value="other">...</option>
-            </Input>
-            <Input className="center-block" type="submit" value="Submit button" />
+          <form onSubmit={this.logIn}>
+            <Input type="text"  label='Text' placeholder="Username" value={this.state.username} onChange={this.usernameChange} required/>
+            <Input type="password" label='Password' placeholder="secret" value={this.state.password} onChange={this.passwordChange} required/>
+
+            <Input className="center-block" type="submit" value="Login" />
           </form>
         </Row>
       </Col>
