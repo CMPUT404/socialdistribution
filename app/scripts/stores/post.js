@@ -37,7 +37,7 @@ export default Reflux.createStore({
     var authorPosts = [];
     for(var post of this.posts.values()) {
       if (post.author.id == authorId) {
-        authorPosts.push(value);
+        authorPosts.push(post);
       }
     }
     this.trigger({posts: authorPosts});
@@ -96,7 +96,6 @@ export default Reflux.createStore({
   },
 
   newComment: function (post, comment) {
-    console.log(comment);
     // <Content> complains when this is missing, used as "key"
     comment.id = UUID.v4();
     post.comments.push(comment);

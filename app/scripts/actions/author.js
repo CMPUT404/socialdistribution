@@ -8,7 +8,9 @@ var Author = Reflux.createActions({
   'login': { asyncResult: true},
   'getAuthorNameList': {},
   'checkAuth': {},
-  'getAuthorViewData': {}
+  'getAuthorViewData': {},
+  'subscribeTo': {},
+  'unsubscribeFrom': {}
 });
 
 Author.login.listen(function(username, password) {

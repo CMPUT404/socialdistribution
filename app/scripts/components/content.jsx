@@ -47,7 +47,9 @@ var Content = React.createClass({
           </Link>
         </div>
         <div className="media-body">
-          <h4 className="media-heading">{this.props.data.author.name}</h4>
+          <Link to="author" params={{id: this.props.data.author.id}}>
+            <h4 className="media-heading">{this.props.data.author.name}</h4>
+          </Link>
           {content}
           <h6 className="timestamp">{timestamp}</h6>
           {comments}

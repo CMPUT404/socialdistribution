@@ -4,6 +4,7 @@ import Moment from 'moment';
 import { Link } from 'react-router';
 import { Input } from 'react-bootstrap';
 import { markdown as Markdown } from 'markdown';
+import Check from 'check-types';
 
 import PostActions from '../actions/post';
 
@@ -53,12 +54,18 @@ export default React.createClass({
   },
 
   render: function() {
+
+    // don't go further if we don't have our current author prop
+    if (Check.emptyObject(this.props.currentAuthor)) {
+      return (<div></div>);
+    }
+
     var Submit = <Input className="pull-right" type="submit" value="Post" onClick={this.submitContent} />;
     return (
       <div className="media">
         <div className="media-left">
           <Link to="author" params={{id: this.props.currentAuthor.id}}>
-            <img className="media-object author-image" src={this.props.currentAuthor.image}/>
+            <img className="media-object author-image" src={this.props.currentAuthor.getImage()}/>
           </Link>
         </div>
         <div className="media-body content-creator">
