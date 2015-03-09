@@ -48,4 +48,4 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'date')
-        read_only_fields('date')
+        read_only_fields = ('date',)
