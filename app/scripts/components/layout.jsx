@@ -46,7 +46,7 @@ export default React.createClass({
   render: function() {
 
     if (Check.emptyObject(this.state.currentAuthor && this.state.intialLoad)) {
-      return (<div></div>);
+      return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
     }
 
     // we do this so we can pass essentially a global prop into the app in the
