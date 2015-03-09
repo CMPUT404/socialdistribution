@@ -16,6 +16,16 @@ class UnixDateTimeField(serializers.DateTimeField):
             return None
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    user = CompactUserSerializer(many=False, read_only=True)
+    # post = PostSerializer(many=False, read_only=True)
+    date = UnixDateTimeField(read_only=True)
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'date', 'user')
+        read_only_fields = ('date')
+
+
 class PostSerializer(serializers.ModelSerializer):
     """
     Multiple posts are deserialized as a list object
@@ -35,17 +45,11 @@ class PostSerializer(serializers.ModelSerializer):
     """
     user = CompactUserSerializer(many=False, read_only=True)
     date = UnixDateTimeField(read_only=True)
+    comments = CommentSerializer(read_only=True, many=True)
     class Meta:
         model = Post
-        fields = ('user', 'id', 'text', 'public', 'fof', 'date', 'image')
+        fields = ('user', 'id', 'text', 'public', 'fof', 'date', 'image', 'comments')
 
         # Fields that must not be set in HTTP request body
-        read_only_fields = ('user' 'id', 'date',)
+        read_only_fields = ('user' 'id', 'date', 'comments',)
 
-
-class CommentSerializer(serializers.ModelSerializer):
-    date = UnixDateTimeField(read_only=True)
-    class Meta:
-        model = Comment
-        fields = ('id', 'text', 'date')
-        read_only_fields('date')

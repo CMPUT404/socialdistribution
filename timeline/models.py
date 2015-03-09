@@ -19,5 +19,6 @@ class Comment(models.Model):
     A comment's privacy is inherited from the Post public attribute
     """
     text = models.TextField(blank=False)
-    date = models.DateTimeField(auto_now_add=True)
-    post = models.ForeignKey('Post')
+    date = models.DateTimeField(auto_now_add=True, editable = False)
+    post = models.ForeignKey('Post', related_name='comments')
+    user = models.ForeignKey(User, blank=False, editable = False)
