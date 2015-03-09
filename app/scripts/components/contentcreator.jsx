@@ -14,8 +14,7 @@ export default React.createClass({
 
   getInitialState: function() {
     return {
-      content: this.defaultContent(),
-      author: AuthorStore.getCurrentAuthor()
+      content: this.defaultContent()
     };
   },
 
@@ -38,7 +37,7 @@ export default React.createClass({
 
     // capture the current content in our inputs
     var content = {
-      author_id: this.state.author.id,
+      authorId: this.props.currentAuthor.id,
       content: this.state.content,
       format: this.state.format,
       timestamp: Moment.unix()
@@ -57,12 +56,13 @@ export default React.createClass({
   },
 
   render: function() {
+    var author = this.props.currentAuthor;
     return (
       <div className="media">
         <div className="media-left">
-          <Link to="author" params={{authorId: this.state.author.id}}>
-            <img className="media-object author-image" src={this.state.author.author_image}/>
-            </Link>
+          <Link to="author" params={{authorId: author.id}}>
+            <img className="media-object author-image" src={author.author_image}/>
+          </Link>
         </div>
         <div className="media-body content-creator">
           <Input type="textarea" placeholder="Say something witty..." value={this.state.content.content} onChange={this.contentChange} />

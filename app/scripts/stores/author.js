@@ -5,6 +5,7 @@ import AuthorActions from '../actions/author';
 var FIXTURE = {
   name: "Bert McGert",
   id: 1234,
+  bio: "I'm a fun loving guy who loves to learn",
   author_image: "images/bert.jpg",
   friend_request_count: 3,
   notifications: {}
@@ -31,11 +32,15 @@ var ALIST = [
 // author's we need to load with their content.
 export default Reflux.createStore({
 
-  currentAuthor: FIXTURE,
-
-  authorList: ALIST,
-
   init: function() {
+
+    // loggedIn is hack for dealing with a problem in react router
+    this.loggedIn = false;
+    this.currentAuthor = FIXTURE;
+    this.authorList = ALIST;
+
+    this.listenTo(AuthorActions.checkAuth, this.checkAuth);
+    this.listenTo(AuthorActions.login, this.logIn);
     this.listenTo(AuthorActions.login.completed, this.loginCompleted);
     this.listenTo(AuthorActions.login.failed, this.loginFailed);
     this.listenTo(AuthorActions.logout, this.logOut);
@@ -45,7 +50,7 @@ export default Reflux.createStore({
   // gets a list of all authors from the server for search purposes
   // TODO: ajax this
   getAuthorNameList: function () {
-    return this.trigger({authorList: this.authorList.map(function(author) {
+    this.trigger({authorList: this.authorList.map(function(author) {
       return author.name;
     })});
   },
@@ -59,15 +64,20 @@ export default Reflux.createStore({
     return null;
   },
 
-  getCurrentAuthor: function () {
-    return this.currentAuthor;
+  // check that our author is still logged in, update state of components
+  checkAuth: function () {
+    // TODO: ajax get author info rather than simply spoofing a successful auth
+    var author = this.currentAuthor;
+    this.loginCompleted(author);
   },
 
   // Handles logging the user in using the provided credentials
   // Also need to set our basic auth token somewhere
   loginCompleted: function(author) {
+    //TODO: store basic auth token in localStorage
+    this.loggedIn = true;
     this.currentAuthor = author;
-    this.trigger({"currentAuthor": author});
+    this.trigger({currentAuthor: author});
   },
 
   loginFailed: function(res) {
@@ -76,6 +86,6 @@ export default Reflux.createStore({
 
   logOut: function() {
     this.currentAuthor = undefined;
-    this.trigger( {"currentAuthor": undefined} );
+    this.trigger({currentAuthor: undefined});
   }
 });

@@ -1,43 +1,32 @@
 import React from 'react';
 import Reflux from 'reflux';
 import Check from 'check-types';
-import { Col } from 'react-bootstrap';
-import ContentViewer from './contentviewer';
+import { Col, Button } from 'react-bootstrap';
 import { State, Navigation } from 'react-router';
 
-import AuthorStore from '../stores/author';
-import ContentCreator from './contentcreator';
+import PostStore from '../stores/post';
+import PostActions from '../actions/post';
 import UserSearch from './usersearch';
+import ContentCreator from './contentcreator';
+import ContentViewer from './contentviewer';
 
 // Represents a collection of posts within the logged in user's social network.
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), State, Navigation],
+  mixins: [Reflux.connect(PostStore), State, Navigation],
 
   getInitialState: function() {
     return {
-      currentAuthor: AuthorStore.getCurrentAuthor()
+      posts: []
     };
   },
 
-  statics: {
-    // Because this is a static method that's called before render
-    // We have to use the global store get the state
-    willTransitionTo: function (transition, params) {
-      if (Check.undefined(AuthorStore.getCurrentAuthor())) {
-        transition.redirect('login');
-      }
-    }
+  componentDidMount: function () {
+    this.refresh();
   },
 
-  // If a user logs out and causes a state change within
-  // The current page then make sure render() doesn't update.
-  // A transition will eventually occure...
-  shouldComponentUpdate: function(nextProps, nextState) {
-    if (Check.undefined(nextState.currentAuthor)) {
-      return false;
-    }
-    return true;
+  refresh: function () {
+    PostActions.getTimeline(this.props.currentAuthor.id);
   },
 
   render: function() {
@@ -46,9 +35,10 @@ export default React.createClass({
         <UserSearch key="search" />
         <div className="jumbotron">
           <h3>Mood?</h3>
-          <ContentCreator authorId={this.state.currentAuthor.id} />
+          <ContentCreator currentAuthor={this.props.currentAuthor} />
         </div>
-        <ContentViewer authorId={this.state.currentAuthor.id} />
+        <h3>Recent Posts:<Button className="badge pull-right" onClick={this.refresh} type="submit">Refresh</Button></h3>
+        <ContentViewer currentAuthor={this.props.currentAuthor} posts={this.state.posts} />
       </Col>
     );
   }
