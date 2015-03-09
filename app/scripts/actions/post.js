@@ -7,5 +7,6 @@ export default Reflux.createActions([
   "newComment",
   "editComment",
   "deleteComment",
-  "refreshPosts"
+  "refreshPosts",
+  "getAuthorPosts"
 ]);

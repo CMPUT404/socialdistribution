@@ -5,6 +5,7 @@ import AuthorActions from '../actions/author';
 var FIXTURE = {
   name: "Bert McGert",
   id: 1234,
+  bio: "I'm a fun loving guy who loves to learn",
   author_image: "images/bert.jpg",
   friend_request_count: 3,
   notifications: {}
@@ -36,6 +37,7 @@ export default Reflux.createStore({
   authorList: ALIST,
 
   init: function() {
+    this.listenTo(AuthorActions.refreshAuthor, this.refreshAuthor);
     this.listenTo(AuthorActions.login, this.logIn);
     this.listenTo(AuthorActions.logout, this.logOut);
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
@@ -44,7 +46,7 @@ export default Reflux.createStore({
   // gets a list of all authors from the server for search purposes
   // TODO: ajax this
   getAuthorNameList: function () {
-    return this.trigger({authorList: this.authorList.map(function(author) {
+    this.trigger({authorList: this.authorList.map(function(author) {
       return author.name;
     })});
   },
@@ -58,8 +60,9 @@ export default Reflux.createStore({
     return null;
   },
 
-  getCurrentAuthor: function () {
-    return this.currentAuthor;
+  // check that our author is still logged in, update state of components
+  refreshAuthor: function () {
+    this.trigger({currentAuthor: this.currentAuthor});
   },
 
   // Handles logging the user in using the provided credentials
@@ -70,6 +73,6 @@ export default Reflux.createStore({
 
   logOut: function() {
     this.currentAuthor = undefined;
-    this.trigger( {"currentAuthor": undefined} );
+    this.trigger({currentAuthor: undefined});
   }
 });

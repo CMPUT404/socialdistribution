@@ -13,6 +13,7 @@ export default Reflux.createStore({
     this.listenTo(PostActions.newPost, this.newPost);
     this.listenTo(PostActions.newComment, this.newComment);
     this.listenTo(PostActions.refreshPosts, this.refreshPosts);
+    this.listenTo(PostActions.getAuthorPosts, this.getAuthorPosts);
   },
 
   // Handles fetching posts based on query.
@@ -24,6 +25,19 @@ export default Reflux.createStore({
   refreshPosts: function (query) {
     //TODO: ajax
     this.trigger({"posts": this.orderPosts(this.posts) });
+  },
+
+  // used to find specific author posts for author views
+  getAuthorPosts: function (authorId) {
+    //TODO: ajax
+    // this is just temporary for testing
+    var authorPosts = [];
+    for(var value of this.posts.values()) {
+      if (value.author_id == authorId) {
+        authorPosts.push(value);
+      }
+    }
+    this.trigger({posts: authorPosts});
   },
 
   // Used to mock data out

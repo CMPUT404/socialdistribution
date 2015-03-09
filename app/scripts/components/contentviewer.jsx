@@ -14,7 +14,9 @@ export default React.createClass({
   mixins: [Reflux.connect(PostStore)],
 
   getInitialState: function() {
-    return { posts: new Map() };
+    return {
+      posts: new Map()
+    };
   },
 
   // when the component is loaded in the browser this is called automatically
@@ -24,33 +26,32 @@ export default React.createClass({
   },
 
   refresh: function() {
-    var query = {author_id: this.props.authorId, author_only: false};
-    if (this.props.isProfile) {
-      query.author_only = true;
+    if (this.props.isAuthorView) {
+      PostActions.getAuthorPosts(this.props.author.id);
+    } else {
+      PostActions.getTimeline(this.props.);
     }
-
-    PostActions.refreshPosts(query);
   },
 
   render: function() {
     var posts = [];
-
+    var author = this.props.author;
     // create an array of posts or comments
     this.state.posts.forEach(function (post, id) {
       posts.push(
-                <div className="panel panel-default" key={id}>
-                  <div className="panel-body">
-                    <ul className="media-list">
-                      <li className="media">
-                        <Content data={post} isPost={true} />
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="panel-footer">
-                    <ContentCreator key="comment-creator" post={post} forComment={true} />
-                  </div>
-                </div>
-                );
+        <div className="panel panel-default" key={id}>
+          <div className="panel-body">
+            <ul className="media-list">
+              <li className="media">
+                <Content data={post} isPost={true} />
+              </li>
+            </ul>
+          </div>
+          <div className="panel-footer">
+            <ContentCreator key="comment-creator" author={author} post={post} forComment={true} />
+          </div>
+        </div>
+      );
     });
 
     return (

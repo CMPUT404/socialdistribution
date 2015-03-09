@@ -5,27 +5,21 @@ import { NavItemLink } from 'react-router-bootstrap';
 import { Navbar, Nav, NavItem} from 'react-bootstrap';
 
 import UserSearch from './usersearch';
-import AuthorStore from '../stores/author';
+import AuthorActions from '../actions/author';
 
 //TODO: Display the logged in author name with author_image in the navbar.
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), Navigation],
-
-  getInitialState: function() {
-    return {
-      currentAuthor: AuthorStore.getCurrentAuthor()
-    };
-  },
+  mixins: [Navigation],
 
   logOut: function(evt) {
     evt.preventDefault();
-    AuthorStore.logOut();
+    AuthorActions.logOut();
     this.transitionTo('login');
   },
 
   render: function() {
-    var currentAuthor  = this.state.currentAuthor;
+    var currentAuthor  = this.props.author;
     var navList;
 
     if (currentAuthor) {

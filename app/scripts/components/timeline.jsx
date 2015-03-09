@@ -6,6 +6,7 @@ import ContentViewer from './contentviewer';
 import { State, Navigation } from 'react-router';
 
 import AuthorStore from '../stores/author';
+import AuthorActions from '../actions/author';
 import ContentCreator from './contentcreator';
 import UserSearch from './usersearch';
 
@@ -16,7 +17,7 @@ export default React.createClass({
 
   getInitialState: function() {
     return {
-      currentAuthor: AuthorStore.getCurrentAuthor()
+      currentAuthor: {}
     };
   },
 
@@ -24,10 +25,11 @@ export default React.createClass({
     // Because this is a static method that's called before render
     // We have to use the global store get the state
     willTransitionTo: function (transition, params) {
-      if (Check.undefined(AuthorStore.getCurrentAuthor())) {
-        transition.redirect('login');
-      }
     }
+  },
+
+  componentDidMount: function () {
+    AuthorActions.refreshAuthor();
   },
 
   // If a user logs out and causes a state change within
@@ -37,7 +39,7 @@ export default React.createClass({
     if (Check.undefined(nextState.currentAuthor)) {
       return false;
     }
-    return true
+    return true;
   },
 
   render: function() {
@@ -46,9 +48,9 @@ export default React.createClass({
         <UserSearch key="search" />
         <div className="jumbotron">
           <h3>Mood?</h3>
-          <ContentCreator authorId={this.state.currentAuthor.id} />
+          <ContentCreator author={this.state.currentAuthor} />
         </div>
-        <ContentViewer authorId={this.state.currentAuthor.id} />
+        <ContentViewer author={this.state.currentAuthor} />
       </Col>
     );
   }
