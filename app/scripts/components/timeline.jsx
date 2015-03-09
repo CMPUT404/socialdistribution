@@ -37,7 +37,7 @@ export default React.createClass({
     if (Check.undefined(nextState.currentAuthor)) {
       return false;
     }
-    return true
+    return true;
   },
 
   render: function() {
