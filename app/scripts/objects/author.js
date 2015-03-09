@@ -2,7 +2,7 @@ import Check from 'check-types';
 
 export default class {
 
-  constructor(data) {
+  constructor(data, subscriptionStore) {
 
     if (Check.emptyObject(data)) {
       throw "Empty data object passed to Author constructor";
@@ -14,10 +14,18 @@ export default class {
     this.bio = data.bio;
     this.image = data.image;
     this.notifications = data.notifications;
+    this.subscriptionCount = data.subscriptions.length;
+    this.subscriptionStore = subscriptionStore;
 
-    this.subscriptions = new Map();
+    // create or update list of subscriptions for each author this author is
+    // subscribed to
     for (let authorId of data.subscriptions) {
-      this.subscriptions.set(authorId, true);
+      var subscriptions = this.subscriptionStore.get(authorId);
+      if (Check.undefined(subscriptions)) {
+        this.subscriptionStore.set(authorId, [this.id]);
+      } else {
+        subscriptions.push(this.id);
+      }
     }
   }
 
@@ -39,27 +47,53 @@ export default class {
   }
 
   follows (author) {
-    return this.subscriptions.has(author.id);
-  }
+    var subscriptions = this.subscriptionStore.get(author.id);
 
-  subscribeTo (author) {
-    this.subscriptions.set(author.id, true);
-  }
+    // if author has no subscriptions then nope
+    if (Check.undefined(subscriptions)) {
+      return false;
+    }
 
-  unsubscribeFrom (author) {
-    this.subscriptions.delete(author.id);
-  }
-
-  getSubscriptionCount () {
-    return this.subscriptions.length;
-  }
-
-  findAuthorById (authors, id) {
-    for (let author of authors) {
-      if (author.id == id) {
+    // otherwise try and find it in the list
+    for (let subscriberId of subscriptions) {
+      if (subscriberId == this.id) {
         return true;
       }
     }
     return false;
+  }
+
+  subscribeTo (author) {
+    var subscriptions = this.subscriptionStore.get(author.id);
+    if (Check.undefined(subscriptions)) {
+      this.subscriptionStore.set(author.id, [this.id]);
+    } else {
+      subscriptions.push(this.id);
+    }
+    this.subscriptionCount++;
+  }
+
+  unsubscribeFrom (author) {
+    var subscriptions = this.subscriptionStore.get(author.id);
+
+    // remove the author id using splice
+    var index = subscriptions.indexOf(this.id);
+    subscriptions.splice(index, 1);
+    this.subscriptionCount--;
+  }
+
+  getSubscriptions () {
+    return this.subscriptionStore.get(this.id);
+  }
+
+  getSubscriptionCount() {
+    return this.subscriptionCount;
+  }
+
+  // This one we can't track through the Author because subscriptions are
+  // coming from outside
+  getSubscriberCount () {
+    var subscriptions = this.getSubscriptions();
+    return Check.undefined(subscriptions) ? 0 : subscriptions.length;
   }
 }

@@ -29,7 +29,7 @@ mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
   getInitialState: function() {
     return {
       displayAuthor: {},
-      posts: []
+      userPosts: []
     };
   },
 
@@ -70,6 +70,7 @@ mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
             <h4 className="media-heading">{this.state.displayAuthor.name}</h4>
             <p><strong>Bio:</strong> {this.state.displayAuthor.bio}</p>
             <p><strong>Following:</strong> {this.state.displayAuthor.getSubscriptionCount()}</p>
+            <p><strong>Followers:</strong> {this.state.displayAuthor.getSubscriberCount()}</p>
             <p><a href={this.state.displayAuthor.github} target="_blank">Github</a></p>
             {follow}
           </div>

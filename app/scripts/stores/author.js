@@ -43,7 +43,10 @@ export default Reflux.createStore({
   init: function() {
 
     this.currentAuthor = {};
-    this.authorList = this.getAuthors();
+    this.authorList = [];
+    this.subscriptionStore = new Map();
+
+    this.getAuthors();
 
     this.listenTo(AuthorActions.checkAuth, this.checkAuth);
     this.listenTo(AuthorActions.login.completed, this.loginCompleted);
@@ -57,10 +60,16 @@ export default Reflux.createStore({
 
   // TODO: ajax this
   getAuthors: function () {
-    var authorData = ALIST;
-    return authorData.map(function (author) {
-      return new Author(author);
-    });
+    var authorListData = ALIST;
+    for (let author of authorListData) {
+      this.addAuthorToList(author);
+    }
+  },
+
+  // call this to cache an author in the author list. Also handles updating
+  // updating the subscriptionStore
+  addAuthorToList: function (authorData) {
+    this.authorList.push(new Author(authorData, this.subscriptionStore));
   },
 
   // gets a list of all authors from the server for search purposes
@@ -115,7 +124,7 @@ export default Reflux.createStore({
   // check that our author is still logged in, update state of components
   checkAuth: function () {
     // TODO: ajax get author info rather than simply spoofing a successful auth
-    var author = new Author(this.authorList[0]);
+    var author = this.authorList[0];
     if (author) {
       this.loginCompleted(author);
     }
