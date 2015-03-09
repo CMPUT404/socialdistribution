@@ -6,7 +6,7 @@ class Post(models.Model):
     Post
     """
     text = models.TextField(blank=False)
-    date = models.DateField(auto_now_add=True, editable = False)
+    date = models.DateTimeField(auto_now_add=True, editable = False)
     public = models.BooleanField(null = False, default = False)
     fof = models.BooleanField(null = False, default = False)
     image = models.ImageField(null=True, blank=True)
@@ -19,5 +19,5 @@ class Comment(models.Model):
     A comment's privacy is inherited from the Post public attribute
     """
     text = models.TextField(blank=False)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
     post = models.ForeignKey('Post')
