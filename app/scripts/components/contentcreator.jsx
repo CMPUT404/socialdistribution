@@ -12,9 +12,7 @@ import PostActions from '../actions/post';
 export default React.createClass({
 
   getInitialState: function() {
-    return {
-      content: this.defaultContent()
-    };
+    return this.defaultContent();
   },
 
   defaultContent: function () {
@@ -38,7 +36,7 @@ export default React.createClass({
     var content = {
       author: this.props.currentAuthor,
       content: this.state.content,
-      format: this.state.format,
+      type: this.state.format,
       timestamp: Moment.unix()
     };
 
@@ -64,11 +62,10 @@ export default React.createClass({
           </Link>
         </div>
         <div className="media-body content-creator">
-          <Input type="textarea" placeholder="Say something witty..." value={this.state.content.content} onChange={this.contentChange} />
-          <Input type="select" value={this.state.content.format} onChange={this.formatChange} buttonAfter={Submit}>
+          <Input type="textarea" placeholder="Say something witty..." value={this.state.content} onChange={this.contentChange} />
+          <Input type="select" value={this.state.format} onChange={this.formatChange} buttonAfter={Submit}>
             <option value="markdown">Markdown</option>
             <option value="text">Text</option>
-            <option value="HTML">HTML</option>
           </Input>
         </div>
       </div>
