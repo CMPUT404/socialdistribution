@@ -27,7 +27,7 @@ export default Reflux.createStore({
 
   getTimeline: function (authorId) {
     //TODO: ajax
-    this.trigger({posts: this.orderPosts(this.posts)});
+    this.pushPosts();
   },
 
   // used to find specific author posts for author views
@@ -77,7 +77,7 @@ export default Reflux.createStore({
             id: "2192",
             image: "images/david.jpg"
           },
-          content: "I dunno man, needs more Dub...",
+          content: "## I dunno man, needs more Dub...",
           type: "markdown",
           timestamp: "1424209498"
         }]
@@ -92,15 +92,20 @@ export default Reflux.createStore({
     this.posts.set(post["id"], post);
     // this.orderPosts();
     //TODO: ajax
-    this.trigger({"posts": this.orderPosts(this.posts) });
+    this.pushPosts();
   },
 
   newComment: function (post, comment) {
+    console.log(comment);
     // <Content> complains when this is missing, used as "key"
     comment.id = UUID.v4();
     post.comments.push(comment);
     //TODO: ajax
-    this.trigger({"posts": this.orderPosts(this.posts) });
+    this.pushPosts();
+  },
+
+  pushPosts: function () {
+    this.trigger({posts: this.orderPosts(this.posts)});
   },
 
   // sorts posts into reverse chronological order. Aka, newest first.

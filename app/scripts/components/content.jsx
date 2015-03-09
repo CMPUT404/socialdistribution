@@ -32,9 +32,9 @@ var Content = React.createClass({
     }
 
     if (this.props.data.type == 'markdown') {
-      content = Content.convertMarkdown(this.props.data.content);
+      content = <div dangerouslySetInnerHTML={{__html: Content.convertMarkdown(this.props.data.content)}} />;
     } else {
-      content = this.props.data.content;
+      content = <p>{this.props.data.content}</p>;
     }
 
     var timestamp = Moment.unix(this.props.data.timestamp).fromNow();
@@ -48,7 +48,7 @@ var Content = React.createClass({
         </div>
         <div className="media-body">
           <h4 className="media-heading">{this.props.data.author.name}</h4>
-          <p>{content}</p>
+          {content}
           <h6 className="timestamp">{timestamp}</h6>
           {comments}
         </div>
