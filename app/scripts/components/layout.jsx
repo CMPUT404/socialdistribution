@@ -41,12 +41,14 @@ export default React.createClass({
 
     // we do this so we can pass essentially a global prop into the app in the
     // form of the currently logged in user
+    // see http://stackoverflow.com/questions/27864720/react-router-pass-props-to-handler-component
+    var AppHandler = this.getRouteHandler({currentAuthor: this.state.currentAuthor});
     return (
       <Grid fluid={true}>
         <Navbar author={this.state.currentAuthor} />
         <Grid>
           <Col md={8} mdOffset={2}>
-            <AppHandler currentAuthor={this.state.currentAuthor} />
+            {AppHandler}
           </Col>
         </Grid>
       </Grid>
