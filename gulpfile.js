@@ -84,7 +84,8 @@ gulp.task('webserver', function() {
     .pipe($.webserver({
       host: '0.0.0.0', //change to 'localhost' to disable outside connections
       livereload: true,
-      open: true
+      open: true,
+      port: 1337
     }));
 });
 

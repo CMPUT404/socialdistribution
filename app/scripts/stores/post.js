@@ -12,7 +12,7 @@ export default Reflux.createStore({
     // Listeners
     this.listenTo(PostActions.newPost, this.newPost);
     this.listenTo(PostActions.newComment, this.newComment);
-    this.listenTo(PostActions.refreshPosts, this.refreshPosts);
+    this.listenTo(PostActions.getTimeline, this.getTimeline);
     this.listenTo(PostActions.getAuthorPosts, this.getAuthorPosts);
   },
 
@@ -22,9 +22,9 @@ export default Reflux.createStore({
     return this.defaultPosts();
   },
 
-  refreshPosts: function (query) {
+  getTimeline: function (authorId) {
     //TODO: ajax
-    this.trigger({"posts": this.orderPosts(this.posts) });
+    this.trigger({posts: this.orderPosts(this.posts)});
   },
 
   // used to find specific author posts for author views

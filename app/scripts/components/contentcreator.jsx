@@ -37,7 +37,7 @@ export default React.createClass({
 
     // capture the current content in our inputs
     var content = {
-      authorId: this.props.author.id,
+      authorId: this.props.currentAuthor.id,
       content: this.state.content,
       format: this.state.format,
       timestamp: Moment.unix()
@@ -56,7 +56,7 @@ export default React.createClass({
   },
 
   render: function() {
-    var author = this.props.author;
+    var author = this.props.currentAuthor;
     return (
       <div className="media">
         <div className="media-left">

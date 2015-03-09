@@ -33,12 +33,13 @@ var ALIST = [
 export default Reflux.createStore({
 
   currentAuthor: FIXTURE,
-
   authorList: ALIST,
 
   init: function() {
-    this.listenTo(AuthorActions.refreshAuthor, this.refreshAuthor);
+    this.listenTo(AuthorActions.checkAuth, this.checkAuth);
     this.listenTo(AuthorActions.login, this.logIn);
+    this.listenTo(AuthorActions.login.completed, this.loginCompleted);
+    this.listenTo(AuthorActions.login.failed, this.loginFailed);
     this.listenTo(AuthorActions.logout, this.logOut);
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
   },
@@ -61,14 +62,21 @@ export default Reflux.createStore({
   },
 
   // check that our author is still logged in, update state of components
-  refreshAuthor: function () {
+  checkAuth: function () {
+    // TODO: ajax get author info
     this.trigger({currentAuthor: this.currentAuthor});
   },
 
   // Handles logging the user in using the provided credentials
   // Also need to set our basic auth token somewhere
-  logIn: function() {
+  loginCompleted: function(author) {
+    //TODO: store basic auth token in localStorage
+    this.currentAuthor = author;
+    this.trigger({currentAuthor: author});
+  },
 
+  loginFailed: function(res) {
+    alertify.error("Login failed! " + res.error);
   },
 
   logOut: function() {
