@@ -1,8 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from external.models import Server
 from author.models import (
-    UserDetails,
+    Author,
     FriendRelationship,
     FriendRequest,
     FollowerRelationship )
@@ -13,9 +12,10 @@ from rest_framework.authtoken.models import Token
 
 c = Client()
 
-# Values to be inserted and checked in the UserDetails model
+# Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "gituser"
 BIO = "This is my witty biography!"
+HOST = "http://example.com/"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
@@ -44,9 +44,9 @@ def get_dict_response(response):
     """Returns a dictionary of the http response containing a list of ordered dictionaries"""
     return json.loads(json.dumps(response.data))
 
-class UserDetailsModelAPITests(TestCase):
+class AuthorModelAPITests(TestCase):
     """
-    Basic testing of the UserDetails model creation and database insertion
+    Basic testing of the Author model creation and database insertion
     """
     def setUp(self):
         """
@@ -60,13 +60,21 @@ class UserDetailsModelAPITests(TestCase):
         self.user = User.objects.create_user(**USER)
         self.user_a = User.objects.create_user(**USER_A)
         self.user_b = User.objects.create_user(**USER_B)
-        self.server = Server.objects.create(address='example.com')
-        self.user_details = UserDetails.objects.create(
+        self.author = Author.objects.create(
             user = self.user,
             github_username = GITHUB_USERNAME,
             bio = BIO,
-            server = self.server)
-
+            host = HOST)
+        self.author_a = Author.objects.create(
+            user = self.user_a,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST)
+        self.author_b = Author.objects.create(
+            user = self.user_b,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST)
 
         token, created = Token.objects.get_or_create(user=self.user_a)
         self.auth_headers = {
@@ -74,7 +82,7 @@ class UserDetailsModelAPITests(TestCase):
 
     def tearDown(self):
         """Remove all created objects from mock database"""
-        UserDetails.objects.all().delete()
+        Author.objects.all().delete()
         User.objects.all().delete()
         FriendRelationship.objects.all().delete()
         FriendRequest.objects.all().delete()
@@ -92,7 +100,7 @@ class UserDetailsModelAPITests(TestCase):
         self.assertEquals(user.email, EMAIL)
 
     def test_retrieve_details(self):
-        response = c.get('/author/%s' %self.user.username,
+        response = c.get('/author/%s' %self.author.id,
             content_type="application/json", **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
@@ -109,33 +117,33 @@ class UserDetailsModelAPITests(TestCase):
         self.assertEquals(response.status_code, 404)
 
     def test_retrieve_friends(self):
-        FriendRelationship.objects.create(friendor = self.user_a, friend = self.user)
-        FriendRelationship.objects.create(friendor = self.user_b, friend = self.user)
+        FriendRelationship.objects.create(friendor = self.author_a, friend = self.author)
+        FriendRelationship.objects.create(friendor = self.author_b, friend = self.author)
 
-        response = c.get('/author/friends/%s' %self.user.username)
+        response = c.get('/author/friends/%s' %self.author.id)
 
         self.assertEquals(response.status_code, 200)
-        self.usernames_in_response(response.data['friendors'])
+        self.users_in_response(response.data['friendors'])
 
     def test_retrieve_requests(self):
-        FriendRequest.objects.create(requestor = self.user_a, requestee = self.user)
-        FriendRequest.objects.create(requestor = self.user_b, requestee = self.user)
+        FriendRequest.objects.create(requestor = self.author_a, requestee = self.author)
+        FriendRequest.objects.create(requestor = self.author_b, requestee = self.author)
 
-        response = c.get('/author/friendrequests/%s' %self.user.username)
+        response = c.get('/author/friendrequests/%s' %self.author.id)
 
         self.assertEquals(response.status_code, 200)
-        self.usernames_in_response(response.data['requestors'])
+        self.users_in_response(response.data['requestors'])
 
     def test_retrieve_followers(self):
-        FollowerRelationship.objects.create(follower = self.user_a, followee = self.user)
-        FollowerRelationship.objects.create(follower = self.user_b, followee = self.user)
+        FollowerRelationship.objects.create(follower = self.author_a, followee = self.author)
+        FollowerRelationship.objects.create(follower = self.author_b, followee = self.author)
 
-        response = c.get('/author/followers/%s' %self.user.username, **self.auth_headers)
+        response = c.get('/author/followers/%s' %self.author.id, **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
-        self.usernames_in_response(response.data['followers'])
+        self.users_in_response(response.data['followers'])
 
-    def usernames_in_response(self, data, usernames=None):
+    def users_in_response(self, data, users=None):
         """
         Test to ensure that all usernames added to relationship are in the returned data
 
@@ -145,8 +153,10 @@ class UserDetailsModelAPITests(TestCase):
         data: list of usernames to be checked against
         """
 
-        if usernames == None:
-            usernames = [self.user_a.username, self.user_b.username]
+        if users == None:
+            users = [self.author_a.id, self.author_b.id]
 
-        for name in usernames:
-            self.assertTrue(name in data)
+        users = map( lambda x: str(x).replace('-', ''), users)
+
+        for name in users:
+            self.assertTrue(unicode(name) in data)

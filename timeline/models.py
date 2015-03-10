@@ -1,5 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import User
+from author.models import Author
+
+from uuidfield import UUIDField
+
 import json
 import ast
 # 100 = 'private'
@@ -64,12 +67,13 @@ class Post(models.Model):
     """
     Post
     """
+    id = UUIDField(auto = True, primary_key = True)
     text = models.TextField(blank=False)
     date = models.DateField(auto_now_add=True, editable = False)
     acl = models.OneToOneField(ACL)
     #acl = models.CharField(max_length=512, blank = False, default = DEFAULT_ACL)
     image = models.ImageField(null=True, blank=True)
-    user = models.ForeignKey(User, blank=False, editable = False)
+    author = models.ForeignKey(Author, blank=False, editable = False)
 
 
 class Comment(models.Model):
@@ -78,7 +82,8 @@ class Comment(models.Model):
 
     A comment's privacy is inherited from the Post public attribute
     """
+    id = UUIDField(auto = True, primary_key = True)
     text = models.TextField(blank=False)
     date = models.DateTimeField(auto_now_add=True, editable = False)
     post = models.ForeignKey('Post', related_name='comments')
-    user = models.ForeignKey(User, blank=False, editable = False)
+    author = models.ForeignKey(Author, blank=False, editable = False)

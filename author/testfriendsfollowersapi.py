@@ -1,8 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from external.models import Server
 from author.models import (
-    UserDetails,
+    Author,
     FriendRelationship,
     FriendRequest,
     FollowerRelationship )
@@ -14,9 +13,10 @@ from rest_framework.authtoken.models import Token
 
 c = Client()
 
-# Values to be inserted and checked in the UserDetails model
+# Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "gituser"
 BIO = "This is my witty biography!"
+HOST = "http://example.com/"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
@@ -45,9 +45,9 @@ def get_dict_response(response):
     """Returns a dictionary of the http response containing a list of ordered dictionaries"""
     return json.loads(json.dumps(response.data))
 
-class UserDetailsModelAPITests(TestCase):
+class AuthorModelAPITests(TestCase):
     """
-    Basic testing of the UserDetails model creation and database insertion
+    Basic testing of the Author model creation and database insertion
     """
     def setUp(self):
         """
@@ -61,12 +61,21 @@ class UserDetailsModelAPITests(TestCase):
         self.user = User.objects.create_user(**USER)
         self.user_a = User.objects.create_user(**USER_A)
         self.user_b = User.objects.create_user(**USER_B)
-        self.server = Server.objects.create(address='example.com')
-        self.user_details = UserDetails.objects.create(
+        self.author = Author.objects.create(
             user = self.user,
             github_username = GITHUB_USERNAME,
             bio = BIO,
-            server = self.server)
+            host = HOST)
+        self.author_a = Author.objects.create(
+            user = self.user_a,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST)
+        self.author_b = Author.objects.create(
+            user = self.user_b,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST)
 
         token, created = Token.objects.get_or_create(user=self.user_a)
         self.auth_headers_user_a = {
@@ -78,7 +87,7 @@ class UserDetailsModelAPITests(TestCase):
 
     def tearDown(self):
         """Remove all created objects from mock database"""
-        UserDetails.objects.all().delete()
+        Author.objects.all().delete()
         User.objects.all().delete()
         FriendRelationship.objects.all().delete()
         FriendRequest.objects.all().delete()
@@ -99,138 +108,139 @@ class UserDetailsModelAPITests(TestCase):
         """
         Follow a user
         """
-        post = {'follower':self.user_b.username}
-        response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
+        post = {'follower':self.author_b.id}
+        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
 
     def test_new_follower_added(self):
         """
         Ensure the follower relationship was created
         """
-        post = {'follower':self.user_b.username}
-        response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
+        post = {'follower':self.author_b.id}
+        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.usernames_in_response(response.data['followers'], [self.user_b.username])
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.users_in_response(response.data['followers'], [self.author_b.id])
 
     def test_not_friends_yet(self):
         """
         Ensure the newly followed user is not yet a friend of the follower
         """
-        post = {'follower':self.user_b.username}
-        response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
+        post = {'follower':self.author_b.id}
+        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.assertTrue(self.user_b.username not in response.data['friendors'])
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.users_in_response(response.data['followers'], [self.author_b.id])
+        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.assertTrue(unicode(self.author_b.id) not in response.data['friendors'])
 
     def test_follow_back(self):
         """
         Follow back the new follower and ensure a new friend relationship
         is created
         """
-        post = {'follower':self.user_b.username}
-        response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
+        post = {'follower':self.author_b.id}
+        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_a)
-        self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_a)
-        self.assertTrue(self.user_b.username not in response.data['friendors'])
-        post = {'follower':self.user_a.username}
-        response = c.post('/author/followers/%s' %self.user_b.username, post, **self.auth_headers_user_a)
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_a)
+        self.users_in_response(response.data['followers'], [self.author_b.id])
+        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_a)
+        self.assertTrue(self.author_b.id not in response.data['friendors'])
+        post = {'follower':self.author_a.id}
+
+        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 201)
 
     def test_user_a_now_friend(self):
         """
         Ensure the users who have now both followed each other are friends
         """
-        post = {'follower':self.user_b.username}
-        response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
+        post = {'follower':self.author_b.id}
+        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.assertTrue(self.user_b.username not in response.data['friendors'])
-        post = {'follower':self.user_a.username}
-        response = c.post('/author/followers/%s' %self.user_b.username, post, **self.auth_headers_user_a)
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.users_in_response(response.data['followers'], [self.author_b.id])
+        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
+        post = {'follower':self.author_a.id}
+        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/friends/%s' %self.user_b.username, **self.auth_headers_user_a)
+        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_a.username in response.data['friendors'])
+        self.assertTrue(str(self.author_a.id) in response.data['friendors'])
 
 
     def test_users_now_friends_not_followers(self):
         """
         Ensure the users who have now both followed each other are friends
         """
-        post = {'follower':self.user_b.username}
-        response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
+        post = {'follower':self.author_b.id}
+        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.assertTrue(self.user_b.username not in response.data['friendors'])
-        post = {'follower':self.user_a.username}
-        response = c.post('/author/followers/%s' %self.user_b.username, post, **self.auth_headers_user_a)
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.users_in_response(response.data['followers'], [self.author_b.id])
+        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
+        post = {'follower':self.author_a.id}
+        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/friends/%s' %self.user_b.username, **self.auth_headers_user_a)
+        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_a.username in response.data['friendors'])
-        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
+        self.assertTrue(str(self.author_a.id) in response.data['friendors'])
+        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_b.username in response.data['friendors'])
+        self.assertTrue(str(self.author_b.id) in response.data['friendors'])
         # ensure neither friend is still following the other
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.assertTrue(self.user_b.username not in response.data['followers'])
-        response = c.get('/author/followers/%s' %self.user_b.username, **self.auth_headers_user_a)
-        self.assertTrue(self.user_a.username not in response.data['followers'])
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.assertTrue(self.author_b.id not in response.data['followers'])
+        response = c.get('/author/followers/%s' %self.author_b.id, **self.auth_headers_user_a)
+        self.assertTrue(self.author_a.id not in response.data['followers'])
 
 
     def test_unfollow_after_friendship(self):
-        post = {'follower':self.user_b.username}
-        response = c.post('/author/followers/%s' %self.user_a.username, post, **self.auth_headers_user_b)
+        post = {'follower':self.author_b.id}
+        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.usernames_in_response(response.data['followers'], [self.user_b.username])
-        response = c.get('/author/friends/%s' %self.user_a.username)
-        self.assertTrue(self.user_b.username not in response.data['friendors'])
-        post = {'follower':self.user_a.username}
-        response = c.post('/author/followers/%s' %self.user_b.username, post, **self.auth_headers_user_a)
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.users_in_response(response.data['followers'], [self.author_b.id])
+        response = c.get('/author/friends/%s' %self.author_a.id)
+        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
+        post = {'follower':self.author_a.id}
+        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/friends/%s' %self.user_b.username, **self.auth_headers_user_a)
+        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_a.username in response.data['friendors'])
-        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
+        self.assertTrue(str(self.author_a.id) in response.data['friendors'])
+        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_b.username in response.data['friendors'])
+        self.assertTrue(str(self.author_b.id) in response.data['friendors'])
         # ensure neither friend is still following the other
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
-        self.assertTrue(self.user_b.username not in response.data['followers'])
-        response = c.get('/author/followers/%s' %self.user_b.username, **self.auth_headers_user_a)
-        self.assertTrue(self.user_a.username not in response.data['followers'])
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
+        self.assertTrue(str(self.author_b.id) not in response.data['followers'])
+        response = c.get('/author/followers/%s' %self.author_b.id, **self.auth_headers_user_a)
+        self.assertTrue(str(self.author_a.id) not in response.data['followers'])
         # user_a unfollow user_b
         # ensure friendship is now gone and following relationship
         # exists as user_b show now follow user_a again
-        post = {"follower":self.user_a.username}
-        response = c.delete('/author/followers/%s' %self.user_b, post, **self.auth_headers_user_a)
+        post = {"follower":str(self.author_a.id)}
+        response = c.delete('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 200)
-        response = c.get('/author/friends/%s' %self.user_b.username, **self.auth_headers_user_a)
+        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_a.username not in response.data['friendors'])
-        response = c.get('/author/friends/%s' %self.user_a.username, **self.auth_headers_user_b)
+        self.assertTrue(str(self.author_a.id) not in response.data['friendors'])
+        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_b.username not in response.data['friendors'])
+        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
         # but user_b should now follow user_a again
-        response = c.get('/author/followers/%s' %self.user_a.username, **self.auth_headers_user_b)
+        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_b.username in response.data['followers'])
+        self.assertTrue(str(self.author_b.id) in response.data['followers'])
         # but user_a should not be following user_b
-        response = c.get('/author/followers/%s' %self.user_b.username, **self.auth_headers_user_a)
+        response = c.get('/author/followers/%s' %self.author_b.id, **self.auth_headers_user_a)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(self.user_a.username not in response.data['followers'])
+        self.assertTrue(str(self.author_a.id) not in response.data['followers'])
 
-    def usernames_in_response(self, data, usernames=None):
+    def users_in_response(self, data, users=None):
         """
         Test to ensure that all usernames added to relationship are in the returned data
 
@@ -240,8 +250,10 @@ class UserDetailsModelAPITests(TestCase):
         data: list of usernames to be checked against
         """
 
-        if usernames == None:
-            usernames = [self.user_a.username, self.user_b.username]
+        if users == None:
+            users = [self.author_a.id, self.author_b.id]
 
-        for name in usernames:
-            self.assertTrue(name in data)
+        users = map( lambda x: str(x).replace('-', ''), users)
+
+        for name in users:
+            self.assertTrue(unicode(name) in data)
