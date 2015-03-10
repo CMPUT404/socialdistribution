@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import Http404
 
 from author.models import User
-from author.models import UserDetails, FriendRelationship
+from author.models import Author, FriendRelationship
 
 from timeline.models import Post, Comment, ACL
 from timeline.serializers import (
@@ -46,9 +46,10 @@ class CreatePost(APIView):
 
     def post(self, request, format=None):
         data = json.loads(request.body)
+        author = Author.objects.get(user = request.user)
         # acl_data = data.get('acl', {"permissions": 300,"shared_users": []})
         # acl = ACL.objects.create(**acl_data)
-        serializer = PostSerializer(data = data, context={'user':request.user})
+        serializer = PostSerializer(data = data, context={'author':author})
         # acl_serializer = ACLSerializer(data = request.data['acl'])
         if serializer.is_valid(raise_exception = True):
             post = serializer.create(serializer.validated_data)
@@ -91,8 +92,9 @@ class GetDeleteAddComments(APIView):
         """
         serializer = CommentSerializer(data = request.data)
         if serializer.is_valid(raise_exception = True):
+            author = Author.objects.get(user = request.user)
             post = Post.objects.get(id=postid)
-            serializer.save(post = post, user=request.user)
+            serializer.save(post = post, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors)
 
@@ -112,22 +114,23 @@ class GetPosts(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated, Custom,)
 
-    def get_queryset(self, username, postid):
+    def get_queryset(self, id, postid):
         """
         This view should return a list of all the posts
         for the specified user.
         """
         if postid:
-            result = Post.objects.filter(user__username=username, id=postid)
+            result = Post.objects.filter(author__id=id, id=postid)
         else:
-            result = Post.objects.filter(user__username=username)
+            result = Post.objects.filter(author__id=id)
+
         for post in result:
             self.check_object_permissions(self.request, post)
         return result
 
-    def get(self, request, username, postid=None, format=None):
+    def get(self, request, id, postid=None, format=None):
         # return multiple posts
-        posts = self.get_queryset(username, postid)
+        posts = self.get_queryset(id, postid)
         serializer = PostSerializer(posts, many=True)
 
         # Insert mock external server data into the response

@@ -1,10 +1,9 @@
 from rest_framework import permissions
-from django.contrib.auth.models import User
-from author.models import FriendRelationship
-
+from author.models import Author, FriendRelationship
 
 def isAuthor(request, obj):
-    return obj.user.username == str(request.user)
+    author = Author.objects.get(user = request.user)
+    return obj.author.id == author.id
 
 def isPublic(request, obj):
     # if obj.acl["permissions"] == 200:
@@ -12,9 +11,11 @@ def isPublic(request, obj):
 
 def isFriend(request, obj):
     # if obj.acl["permissions"] == 300:
-    relationships = FriendRelationship.objects.filter(friendor__username = str(obj.user.username))
+    author = Author.objects.get(user = request.user)
+    relationships = FriendRelationship.objects.filter(friendor__id = obj.author.id)
+
     for relationship in relationships:
-        if (str(request.user) == relationship.friend.username):
+        if (author.id == relationship.friend.id):
             return True
     return False
 
@@ -24,20 +25,24 @@ def isFriendOnSameHost(request, obj):
 
 def isFoF(request, obj):
     # if obj.acl["permissions"] == 302:
-    f_relationships = FriendRelationship.objects.filter(friendor__username = str(obj.user.username))
+    author = Author.objects.get(user = request.user)
+    f_relationships = FriendRelationship.objects.filter(friendor__id = obj.author.id)
     for relationship in f_relationships:
-        if (str(request.user) == relationship.friend.username):
+        if (author.id == relationship.friend.id):
             return True
-        fof_relationships = FriendRelationship.objects.filter(friendor__username = str(relationship.friend.username))
+        fof_relationships = FriendRelationship.objects.filter(friendor__id = relationship.friend.id)
         for relationship in fof_relationships:
-            if (str(request.user) == relationship.friend.username):
+            if (author.id == relationship.friend.id):
                 return True
     return False
 
 def isPrivateList(request, obj):
     # if obj.acl["permissions"] == 302:
-    if str(request.user) in obj.acl.shared_users:
+    author = Author.objects.get(user = request.user)
+
+    if str(author.id) in obj.acl.shared_users:
         return True
+
     return False
 
 

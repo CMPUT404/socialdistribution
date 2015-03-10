@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from author.models import (
-    UserDetails,
+    Author,
     FollowerRelationship,
     FriendRelationship,
     FriendRequest )
@@ -34,7 +34,7 @@ class RegistrationSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         """
-        Returns a created UserDetails model after saving to the database
+        Returns a created Author model after saving to the database
         """
         try:
             user = User(
@@ -48,37 +48,30 @@ class RegistrationSerializer(serializers.Serializer):
         except:
             raise serializers.ValidationError("Error creating User")
         else:
-            details = UserDetails(
+            author = Author(
                 user = user,
                 github_username = validated_data['github_username'],
                 bio = validated_data['bio']
             )
-            details.save()
+            author.save()
 
-            return details
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ('username', 'email', 'first_name', 'last_name')
+            return author
 
 class CompactAuthorSerializer(serializers.ModelSerializer):
-    id          = serializers.CharField(source='user.pk')
     displayname = serializers.CharField(source='user.username')
 
     class Meta:
-        model = UserDetails
+        model = Author
         fields = ('id', 'displayname', 'host', 'url')
 
 class AuthorSerializer(serializers.ModelSerializer):
-    id          = serializers.CharField(source='user.pk')
     displayname = serializers.CharField(source='user.username')
     email       = serializers.EmailField(source='user.email')
     first_name  = serializers.CharField(source='user.first_name')
     last_name   = serializers.CharField(source='user.last_name')
 
     class Meta:
-        model = UserDetails
+        model = Author
         fields = ('id', 'displayname', 'email', 'first_name', 'last_name', 'github_username', 'bio', 'host', 'url')
 
 class CompactUserSerializer(serializers.Serializer):
@@ -91,21 +84,21 @@ class CompactUserSerializer(serializers.Serializer):
 
 
 class FollowerRelationshipSerializer(serializers.ModelSerializer):
-    follower = UserSerializer(many=False, read_only=True)
+    follower = CompactUserSerializer(many=False, read_only=True)
 
     class Meta:
         model = FollowerRelationship
         fields = ('follower',)
 
 class FriendRelationshipSerializer(serializers.ModelSerializer):
-    friendor = UserSerializer(many=False, read_only=True)
+    friendor = CompactUserSerializer(many=False, read_only=True)
 
     class Meta:
         model = FriendRelationship
         fields = ('friendor',)
 
 class FriendRequestSerializer(serializers.ModelSerializer):
-    requestor = UserSerializer(many=False, read_only=True)
+    requestor = CompactUserSerializer(many=False, read_only=True)
 
     class Meta:
         model = FriendRequest

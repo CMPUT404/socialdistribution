@@ -5,50 +5,42 @@ from uuidfield import UUIDField
 
 # Consider just making a custom User model if using UUID
 # http://stackoverflow.com/questions/3641483/django-user-model-and-custom-primary-key-field
-class UserDetails(models.Model):
+class Author(models.Model):
     """
     Extends the existing Django User model as reccomended in the docs.
     https://docs.djangoproject.com/en/1.7/topics/auth/customizing/
     """
     user = models.OneToOneField(User)
-    github_username = models.CharField(max_length=40, blank=True)
+    id = UUIDField(auto = True, primary_key = True)
+    host = models.URLField(blank = False, null = False)
     bio = models.TextField(blank=False, null=False)
-    server = models.ForeignKey('external.Server', null=True, blank=True)
-
-    @property
-    def host(self):
-      if self.server:
-        return self.server.address
-      else:
-        return None
+    github_username = models.CharField(max_length=40, blank=True)
 
     @property
     def url(self):
-      if self.server.address:
-        return self.server.address + 'author/' + str(self.user.pk)
-      else:
-        return None
+      return self.host + 'author/' + str(self.user.pk)
+
 
 class FollowerRelationship(models.Model):
     """
     Follower
     """
     created_on = models.DateField(auto_now_add=True)
-    follower = models.ForeignKey(User, null=True, related_name='follower')
-    followee = models.ForeignKey(User, null=True, related_name='followee')
+    follower = models.ForeignKey(Author, null=True, related_name='follower')
+    followee = models.ForeignKey(Author, null=True, related_name='followee')
 
 class FriendRelationship(models.Model):
     """
     Friend
     """
     created_on = models.DateField(auto_now_add=True)
-    friendor = models.ForeignKey(User, null=True, related_name='friendor')
-    friend = models.ForeignKey(User, null=True, related_name='friend')
+    friendor = models.ForeignKey(Author, null=True, related_name='friendor')
+    friend = models.ForeignKey(Author, null=True, related_name='friend')
 
 class FriendRequest(models.Model):
     """
     Requests
     """
     created_on = models.DateField(auto_now_add=True)
-    requestee = models.ForeignKey(User, null=True, related_name='requestee')
-    requestor = models.ForeignKey(User, null=True, related_name='requestor')
+    requestee = models.ForeignKey(Author, null=True, related_name='requestee')
+    requestor = models.ForeignKey(Author, null=True, related_name='requestor')

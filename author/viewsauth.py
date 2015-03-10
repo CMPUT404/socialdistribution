@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from author.serializers import RegistrationSerializer, AuthorSerializer
-from author.models import UserDetails
+from author.models import Author
 
 """
 All views related to authentication
@@ -18,16 +18,16 @@ All views related to authentication
 
 class AuthorRegistration(APIView):
     """
-    Takes incoming JSON, validates it and builds a UserDetails/User Model
+    Takes incoming JSON, validates it and builds a Author/User Model
     """
 
     def post(self, request):
       serializer = RegistrationSerializer(data = request.DATA)
 
       if serializer.is_valid(raise_exception = True):
-          user_details = serializer.create(serializer.validated_data)
-          token, created = Token.objects.get_or_create(user=user_details.user)
-          serializer = AuthorSerializer(user_details)
+          author = serializer.create(serializer.validated_data)
+          token, created = Token.objects.get_or_create(user=author.user)
+          serializer = AuthorSerializer(author)
 
           return Response({'token': token.key, 'author': serializer.data}, status=status.HTTP_201_CREATED)
       else:
@@ -64,8 +64,8 @@ class Login(APIView):
       token, created = Token.objects.get_or_create(user=request.user)
       login(request, request.user)
 
-      details = UserDetails.objects.get(user = request.user)
-      serializer = AuthorSerializer(details)
+      author = Author.objects.get(user = request.user)
+      serializer = AuthorSerializer(author)
 
       return Response({'token': token.key, 'author': serializer.data})
 

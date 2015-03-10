@@ -4,11 +4,11 @@ from timeline import views
 
 urlpatterns = [
 
-    # GET  /author/:username/posts
-    url(r'^(?P<username>[0-9a-zA-Z_]+)/posts/?$', views.GetPosts.as_view()),
+    # GET  /author/:id/posts
+    url(r'^(?P<id>[0-9a-zA-Z_]+)/posts/?$', views.GetPosts.as_view()),
 
-    # GET for single post /author/:username/posts/:postid
-    url(r'^(?P<username>[0-9a-zA-Z_]+)/posts/(?P<postid>[0-9a-zA-Z_]+)/?$', views.GetPosts.as_view()),
+    # GET for single post /author/:id/posts/:postid
+    url(r'^(?P<id>[0-9a-zA-Z_]+)/posts/(?P<postid>[0-9a-zA-Z_]+)/?$', views.GetPosts.as_view()),
 
     # POST /author/post
     url(r'^post/?$', views.CreatePost.as_view()),

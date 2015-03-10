@@ -3,7 +3,7 @@ from timeline.models import Post, Comment, ACL
 import time
 import datetime
 from copy import deepcopy
-from author.serializers import CompactUserSerializer
+from author.serializers import CompactAuthorSerializer
 
 
 class UnixDateTimeField(serializers.DateTimeField):
@@ -25,12 +25,12 @@ class ACLSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = CompactUserSerializer(many=False, read_only=True)
+    author = CompactAuthorSerializer(many=False, read_only=True)
     # post = PostSerializer(many=False, read_only=True)
     date = UnixDateTimeField(read_only=True)
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'date', 'user')
+        fields = ('id', 'text', 'date', 'author')
         read_only_fields = ('date')
 
 
@@ -53,7 +53,7 @@ class PostSerializer(serializers.ModelSerializer):
     Only for retrieval. Should not be used for insertion.
     """
     acl = ACLSerializer(many=False)
-    user = CompactUserSerializer(many=False, read_only=True)
+    author = CompactAuthorSerializer(many=False, read_only=True)
     date = UnixDateTimeField(read_only=True)
     # text = serializers.CharField()
     comments = CommentSerializer(read_only=True, many=True)
@@ -61,7 +61,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('user', 'id', 'text', 'date', 'image', 'comments', 'acl')
+        fields = ('author', 'id', 'text', 'date', 'image', 'comments', 'acl')
 
         # Fields that must not be set in HTTP request body
         read_only_fields = ('user' 'id', 'date', 'comments',)
@@ -70,6 +70,5 @@ class PostSerializer(serializers.ModelSerializer):
         data = deepcopy(validated_data)
         acl_data = data.pop('acl', {"permissions": 300,"shared_users": []})
         acl_object = ACL.objects.create(**acl_data)
-        post = Post.objects.create(acl=acl_object, user=self.context['user'], **data)
+        post = Post.objects.create(acl=acl_object, author=self.context['author'], **data)
         return post
-

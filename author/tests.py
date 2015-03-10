@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 
-from author.models import UserDetails
+from author.models import Author
 
 import uuid
 
@@ -19,7 +19,7 @@ FIRST_NAME = "Michael"
 LAST_NAME = "Raypold"
 EMAIL = "raypold@ualberta.ca"
 
-class UserDetailsDatabaseTestCase(TestCase):
+class AuthorDatabaseTestCase(TestCase):
     """
     Basic testing of the Author model creation and database insertion
     """
@@ -34,7 +34,7 @@ class UserDetailsDatabaseTestCase(TestCase):
 
     def tearDown(self):
         """Remove all created objects from mock database"""
-        UserDetails.objects.all().delete()
+        Author.objects.all().delete()
         User.objects.all().delete()
 
     def test_set_up(self):
@@ -50,16 +50,16 @@ class UserDetailsDatabaseTestCase(TestCase):
 
     def test_author_create_insert(self):
         try:
-            user_details = UserDetails.objects.create(user = self.user,
+            author = Author.objects.create(user = self.user,
                 github_username = GITHUB_USERNAME,
                 bio = BIO)
         except:
             self.assertFalse(True, 'Author object not created and inserted into db')
 
     def test_author_delete_by_id(self):
-        user_details = UserDetails.objects.create(user = self.user)
+        author = Author.objects.create(user = self.user)
         try:
-            query = UserDetails.objects.filter(id = user_details.id).delete()
+            query = Author.objects.filter(id = author.id).delete()
             self.assertEquals(query, None)
         except:
             self.assertFalse(True, 'Author deletion failed')

@@ -1,5 +1,5 @@
 import json
-from backend.utils import UsernameNotFound
+from backend.utils import UserNotFound
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
@@ -10,7 +10,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 
 from author.models import (
-    UserDetails,
+    Author,
     FollowerRelationship,
     FriendRelationship,
     FriendRequest )
@@ -29,14 +29,14 @@ def create_relationship_list(queryset, lookup):
     return relationships
 
 # Keeping it DRY
-def get_user(username):
+def get_author(id):
     try:
-        return User.objects.get(username = username)
+        return Author.objects.get(id = id)
     except:
         return None
 
-# GET /author/:username
-class GetUserDetails(APIView):
+# GET /author/:id
+class GetAuthorDetails(APIView):
     """
     Retrieve user details, given a valid username.
 
@@ -55,17 +55,16 @@ class GetUserDetails(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        user = get_user(kwargs['username'])
+        author = get_author(kwargs['id'])
 
-        if user:
-            details = UserDetails.objects.get(user = user)
-            serializer = AuthorSerializer(details)
+        if author:
+            serializer = AuthorSerializer(author)
 
             return Response(serializer.data, status = status.HTTP_200_OK)
         else:
-            raise UsernameNotFound()
+            raise UserNotFound()
 
-# GET /author/friends/:username
+# GET /author/friends/:id
 class GetAuthorFriends(ListAPIView):
     """
     Returns a JSON object containing a friend and a list of friendors
@@ -82,19 +81,19 @@ class GetAuthorFriends(ListAPIView):
 
     def list(self, request, *args, **kwargs):
 
-        user = get_user(kwargs['username'])
+        author = get_author(kwargs['id'])
 
-        if user:
+        if author:
             # Retrieve only the usernames of the friendors for a given friend
-            friendors = FriendRelationship.objects.filter(friend = user)\
-                .values('friendor__username')
+            friendors = FriendRelationship.objects.filter(friend = author)\
+                .values('friendor__id')
 
-            relations = create_relationship_list(friendors, 'friendor__username')
-            return Response({'friend':user.username, 'friendors':relations})
+            relations = create_relationship_list(friendors, 'friendor__id')
+            return Response({'friend':author.id, 'friendors':relations})
         else:
-            raise UsernameNotFound()
+            raise UserNotFound()
 
-# GET /author/followers/:username
+# GET /author/followers/:id
 class GetAuthorFollowers(APIView):
     """
     Returns a JSON object containing a followee and a list of followers
@@ -112,20 +111,20 @@ class GetAuthorFollowers(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        user = get_user(kwargs['username'])
-        if user:
+        author = get_author(kwargs['id'])
+        if author:
             # Retrieve only the usernames of the followers for a given user
-            followers = FollowerRelationship.objects.filter(followee = user)\
-                .values('follower__username')
+            followers = FollowerRelationship.objects.filter(followee = author)\
+                .values('follower__id')
 
-            relations = create_relationship_list(followers, 'follower__username')
-            return Response({'followee':user.username, 'followers':relations})
+            relations = create_relationship_list(followers, 'follower__id')
+            return Response({'followee':author.id, 'followers':relations})
         else:
-            raise UsernameNotFound()
+            raise UserNotFound()
 
-    def post(self, request, username, format=None):
-        followee = get_user(username)
-        new_follower = User.objects.get(username=request.POST.get('follower', ""))
+    def post(self, request, id, format=None):
+        followee = get_author(id)
+        new_follower = Author.objects.get(id=request.POST.get('follower', ""))
         if followee == None:
             return Response("Followee not found", status=status.HTTP_404_NOT_FOUND)
         if new_follower == None:
@@ -137,18 +136,18 @@ class GetAuthorFollowers(APIView):
             FriendRelationship.objects.create(friendor=new_follower, friend=followee)
             FriendRelationship.objects.create(friendor=followee, friend=new_follower)
             FollowerRelationship.objects.get(follower=followee, followee=new_follower).delete()
-            return Response({"friendor":new_follower.username, "friend":followee.username}, status=status.HTTP_201_CREATED)
+            return Response({"friendor":new_follower.id, "friend":followee.id}, status=status.HTTP_201_CREATED)
 
         # otherwise create new follower relationship
         FollowerRelationship.objects.create(follower=new_follower, followee=followee)
-        return Response({"follower":new_follower.username, "followee":followee.username}, status=status.HTTP_201_CREATED)
+        return Response({"follower":new_follower.id, "followee":followee.id}, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, username, format=None):
+    def delete(self, request, id, format=None):
         # unfollow
-        followee = get_user(username)
+        followee = get_author(id)
         formattted_request = str(request.body).strip("'<>()[]\"` ").replace('\'', '\"')
         new_unfollower = json.loads(formattted_request)['follower']
-        new_unfollower = User.objects.get(username=new_unfollower)
+        new_unfollower = Author.objects.get(id=new_unfollower)
 
         # check whether the users are friends
         if FriendRelationship.objects.filter(friendor=followee, friend=new_unfollower).count():
@@ -163,7 +162,7 @@ class GetAuthorFollowers(APIView):
         FollowerRelationship.objects.get(follower=new_unfollower, followee=followee).delete()
         return Response(status=status.HTTP_200_OK)
 
-# GET /author/friendrequests/:username
+# GET /author/friendrequests/:id
 class GetAuthorFriendRequests(ListAPIView):
     """
     Returns a JSON object containing a requestee and a list of requestor
@@ -179,17 +178,17 @@ class GetAuthorFriendRequests(ListAPIView):
     """
 
     def list(self, request, *args, **kwargs):
-        user = get_user(kwargs['username'])
+        author = get_author(kwargs['id'])
 
-        if user:
+        if author:
             # Retrieve only the usernames of the requestor for a given user
-            requestors = FriendRequest.objects.filter(requestee = user)\
-                .values('requestor__username')
+            requestors = FriendRequest.objects.filter(requestee = author)\
+                .values('requestor__id')
 
-            relations = create_relationship_list(requestors, 'requestor__username')
-            return Response({'requestee':user.username, 'requestors':relations})
+            relations = create_relationship_list(requestors, 'requestor__id')
+            return Response({'requestee':author.id, 'requestors':relations})
         else:
-            raise UsernameNotFound()
+            raise UserNotFound()
 
 # PUT /author/update
 # TODO

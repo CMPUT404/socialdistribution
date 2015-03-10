@@ -4,8 +4,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db import IntegrityError
 
-from author.models import UserDetails
-from external.models import Server
+from author.models import Author
 
 import uuid
 import json
@@ -13,10 +12,10 @@ import base64
 
 c = Client()
 
-# Values to be inserted and checked in the UserDetails model
+# Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "jmaguire"
 BIO = "I'm the best sports agent around!"
-SERVER = None
+HOST = "http://examples.com/"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
@@ -32,9 +31,9 @@ auth_headers = {
     'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode('%s:%s' %(USERNAME, PASSWORD)),
 }
 
-class UserDetailsAuthentication(TestCase):
+class AuthorAuthentication(TestCase):
     """
-    Basic testing of the UserDetails model creation and database insertion
+    Basic testing of the Author model creation and database insertion
     """
     def setUp(self):
         self.user_dict = {
@@ -46,7 +45,7 @@ class UserDetailsAuthentication(TestCase):
             'email':EMAIL,
             'github_username':GITHUB_USERNAME,
             'bio':BIO,
-            'server': SERVER }
+            'host': HOST }
 
         self.login_dict = {
             'username':USERNAME,
@@ -57,7 +56,7 @@ class UserDetailsAuthentication(TestCase):
 
     def tearDown(self):
         """Remove all created objects from mock database"""
-        UserDetails.objects.all().delete()
+        Author.objects.all().delete()
         User.objects.all().delete()
 
     def test_registration(self):
@@ -66,7 +65,7 @@ class UserDetailsAuthentication(TestCase):
         """
         response = c.post('/author/registration/', self.user_dict)
 
-        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+        self.assertEquals(response.status_code, 201, "User and Author not created")
 
         # Confirm that model and all attributes were inserted
         user = User.objects.get(username = USERNAME)
@@ -74,7 +73,7 @@ class UserDetailsAuthentication(TestCase):
         self.assertEquals(user.first_name, FIRST_NAME, "Name doesn't match")
         self.assertEquals(user.last_name, LAST_NAME, "Name doesn't match")
 
-        details = UserDetails.objects.get(user = user)
+        details = Author.objects.get(user = user)
         self.assertEquals(details.bio, BIO, "Bio doesn't match")
         self.assertEquals(details.github_username, GITHUB_USERNAME, "Username doesn't match")
 
@@ -131,7 +130,7 @@ class UserDetailsAuthentication(TestCase):
 
     def test_login(self):
         response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+        self.assertEquals(response.status_code, 201, "User and Author not created")
 
         response = c.get('/author/login/', **auth_headers)
         content = json.loads(response.content)
@@ -141,7 +140,13 @@ class UserDetailsAuthentication(TestCase):
         self.assertIsNotNone(content['token'], 'Empty Token')
 
         profile = content['author']
-        keys    =  set(profile.keys()).intersection(self.user_dict.keys());
+        self.assertEquals(profile.has_key('host'), True, "Host key doesn't exist")
+
+        keys = set(profile.keys()).intersection(self.user_dict.keys());
+        # Can't test for host since it will be auto-created
+        keys.remove('host')
+
+
 
         for key in keys:
             self.assertEquals(profile[key], self.user_dict[key])
@@ -151,7 +156,7 @@ class UserDetailsAuthentication(TestCase):
     def test_bad_login(self):
         response = c.post('/author/registration/', self.user_dict)
 
-        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+        self.assertEquals(response.status_code, 201, "User and Author not created")
 
         new_auth_headers = {
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode('%s:%s' %(USERNAME, 'basepassword')),
@@ -161,7 +166,7 @@ class UserDetailsAuthentication(TestCase):
 
     def test_logout(self):
         response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+        self.assertEquals(response.status_code, 201, "User and Author not created")
 
         token = json.loads(response.content)['token']
 

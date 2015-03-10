@@ -1,8 +1,7 @@
 from django.test import TestCase, Client, RequestFactory
 from django.contrib.auth.models import User
 
-from external.models import Server
-from author.models import UserDetails, FriendRelationship
+from author.models import Author, FriendRelationship
 from timeline.models import Post, Comment, ACL
 from timeline.views import GetPosts, CreatePost
 from rest_framework.authtoken.models import Token
@@ -18,6 +17,7 @@ c = APIClient()
 USERNAME = "programmer"
 GITHUB_USERNAME = "programmer"
 BIO = "This is my witty biography!"
+HOST = "http://example.com/"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
@@ -26,7 +26,7 @@ USER_A = {"username":"User_A", "password":uuid.uuid4()}
 USER_B = {"username":"User_B", "password":uuid.uuid4()}
 USER_C = {"username":"User_C", "password":uuid.uuid4()}
 ACL_DEFAULT = {"permissions":300}
-# Values to be inserted and checked in the UserDetails model
+# Values to be inserted and checked in the Author model
 
 # optional User model attributes
 FIRST_NAME = "Jerry"
@@ -52,12 +52,22 @@ class TimelineAPITestCase(TestCase):
         self.user_b.save()
         self.user_c = User.objects.create_user(**USER_C)
         self.user_c.save()
-        self.server = Server.objects.create(address="example.com")
 
-        self.user_details = UserDetails.objects.create(user = self.user_a,
+        self.author_a = Author.objects.create(user = self.user_a,
             github_username = GITHUB_USERNAME + "A",
             bio = BIO + "A",
-            server = self.server)
+            host = HOST)
+
+        self.author_b = Author.objects.create(
+            user = self.user_b,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST)
+        self.author_c = Author.objects.create(
+            user = self.user_c,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST)
 
         self.user_dict = {
             "username":USERNAME,
@@ -69,7 +79,7 @@ class TimelineAPITestCase(TestCase):
             "bio":BIO }
 
         self.post = Post.objects.create(text = TEXT,
-            user = self.user_a, acl=self.acl)
+            author = self.author_a, acl=self.acl)
 
         # Set login headers for test use, or force authentication to bypass
         token, created = Token.objects.get_or_create(user=self.user_a)
@@ -78,7 +88,7 @@ class TimelineAPITestCase(TestCase):
 
     def tearDown(self):
         """Remove all created objects from mock database"""
-        UserDetails.objects.all().delete()
+        Author.objects.all().delete()
         User.objects.all().delete()
         Post.objects.all().delete()
         ACL.objects.all().delete()
@@ -97,30 +107,31 @@ class TimelineAPITestCase(TestCase):
             self.assertFalse(True, "Error retrieving post %s from database" %self.post.id)
 
     def test_get_post_by_author_from_db(self):
-        """Post created in setUp() can be retrieved using UserDetails id from setUp()"""
-        post = Post.objects.get(user = self.user_a)
+        """Post created in setUp() can be retrieved using Author id from setUp()"""
+        post = Post.objects.get(author = self.author_a)
         self.assertEquals(post.text, TEXT)
 
         # If this doesn"t pass, then the following test will obviously fail
 
     def test_get_posts_by_author_with_http(self):
-        username = self.user_a.username
-        response = c.get("/author/%s/posts" %username, content_type="application/json", **self.auth_headers)
+        id = self.author_a.id
+        response = c.get("/author/%s/posts" %id, content_type="application/json", **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 1, "Only one post should have been retrieved")
 
         post = response.data[0]
-        self.assertEquals(post["user"]["username"], USER_A["username"], "Wrong post author")
+
+        self.assertEquals(post["author"]["displayname"], USER_A["username"], "Wrong post author")
         self.assertEquals(post["text"], TEXT, "Wrong post content")
 
     def test_get_multiple_posts_by_author_with_http(self):
         # Create two posts, in addition to the post created in setUp()
-        Post.objects.create(text = TEXT, user = self.user_a, acl=ACL.objects.create(**ACL_DEFAULT))
-        Post.objects.create(text = TEXT, user = self.user_a, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, author = self.author_a, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, author = self.author_a, acl=ACL.objects.create(**ACL_DEFAULT))
 
-        username = self.user_a.username
-        response = c.get("/author/%s/posts" %username, content_type="application/json", **self.auth_headers)
+        id = self.author_a.id
+        response = c.get("/author/%s/posts" %id, content_type="application/json", **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 3, "Three posts should have been retrieved")
@@ -137,15 +148,15 @@ class TimelineAPITestCase(TestCase):
 
     def test_get_posts_of_friend(self):
         # Add Friends
-        FriendRelationship.objects.create(friend = self.user_b, friendor = self.user_a)
-        FriendRelationship.objects.create(friend = self.user_a, friendor = self.user_b)
+        FriendRelationship.objects.create(friend = self.author_b, friendor = self.author_a)
+        FriendRelationship.objects.create(friend = self.author_a, friendor = self.author_b)
 
         # Add Posts
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**ACL_DEFAULT))
 
-        username = self.user_b.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_b.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 200)
 
         # TODO this test needs to be completed when auth is fully setup
@@ -155,86 +166,85 @@ class TimelineAPITestCase(TestCase):
 
     def test_get_posts_of_non_friend(self):
         # Add Posts
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**ACL_DEFAULT))
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**ACL_DEFAULT))
 
-        username = self.user_b.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_b.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 403)
 
     def test_get_posts_of_fof(self):
         # Add Friends
-        FriendRelationship.objects.create(friend = self.user_b, friendor = self.user_a)
-        FriendRelationship.objects.create(friend = self.user_a, friendor = self.user_b)
+        FriendRelationship.objects.create(friend = self.author_b, friendor = self.author_a)
+        FriendRelationship.objects.create(friend = self.author_a, friendor = self.author_b)
 
-        FriendRelationship.objects.create(friend = self.user_b, friendor = self.user_c)
-        FriendRelationship.objects.create(friend = self.user_c, friendor = self.user_b)
+        FriendRelationship.objects.create(friend = self.author_b, friendor = self.author_c)
+        FriendRelationship.objects.create(friend = self.author_c, friendor = self.author_b)
 
         # Add Posts
         acl = {"permissions":302, "shared_users":[]}
-        Post.objects.create(text = TEXT, user = self.user_c, acl=ACL.objects.create(**acl))
-        Post.objects.create(text = TEXT, user = self.user_c, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_c, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_c, acl=ACL.objects.create(**acl))
 
-        username = self.user_c.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_c.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 200)
 
 
     def test_attempt_get_posts_of_fof(self):
         # Add Friends
-        FriendRelationship.objects.create(friend = self.user_b, friendor = self.user_a)
-        FriendRelationship.objects.create(friend = self.user_a, friendor = self.user_b)
+        FriendRelationship.objects.create(friend = self.author_b, friendor = self.author_a)
+        FriendRelationship.objects.create(friend = self.author_a, friendor = self.author_b)
 
-        FriendRelationship.objects.create(friend = self.user_b, friendor = self.user_c)
-        FriendRelationship.objects.create(friend = self.user_c, friendor = self.user_b)
+        FriendRelationship.objects.create(friend = self.author_b, friendor = self.author_c)
+        FriendRelationship.objects.create(friend = self.author_c, friendor = self.author_b)
 
         # Add Posts
         acl = {"permissions":300, "shared_users":[]}
-        Post.objects.create(text = TEXT, user = self.user_c, acl=ACL.objects.create(**acl))
-        Post.objects.create(text = TEXT, user = self.user_c, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_c, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_c, acl=ACL.objects.create(**acl))
 
-        username = self.user_c.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_c.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 403)
 
     def test_get_posts_in_private_list(self):
         # Add Posts
-        acl = {"permissions":500, "shared_users":[self.user_a.username]}
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**acl))
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**acl))
+        acl = {"permissions":500, "shared_users":[str(self.author_a.id)]}
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**acl))
 
-        username = self.user_b.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_b.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 200)
 
     def test_attempt_get_posts_in_private_list(self):
         # Add Posts
-        acl = {"permissions":500, "shared_users":[self.user_c.username]}
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**acl))
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**acl))
+        acl = {"permissions":500, "shared_users":[str(self.author_c.id)]}
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**acl))
 
-        username = self.user_b.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_b.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 403)
 
     def test_get_private_post(self):
         # Add Posts
         acl = {"permissions":100, "shared_users":[]}
-        Post.objects.create(text = TEXT, user = self.user_a, acl=ACL.objects.create(**acl))
-        Post.objects.create(text = TEXT, user = self.user_a, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_a, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_a, acl=ACL.objects.create(**acl))
 
-        username = self.user_a.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_a.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 200)
 
     def test_attempt_get_private_post(self):
         # Add Posts
         acl = {"permissions":100, "shared_users":[]}
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**acl))
-        Post.objects.create(text = TEXT, user = self.user_b, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**acl))
+        Post.objects.create(text = TEXT, author = self.author_b, acl=ACL.objects.create(**acl))
 
-        username = self.user_b.username
-        response = c.get("/author/%s/posts" %username, **self.auth_headers)
+        id = self.author_b.id
+        response = c.get("/author/%s/posts" %id, **self.auth_headers)
         self.assertEquals(response.status_code, 403)
 
 
@@ -247,7 +257,8 @@ class TimelineAPITestCase(TestCase):
         # Retrieve post manually to confirm
         result = Post.objects.get(text = ptext, id=response.data["id"])
         self.assertEquals(result.text, ptext, "wrong post text")
-        self.assertEquals(result.user, self.user_a, "wrong user")
+
+        self.assertEquals(result.author.id, self.author_a.id, "wrong user")
 
     def test_attempt_set_read_only_fields(self):
         """Read only fields should be ignored in POST request"""
@@ -268,7 +279,7 @@ class TimelineAPITestCase(TestCase):
     def test_public_post_set(self):
         """public and fof are False by default"""
         post = Post.objects.create(text = TEXT,
-            user = self.user_a, acl = ACL.objects.create(**ACL_DEFAULT))
+            author = self.author_a, acl = ACL.objects.create(**ACL_DEFAULT))
         self.assertEquals(post.acl.permissions, 300)
 
     def test_create_public_post_http(self):
@@ -329,7 +340,7 @@ class TimelineAPITestCase(TestCase):
         response = c.post('/author/posts/%s/comments' %post_id, json.dumps(comment), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
         # get the post
-        response = c.get('/author/%s/posts/%s' %(self.user_a.username, post_id), **self.auth_headers)
+        response = c.get('/author/%s/posts/%s' %(self.author_a.id, post_id), **self.auth_headers)
         self.assertEquals(response.data[0]['comments'][0]['text'], TEXT)
 
     def test_create_post_no_auth(self):

@@ -4,7 +4,7 @@
 import os
 import shutil
 
-paths = ['author', 'backend', 'external', 'sysadmin', 'timeline']
+paths = ['author', 'backend', 'sysadmin', 'timeline']
 
 for path in paths:
     folder = os.path.join(path, 'migrations')
