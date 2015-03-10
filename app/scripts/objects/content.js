@@ -6,6 +6,7 @@ export default class {
 
   constructor (contentData) {
     this.id = contentData.id;
+    // TODO: check if other and convert to class if not
     this.author = contentData.author;
     this.content = contentData.content;
     this.type = contentData.type;

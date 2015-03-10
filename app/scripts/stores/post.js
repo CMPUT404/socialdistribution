@@ -19,6 +19,9 @@ export default Reflux.createStore({
     // that we can push specific post updates when they are on that page
     this.authorViewId = undefined;
 
+    // TODO: remove this once we are populating our own data
+    this.getPosts();
+
     // Listeners
     this.listenTo(PostActions.newPost, this.newPost);
     this.listenTo(PostActions.newComment, this.newComment);
@@ -34,9 +37,9 @@ export default Reflux.createStore({
     this.defaultPosts();
   },
 
+  // fetches the timeline specific to the given author id
   getTimeline: function (authorId) {
     //TODO: ajax
-    this.getPosts();
     this.pushPosts();
   },
 
@@ -118,7 +121,7 @@ export default Reflux.createStore({
 
     // if we're currently listening for author posts
     if (!Check.undefined(this.authorViewId)) {
-      postTypes.authorPosts = this.postStore.getPostsByAuthorId(this.authorViewId);
+      postTypes.authorPosts = this.postStore.getAuthorViewPosts(this.authorViewId);
     }
 
     this.trigger(postTypes);
