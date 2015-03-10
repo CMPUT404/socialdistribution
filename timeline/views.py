@@ -11,23 +11,101 @@ from timeline.serializers import (
     ACLSerializer )
 from timeline.permissions import IsFriend, IsAuthor, Custom
 
+from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework import mixins, generics, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
+from django.http import JsonResponse
+
 import json
 
-class MultipleFieldLookupMixin(object):
-    """Allows the lookup of multiple fields in an url for mixins"""
-    def get_object(self):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        filter = {}
-        for field in self.lookup_fields:
-            filter[field] = self.kwargs[field]
-        return get_object_or_404(queryset, **filter)
+class TimelineBuilder():
+    """
+    Builds a timeline from a queryset
+    """
+
+    page_size = 20
+
+    def __init__(self, queryset=None):
+        self.posts = []
+
+        if queryset:
+            self.add_queryset(queryset)
+
+    def add_queryset(self, queryset):
+        for post in queryset:
+            self.posts.append(PostSerializer(post).data)
+
+    # TODO retuns all posts right now
+    # Divide self.posts into equal pages based on page_size
+    def get_page(self, page = 1):
+        return self.posts
+
+    def count(self):
+        return len(self.posts)
+
+    def get_timeline(self):
+        return {"posts":self.posts}
+
+    def get_posts(self):
+        return self.posts
+
+    def __str__(self):
+        return unicode(self.get_json())
+
+class GetTimeline(APIView):
+    """
+    Returns the combination of posts by an author and their friends
+
+    Return JSON:
+    {
+        posts: [
+            {
+                id:1
+                text:text here
+                text:Awesome post,
+                date:1425945600,
+                image:null,
+                author:{displayname:bob,
+                    id:020210103310,
+                    url:"example.org"
+                    last_name:smith }
+                comments: [],
+                acl: {permissions:200, shared_users: []}
+            },
+            ...
+        ]
+    }
+
+    """
+
+    # TODO Implementation Notes:
+    # This is horribly inefficient right now and will be improved as time permits.
+    # Pagination will come in another milestone
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+
+        timeline = TimelineBuilder()
+
+        timeline.add_queryset(Post.objects.filter(author = request.user))
+
+        # Get friend posts and add to TimelineBuilder
+        friends = FriendRelationship.objects.filter(friend = request.user)\
+            .values('friendor')
+
+        for friendor in friends:
+            timeline.add_queryset(Post.objects.filter(author__id = friendor['friendor']))
+
+        timeline.add_queryset(Post.objects.exclude(author__id__in = friends)
+            .exclude(author__id = request.user.id))
+
+        return JsonResponse(timeline.get_timeline(), safe=False)
 
 class CreatePost(APIView):
     """
