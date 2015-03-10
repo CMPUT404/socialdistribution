@@ -1,28 +1,37 @@
 import Reflux from 'reflux';
 import UUID from 'uuid';
+import Check from 'check-types';
 
 import PostActions from '../actions/post';
 import AuthorActions from '../actions/author';
+import PostStore from '../objects/poststore';
+import Post from '../objects/post';
+import Comment from '../objects/comment';
 
 // Deals with App State Machine state
 export default Reflux.createStore({
 
   init: function() {
     // fetches the list of most recent posts
-    this.posts = this.getPosts();
+    this.postStore = new PostStore();
+
+    // this helps us keep track of what author the user is currently viewing so
+    // that we can push specific post updates when they are on that page
+    this.authorViewId = undefined;
 
     // Listeners
     this.listenTo(PostActions.newPost, this.newPost);
     this.listenTo(PostActions.newComment, this.newComment);
     this.listenTo(PostActions.getTimeline, this.getTimeline);
     this.listenTo(PostActions.getAuthorPosts, this.getAuthorPosts);
-    this.listenTo(AuthorActions.getAuthorViewData, this.getAuthorPosts);
+    this.listenTo(AuthorActions.getAuthorAndListen, this.listenForAuthorPosts);
+    this.listenTo(AuthorActions.unbindAuthorListener, this.unbindAuthorListener);
   },
 
   // Handles fetching posts based on query.
-  getPosts: function (query) {
+  getPosts: function () {
     // TODO: AJAX and remove defaultPost placeholder
-    return this.defaultPosts();
+    this.defaultPosts();
   },
 
   getTimeline: function (authorId) {
@@ -31,101 +40,87 @@ export default Reflux.createStore({
   },
 
   // used to find specific author posts for author views
-  getAuthorPosts: function (authorId) {
-    //TODO: ajax
-    // this is just temporary for testing
-    var authorPosts = [];
-    for(var post of this.posts.values()) {
-      if (post.author.id == authorId) {
-        authorPosts.push(value);
-      }
-    }
-    this.trigger({posts: authorPosts});
+  listenForAuthorPosts: function (authorId) {
+    //TODO: retrive w/ ajax and cache
+
+    // listen on author id
+    this.authorViewId = authorId;
+    this.pushPosts();
+  },
+
+  unbindAuthorListener: function () {
+    this.authorViewId = undefined;
   },
 
   // Used to mock data out
-  defaultPosts: function (query) {
+  defaultPosts: function () {
 
-    var map = new Map();
     var uuid = UUID.v4();
-
-    map.set(uuid, {
-        id: uuid,
+    var post = new Post({
+      id: uuid,
+      author: {
+        id: "4567",
+        name: "Benny Bennassi",
+        image: "images/benny.jpg"
+      },
+      content: "Check out my new hit satisfaction",
+      type: "raw",
+      timestamp: "1423950298",
+      comments: [{
+        id: UUID.v4(),
         author: {
-          id: "4567",
-          name: "Benny Bennassi",
-          image: "images/benny.jpg"
+          name: "Kanye West",
+          id: "9876",
+          image: "images/kanye.jpg"
         },
-        content: "Check out my new hit satisfaction",
+        content: "Wow, that's fly dude!",
         type: "raw",
-        timestamp: "1423950298",
-        comments: [{
-          id: UUID.v4(),
-          author: {
-            name: "Kanye West",
-            id: "9876",
-            image: "images/kanye.jpg"
-          },
-          content: "Wow, that's fly dude!",
-          type: "raw",
-          timestamp: "1424036698"
+        timestamp: "1424036698"
+      },
+      {
+        id: UUID.v4(),
+        author: {
+          name: "David Guetta",
+          id: "2192",
+          image: "images/david.jpg"
         },
-        {
-          id: UUID.v4(),
-          author: {
-            name: "David Guetta",
-            id: "2192",
-            image: "images/david.jpg"
-          },
-          content: "I dunno man, needs more Dub...",
-          type: "markdown",
-          timestamp: "1424209498"
-        }]
-      }
-    );
+        content: "## I dunno man, needs more Dub...",
+        type: "markdown",
+        timestamp: "1424209498"
+      }]
+    });
 
-    return map;
+    this.postStore.add(post);
   },
 
   newPost: function (post) {
-    post["id"] = UUID.v4();
-    this.posts.set(post["id"], post);
-    // this.orderPosts();
     //TODO: ajax
-    this.trigger({"posts": this.orderPosts(this.posts) });
+    post["id"] = UUID.v4();
+    this.postStore.add(post);
+    this.pushPosts();
   },
 
   newComment: function (post, comment) {
-    // <Content> complains when this is missing, used as "key"
-    comment.id = UUID.v4();
-    post.comments.push(comment);
     //TODO: ajax
-    this.trigger({"posts": this.orderPosts(this.posts) });
+    comment.id = UUID.v4();
+    var post = this.postStore.getPost(post.author.id, post.id);
+    post.comments.push(new Comment(comment));
+    this.pushPosts();
   },
 
-  // sorts posts into reverse chronological order. Aka, newest first.
-  orderPosts: function (posts) {
+  // handles triggering updates since we want certain things to occur and might
+  // have a listener active
+  pushPosts: function (authorPosts) {
+    var postTypes = {
+      timeline: this.postStore.getTimeline()
+    };
 
-    var postArr = [];
-    if (posts.size == 0) {
-      return postArr;
+    // if we're currently listening for author posts
+    if (!Check.undefined(this.authorViewId)) {
+      console.log("here we are");
+      postTypes.authorPosts = this.postStore.getPostsByAuthorId(this.authorViewId);
     }
 
-    for (var value of posts.values()) {
-      postArr.push(value);
-    }
-
-    postArr.sort(function(a, b) {
-      if (a.timestamp < b.timestamp) {
-        return -1;
-      } if (a.timestamp == b.timestamp) {
-        return 0;
-      } else {
-        return 1;
-      }
-    });
-
-    return postArr;
+    this.trigger(postTypes);
   }
-
 });

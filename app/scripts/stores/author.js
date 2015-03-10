@@ -44,6 +44,23 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.logout, this.logOut);
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
     this.listenTo(AuthorActions.getAuthorViewData, this.getAuthorViewData);
+    this.listenTo(AuthorActions.getAuthorAndListen, this.getAuthorViewData);
+    this.listenTo(AuthorActions.subscribeTo, this.subscribeTo);
+    this.listenTo(AuthorActions.unsubscribeFrom, this.unsubscribeFrom);
+  },
+
+  // TODO: ajax this
+  getAuthors: function () {
+    var authorListData = ALIST;
+    for (let author of authorListData) {
+      this.addAuthorToList(author);
+    }
+  },
+
+  // call this to cache an author in the author list. Also handles updating
+  // updating the subscriptionStore
+  addAuthorToList: function (authorData) {
+    this.authorList.push(new Author(authorData, this.subscriptionStore));
   },
 
   // gets a list of all authors from the server for search purposes
@@ -79,6 +96,28 @@ export default Reflux.createStore({
         this.trigger({displayAuthor: author});
         return;
       }
+    }
+  },
+
+  subscribeTo: function (author) {
+    // find authors and add subscriber
+    this.currentAuthor.subscribeTo(author);
+    // TODO: ajax call here to persist
+  },
+
+  // unsubscribes the current user from the specified author
+  unsubscribeFrom: function (author) {
+    // find authors and add subscriber
+    this.currentAuthor.unsubscribeFrom(author);
+    // TODO: ajax call here to persist
+  },
+
+  // check that our author is still logged in, update state of components
+  checkAuth: function () {
+    // TODO: ajax get author info rather than simply spoofing a successful auth
+    var author = this.authorList[0];
+    if (author) {
+      this.loginCompleted(author);
     }
   },
 

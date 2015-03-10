@@ -16,15 +16,28 @@ export default React.createClass({
 
 mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
 
+  statics: {
+
+    // since the author component can sometimes be mounted in the background,
+    // ensure we update the author if we're not coming back to the same one
+    willTransitionTo: function (transition, params) {
+      AuthorActions.getAuthorAndListen(params.id);
+    },
+
+    willTransitionFrom: function () {
+      AuthorActions.unbindAuthorListener();
+    }
+  },
+
   getInitialState: function() {
     return {
       displayAuthor: {},
-      posts: []
+      authorPosts: []
     };
   },
 
   componentDidMount: function () {
-    AuthorActions.getAuthorViewData(this.getParams().id);
+    AuthorActions.getAuthorAndListen(this.getParams().id);
   },
 
   render: function() {
@@ -58,7 +71,7 @@ mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
         </div>
         <ContentViewer
           currentAuthor={this.props.currentAuthor}
-          posts={this.state.posts} />
+          posts={this.state.authorPosts} />
       </Col>
     );
   }

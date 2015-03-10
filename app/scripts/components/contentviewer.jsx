@@ -1,4 +1,5 @@
 import React from 'react';
+import Check from 'check-types';
 
 import ContentCreator from './contentcreator';
 import Content from './content';
@@ -10,9 +11,13 @@ export default React.createClass({
   render: function() {
     var posts = [];
 
+    if (Check.undefined(this.props.posts)) {
+      return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
+    }
+
+    // orders posts if any are passed in as props
     if (this.props.posts.length > 0) {
-      // create an array of posts or comments
-      for (var post of this.props.posts) {
+      for (let post of this.props.posts) {
         posts.push(
           <div className="panel panel-default" key={"post-"+post.id}>
             <div className="panel-body">
@@ -23,7 +28,7 @@ export default React.createClass({
               </ul>
             </div>
             <div className="panel-footer">
-              <ContentCreator key="comment-creator" currentAuthor={this.props.currentAuthor} post={post} forComment={true} />
+              <ContentCreator key={"comment-creator-" + post.id} currentAuthor={this.props.currentAuthor} post={post} forComment={true} />
             </div>
           </div>
         );

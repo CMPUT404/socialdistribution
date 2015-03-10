@@ -23,8 +23,8 @@ var Content = React.createClass({
     var content;
     var comments;
 
-    if (this.props.data.comments) {
-      comments = this.props.data.comments.map(function (comment) {
+    if (this.props.data.getType() === "Post" && this.props.data.hasComments()) {
+      comments = this.props.data.getComments().map(function (comment) {
         return (
           <Content key={"comment-"+comment.id} data={comment} />
         );
@@ -37,6 +37,7 @@ var Content = React.createClass({
       content = this.props.data.content;
     }
 
+    // creates those nice "25 minutes ago" timestamps
     var timestamp = Moment.unix(this.props.data.timestamp).fromNow();
 
     return (

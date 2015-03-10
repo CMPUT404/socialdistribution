@@ -1,13 +1,12 @@
 import React from 'react';
 import Reflux from 'reflux';
-import Moment from 'moment';
 import { Link } from 'react-router';
 import { Input } from 'react-bootstrap';
 import { markdown as Markdown } from 'markdown';
 
 import PostActions from '../actions/post';
 
-// Responsible for creating posts/comments and notifying the Post store when
+    // Responsible for creating posts/comments and notifying the Post store when
 // this happens.
 export default React.createClass({
 
@@ -38,8 +37,7 @@ export default React.createClass({
     var content = {
       author: this.props.currentAuthor,
       content: this.state.content,
-      format: this.state.format,
-      timestamp: Moment.unix()
+      type: this.state.format
     };
 
     // reset content state now that we have it stored
