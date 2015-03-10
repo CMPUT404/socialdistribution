@@ -25,7 +25,9 @@ HOST = "http://example.com/"
 USER_A = {"username":"User_A", "password":uuid.uuid4()}
 USER_B = {"username":"User_B", "password":uuid.uuid4()}
 USER_C = {"username":"User_C", "password":uuid.uuid4()}
+USER_D = {"username":"User_D", "password":uuid.uuid4()}
 ACL_DEFAULT = {"permissions":300}
+ACL_PUBLIC = {"permissions":200}
 # Values to be inserted and checked in the Author model
 
 # optional User model attributes
@@ -86,6 +88,10 @@ class TimelineAPITestCase(TestCase):
         self.auth_headers = {
             "HTTP_AUTHORIZATION": "Token %s" %token }
 
+        tokenc, createdc = Token.objects.get_or_create(user=self.user_c)
+        self.auth_headers_c = {
+            "HTTP_AUTHORIZATION": "Token %s" %tokenc }
+
     def tearDown(self):
         """Remove all created objects from mock database"""
         Author.objects.all().delete()
@@ -93,6 +99,63 @@ class TimelineAPITestCase(TestCase):
         Post.objects.all().delete()
         ACL.objects.all().delete()
         Token.objects.all().delete()
+
+    def pretty_print_dict(self, data):
+        """Pretty prints a dictionary object"""
+        print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+
+    # DRY Utility Call
+    def create_friends(self, fof = False):
+        """
+        Create Friends and Friends of Friends and associated posts
+
+        If fof set to True, the created FoF will be retuned as a User Model
+        """
+        FriendRelationship.objects.create(friendor = self.author_b, friend = self.author_a)
+        FriendRelationship.objects.create(friendor = self.author_c, friend = self.author_a)
+
+        pac_1 = ACL.objects.create(**ACL_PUBLIC)
+        pac_2 = ACL.objects.create(**ACL_PUBLIC)
+
+        Post.objects.create(text = TEXT + "B", author = self.author_b, acl = pac_1)
+        Post.objects.create(text = TEXT + "C", author = self.author_c, acl = pac_2)
+
+        if fof:
+            return self.create_friend_of_friends()
+
+    # DRY Utility Call
+    def create_friend_of_friends(self):
+        user_d = User.objects.create_user(**USER_D)
+        user_d.save()
+
+        author_d = Author.objects.create(
+            user = user_d,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST)
+        author_d.save()
+
+        pac_3 = ACL.objects.create(**ACL_PUBLIC)
+
+        FriendRelationship.objects.create(friendor = author_d, friend = self.author_b)
+        Post.objects.create(text = TEXT + "D", author = author_d, acl = pac_3)
+
+        return user_d
+
+    # DRY Utility Call
+    def check_user_in_timeline(self, usernames, posts):
+        """Compares a list of post's usernames against a list of usernames
+
+        Takes as input a list of usernames and a list of posts
+        """
+        post_users = []
+        for post in posts:
+            post_users.append(post['author']['displayname'])
+
+        for username in usernames:
+            self.assertTrue(username in post_users, "%s not in timeline"\
+                %username)
+
 
     def test_set_up(self):
         """Assert that that the models were created in setUp()"""
@@ -346,3 +409,108 @@ class TimelineAPITestCase(TestCase):
     def test_create_post_no_auth(self):
         response = c.post('/author/post', {'text':TEXT})
         self.assertEquals(response.status_code, 401)
+
+    def test_retrieve_timeline_own(self):
+        # Timeline will include only posts by the auth user
+        response = c.get('/author/timeline', **self.auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        data = json.loads(response.content)['posts']
+
+        self.assertEquals(len(data), 1, "Too many posts returned")
+        self.assertEquals(data[0]['text'], unicode(TEXT), 'Wrong post text')
+        self.assertEquals(data[0]['author']['displayname'], self.user_a.username)
+
+        # self.pretty_print_dict(data)
+
+    def test_retrieve_multiple_posts_timeline(self):
+        # Test the retrieval of multiple posts in the timeline
+        acl = {"permissions":200, "shared_users":[]}
+        for i in range(5):
+            acl = ACL.objects.create(**ACL_PUBLIC)
+            Post.objects.create(text = TEXT, author = self.author_a, acl=acl)
+
+        response = c.get('/author/timeline', **self.auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        data = json.loads(response.content)['posts']
+        self.assertEquals(len(data), 6)
+
+        # self.pretty_print_dict(data)
+
+        # All posts are unique
+        post_ids = []
+        for post in data:
+            post_ids.append(post['id'])
+        self.assertEquals(len(data), len(set(post_ids)), "All ids are not unique")
+
+    def test_timeline_includes_friends(self):
+        self.create_friends()
+
+        response = c.get('/author/timeline', **self.auth_headers)
+        self.assertEquals(response.status_code, 200)
+        data = json.loads(response.content)['posts']
+
+        self.assertEquals(len(data), 3, "Wrong # of posts returned")
+
+        users = [
+            self.user_a.username,
+            self.user_b.username,
+            self.user_c.username ]
+
+        self.check_user_in_timeline(users, data)
+
+        # self.pretty_print_dict(data)
+
+    def test_timeline_include_fof(self):
+        fof = self.create_friends(True)
+
+        response = c.get('/author/timeline', **self.auth_headers)
+        self.assertEquals(response.status_code, 200)
+        data = json.loads(response.content)['posts']
+
+        self.assertEquals(len(data), 4, "Wrong # of posts returned")
+
+        users = [
+            self.user_a.username,
+            self.user_b.username,
+            self.user_c.username,
+            fof.username ]
+
+        self.check_user_in_timeline(users, data)
+
+        self.pretty_print_dict(data)
+
+    def test_retrieve_timeline_bogus_user(self):
+        self.auth_headers = {
+            'HTTP_AUTHORIZATION': "Token %s" % '19292939' }
+
+        response = c.get('/author/timeline', **self.auth_headers)
+        self.assertEquals(response.status_code, 401)
+
+    def test_comments_in_timeline(self):
+        # comment on the post
+        post_id = self.post.id
+        comment = {"text":TEXT + " COMMENT"}
+
+        response = c.post('/author/posts/%s/comments' %post_id,
+            json.dumps(comment), content_type="application/json",
+            **self.auth_headers_c)
+
+        self.assertEquals(response.status_code, 201)
+
+        # Comments should be embedded in posts
+        response = c.get('/author/timeline', **self.auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        data = json.loads(response.content)['posts']
+
+        self.assertEquals(len(data), 1, "Too many posts returned")
+        self.assertEquals(data[0]['text'], unicode(TEXT), 'Wrong post text')
+        self.assertEquals(data[0]['author']['displayname'], self.user_a.username)
+
+        # Comment data
+        self.assertEquals(data[0]['comments'][0]['author']['displayname'],
+            self.user_c.username, "Wrong username in comment")
+
+        # self.pretty_print_dict(data)

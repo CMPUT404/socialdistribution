@@ -13,6 +13,9 @@ urlpatterns = [
     # POST /author/post
     url(r'^post/?$', views.CreatePost.as_view()),
 
+    # GET /author/timeline
+    url(r'^timeline/?$', views.GetTimeline.as_view()),
+
     # POST /author/posts/:postid/comments
     url(r'^posts/(?P<postid>[0-9a-zA-Z]+)/comments/?$', views.GetDeleteAddComments.as_view()),
 
