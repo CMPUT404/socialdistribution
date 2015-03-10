@@ -1,9 +1,9 @@
+import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import { Link } from 'react-router';
 import { Input } from 'react-bootstrap';
 import { markdown as Markdown } from 'markdown';
-import Check from 'check-types';
 
 import PostActions from '../actions/post';
 
@@ -53,7 +53,7 @@ export default React.createClass({
   render: function() {
 
     // don't go further if we don't have our current author prop
-    if (Check.emptyObject(this.props.currentAuthor)) {
+    if (_.isEmpty(this.props.currentAuthor)) {
       return (<div></div>);
     }
 

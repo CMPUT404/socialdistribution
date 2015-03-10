@@ -1,4 +1,4 @@
-import Check from 'check-types';
+import _ from 'lodash';
 import Moment from 'moment';
 
 import Content from './content';
@@ -12,7 +12,7 @@ export default class extends Content {
     this.comments = [];
 
     // if we have any comment data, marshal it into comment classes
-    if (!Check.undefined(postData.comments)) {
+    if (!_.isUndefined(postData.comments)) {
       for (let comment of postData.comments) {
         this.comments.push(new Comment(comment));
       }

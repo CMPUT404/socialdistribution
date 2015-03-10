@@ -1,5 +1,5 @@
+import _ from 'lodash';
 import React from 'react';
-import Check from 'check-types';
 
 import ContentCreator from './contentcreator';
 import Content from './content';
@@ -11,7 +11,7 @@ export default React.createClass({
   render: function() {
     var posts = [];
 
-    if (Check.undefined(this.props.posts)) {
+    if (_.isUndefined(this.props.posts)) {
       return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
     }
 

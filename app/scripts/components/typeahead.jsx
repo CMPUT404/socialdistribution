@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import React from 'react';
 import { Input } from 'react-bootstrap';
-import Check from 'check-types';
 
 export default React.createClass({
 
@@ -16,7 +16,6 @@ export default React.createClass({
   // simple regex
   filter: function (value, options) {
 
-    console.log(options);
     if (this.state.value.length == 0) {
       return new Array();
     }
@@ -36,7 +35,7 @@ export default React.createClass({
 
     var state = {
       value: newValue,
-      searchResults: Check.function(this.props.filter) ?
+      searchResults: _.isFunction(this.props.filter) ?
         this.props.filter(newValue, this.props.options) : this.filter(newValue, this.props.options)
     };
 
@@ -49,7 +48,7 @@ export default React.createClass({
 
     // hook so the user can do something intelligent dynamically while the
     // user types
-    if (Check.function(this.props.onChange)) {
+    if (_.isFunction(this.props.onChange)) {
       this.props.onChange(this.state.value);
     }
   },
@@ -108,8 +107,7 @@ export default React.createClass({
           value={this.state.value}
           onChange={this.onChange}
           onKeyDown={this.onKeyDown}
-          ref="typeahead"
-        />
+          ref="typeahead" />
         <ul className="typeahead-options">
           {opts}
         </ul>

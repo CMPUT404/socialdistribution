@@ -1,5 +1,4 @@
 import Reflux from 'reflux';
-import UUID from 'uuid';
 
 import Author from '../objects/author';
 import AuthorActions from '../actions/author';
