@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
-import Check from 'check-types';
 import { State } from 'react-router';
 import { Col } from 'react-bootstrap';
 
@@ -44,7 +44,7 @@ mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
   render: function() {
 
     // if we haven't gotten our initial data yet, put a spinner in place
-    if (Check.emptyObject(this.state.displayAuthor)) {
+    if (_.isEmpty(this.state.displayAuthor)) {
       return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
     }
 
@@ -54,7 +54,7 @@ mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
     var contentCreator, follow;
 
     // see if the viewer is logged in
-    if (!Check.emptyObject(this.props.currentAuthor)) {
+    if (!_.isEmpty(this.props.currentAuthor)) {
 
       // if viewing their own profile
       if (this.props.currentAuthor.isAuthor(authorViewId)) {

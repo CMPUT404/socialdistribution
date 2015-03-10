@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
-import Check from 'check-types';
 import { Navigation } from 'react-router';
 import { NavItemLink, ButtonLink } from 'react-router-bootstrap';
 import { Navbar, Nav, NavItem, ButtonToolbar, DropdownButton, MenuItem } from 'react-bootstrap';
@@ -22,7 +22,7 @@ export default React.createClass({
   render: function() {
     var navList;
 
-    if (!Check.emptyObject(this.props.currentAuthor)) {
+    if (!_.isEmpty(this.props.currentAuthor)) {
       navList = [
         <NavItemLink key="timeline" to="/">Timeline</NavItemLink>,
         <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>Profile</NavItemLink>,

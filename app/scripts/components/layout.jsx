@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
-import Check from 'check-types';
 import { Grid, Col } from 'react-bootstrap';
 import { State, Navigation } from 'react-router';
 import RouteHandler from 'react-router/modules/mixins/RouteHandler';
@@ -23,14 +23,12 @@ export default React.createClass({
   },
 
   checkAuthResult: function(state) {
-
     // only perform updates if our currentAuthor is being changed
-    if (!Check.undefined(state.currentAuthor)) {
+    if (!_.isUndefined(state.currentAuthor)) {
 
       // set state, then transition
       this.setState({currentAuthor: state.currentAuthor, initialLoad: false});
-
-      if (Check.emptyObject(state.currentAuthor) && !this.isActive('login')) {
+      if (_.isEmpty(state.currentAuthor) && !this.isActive('login')) {
         this.transitionTo('login');
       } else {
         this.transitionTo('timeline');
@@ -44,8 +42,7 @@ export default React.createClass({
   },
 
   render: function() {
-
-    if (Check.emptyObject(this.state.currentAuthor && this.state.intialLoad)) {
+    if (_.isEmpty(this.state.currentAuthor) && this.state.intialLoad) {
       return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
     }
 

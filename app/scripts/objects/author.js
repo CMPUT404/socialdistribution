@@ -1,10 +1,10 @@
-import Check from 'check-types';
+import _ from 'lodash';
 
 export default class {
 
   constructor(data, subscriptionStore) {
 
-    if (Check.emptyObject(data)) {
+    if (_.isEmpty(data)) {
       throw "Empty data object passed to Author constructor";
     }
 
@@ -21,7 +21,7 @@ export default class {
     // subscribed to
     for (let authorId of data.subscriptions) {
       var subscriptions = this.subscriptionStore.get(authorId);
-      if (Check.undefined(subscriptions)) {
+      if (_.isUndefined(subscriptions)) {
         this.subscriptionStore.set(authorId, [this.id]);
       } else {
         subscriptions.push(this.id);
@@ -30,7 +30,7 @@ export default class {
   }
 
   getImage () {
-    return Check.undefined(this.image) ? 'images/placeholder.jpg' : this.image;
+    return _.isUndefined(this.image) ? 'images/placeholder.jpg' : this.image;
   }
 
   isAuthor (authorId) {
@@ -50,7 +50,7 @@ export default class {
     var subscriptions = this.subscriptionStore.get(author.id);
 
     // if author has no subscriptions then nope
-    if (Check.undefined(subscriptions)) {
+    if (_.isUndefined(subscriptions)) {
       return false;
     }
 
@@ -65,7 +65,7 @@ export default class {
 
   subscribeTo (author) {
     var subscriptions = this.subscriptionStore.get(author.id);
-    if (Check.undefined(subscriptions)) {
+    if (_.isUndefined(subscriptions)) {
       this.subscriptionStore.set(author.id, [this.id]);
     } else {
       subscriptions.push(this.id);
@@ -94,6 +94,6 @@ export default class {
   // coming from outside
   getSubscriberCount () {
     var subscriptions = this.getSubscriptions();
-    return Check.undefined(subscriptions) ? 0 : subscriptions.length;
+    return _.isUndefined(subscriptions) ? 0 : subscriptions.length;
   }
 }

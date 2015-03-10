@@ -1,5 +1,5 @@
+import _ from 'lodash';
 import React from 'react';
-import Check from 'check-types';
 import { Navigation } from 'react-router';
 import { Grid, Row, Col, Input, PageHeader, Button } from 'react-bootstrap';
 
@@ -15,7 +15,7 @@ export default React.createClass({
     willTransitionTo: function (transition, params) {
       // Using the author store is a hack, but until
       // https://github.com/rackt/react-router/pull/590 is merged/closed
-      if (!Check.emptyObject(AuthorStore.currentAuthor)) {
+      if (!_.isEmpty(AuthorStore.currentAuthor)) {
         transition.redirect("timeline");
       }
     }

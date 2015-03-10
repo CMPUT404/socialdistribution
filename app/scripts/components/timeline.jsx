@@ -1,6 +1,5 @@
 import React from 'react';
 import Reflux from 'reflux';
-import Check from 'check-types';
 import { Col, Button } from 'react-bootstrap';
 import { State, Navigation } from 'react-router';
 

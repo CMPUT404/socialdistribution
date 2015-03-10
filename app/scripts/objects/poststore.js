@@ -1,4 +1,4 @@
-import Check from 'check-types';
+import _ from 'lodash';
 
 // This is sort of a custom datastore/container that makes it easier to deal
 // with adding/removing/querying our post list.
@@ -17,7 +17,7 @@ export default class {
   // adds a post to the store and updates caches in various ways
   add (post) {
 
-    if (Check.undefined(post.id) || Check.undefined(post.author.id)) {
+    if (_.isUndefined(post.id) || _.isUndefined(post.author.id)) {
       throw "Tried to add a post without a post or authorId";
     }
 
@@ -27,7 +27,7 @@ export default class {
     var authorId = post.author.id;
     var userPosts = this.authorMap.get(authorId);
 
-    if (Check.undefined(userPosts)) {
+    if (_.isUndefined(userPosts)) {
       this.authorMap.set(authorId, [post]);
     } else {
       userPosts.push(post);
@@ -72,7 +72,7 @@ export default class {
 
   getPostsByAuthorId (authorId) {
     var posts = this.authorMap.get(authorId);
-    if (Check.undefined(posts)) {
+    if (_.isUndefined(posts)) {
       return [];
     }
 

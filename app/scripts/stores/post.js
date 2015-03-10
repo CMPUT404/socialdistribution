@@ -1,6 +1,6 @@
+import _ from 'lodash';
 import Reflux from 'reflux';
 import UUID from 'uuid';
-import Check from 'check-types';
 
 import PostActions from '../actions/post';
 import AuthorActions from '../actions/author';
@@ -120,7 +120,7 @@ export default Reflux.createStore({
     };
 
     // if we're currently listening for author posts
-    if (!Check.undefined(this.authorViewId)) {
+    if (!_.isUndefined(this.authorViewId)) {
       postTypes.authorPosts = this.postStore.getAuthorViewPosts(this.authorViewId);
     }
 

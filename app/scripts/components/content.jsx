@@ -1,7 +1,7 @@
+import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import Moment from 'moment';
-import Check from 'check-types';
 import { Link } from 'react-router';
 import { markdown as Markdown } from 'markdown';
 import { Col } from 'react-bootstrap';
@@ -24,7 +24,7 @@ var Content = React.createClass({
     var content;
     var comments;
 
-    if (Check.undefined(this.props.data)) {
+    if (_.isUndefined(this.props.data)) {
       return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
     }
 

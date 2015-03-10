@@ -1,4 +1,4 @@
-import Check from 'check-types';
+import _ from 'lodash';
 import Moment from 'moment';
 
 // represents our base content class
@@ -12,7 +12,7 @@ export default class {
     this.type = contentData.type;
 
     // make sure we have a timestamp
-    if (Check.undefined(contentData.timestamp)) {
+    if (_.isUndefined(contentData.timestamp)) {
       this.timestamp = Moment.unix()
     } else {
       this.timestamp = contentData.timestamp;
