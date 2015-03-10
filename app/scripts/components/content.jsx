@@ -1,6 +1,7 @@
 import React from 'react';
 import Reflux from 'reflux';
 import Moment from 'moment';
+import Check from 'check-types';
 import { Link } from 'react-router';
 import { markdown as Markdown } from 'markdown';
 import { Col } from 'react-bootstrap';
@@ -23,8 +24,12 @@ var Content = React.createClass({
     var content;
     var comments;
 
-    if (this.props.data.comments) {
-      comments = this.props.data.comments.map(function (comment) {
+    if (Check.undefined(this.props.data)) {
+      return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
+    }
+
+    if (this.props.data.getType() === "Post" && this.props.data.hasComments()) {
+      comments = this.props.data.getComments().map(function (comment) {
         return (
           <Content key={"comment-"+comment.id} data={comment} />
         );
@@ -37,6 +42,7 @@ var Content = React.createClass({
       content = <p>{this.props.data.content}</p>;
     }
 
+    // creates those nice "25 minutes ago" timestamps
     var timestamp = Moment.unix(this.props.data.timestamp).fromNow();
 
     return (

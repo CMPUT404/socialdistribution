@@ -53,7 +53,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.login.failed, this.ajaxFailed);
     this.listenTo(AuthorActions.logout, this.logOut);
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
-    this.listenTo(AuthorActions.getAuthorViewData, this.getAuthorViewData);
+    this.listenTo(AuthorActions.getAuthorAndListen, this.getAuthorViewData);
     this.listenTo(AuthorActions.subscribeTo, this.subscribeTo);
     this.listenTo(AuthorActions.unsubscribeFrom, this.unsubscribeFrom);
     this.listenTo(AuthorActions.register.completed, this.registrationComplete);
@@ -131,6 +131,7 @@ export default Reflux.createStore({
       this.loginCompleted(author);
     }
   },
+
   // Handles logging the user in using the provided credentials
   // Also need to set our basic auth token somewhere
   loginCompleted: function(author) {

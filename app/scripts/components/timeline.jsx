@@ -17,7 +17,7 @@ export default React.createClass({
 
   getInitialState: function() {
     return {
-      posts: []
+      timeline: []
     };
   },
 
@@ -38,7 +38,7 @@ export default React.createClass({
           <ContentCreator currentAuthor={this.props.currentAuthor} />
         </div>
         <h3>Recent Posts:<Button className="badge pull-right" onClick={this.refresh} type="submit">Refresh</Button></h3>
-        <ContentViewer currentAuthor={this.props.currentAuthor} posts={this.state.posts} />
+        <ContentViewer currentAuthor={this.props.currentAuthor} posts={this.state.timeline} />
       </Col>
     );
   }
