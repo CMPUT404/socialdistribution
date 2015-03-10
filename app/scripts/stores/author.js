@@ -50,12 +50,14 @@ export default Reflux.createStore({
 
     this.listenTo(AuthorActions.checkAuth, this.checkAuth);
     this.listenTo(AuthorActions.login.completed, this.loginCompleted);
-    this.listenTo(AuthorActions.login.failed, this.loginFailed);
+    this.listenTo(AuthorActions.login.failed, this.ajaxFailed);
     this.listenTo(AuthorActions.logout, this.logOut);
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
     this.listenTo(AuthorActions.getAuthorViewData, this.getAuthorViewData);
     this.listenTo(AuthorActions.subscribeTo, this.subscribeTo);
     this.listenTo(AuthorActions.unsubscribeFrom, this.unsubscribeFrom);
+    this.listenTo(AuthorActions.register.completed, this.registrationComplete);
+    this.listenTo(AuthorActions.register.failed, this.ajaxFailed);
   },
 
   // TODO: ajax this
@@ -137,8 +139,12 @@ export default Reflux.createStore({
     this.trigger({currentAuthor: this.currentAuthor});
   },
 
-  loginFailed: function(res) {
-    alertify.error("Login failed! " + res.error);
+  registrationComplete: function(author) {
+    this.loginCompleted(author);
+  },
+
+  ajaxFailed: function(error) {
+    alertify.error(error);
   },
 
   logOut: function() {

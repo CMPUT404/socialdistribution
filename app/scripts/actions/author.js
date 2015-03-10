@@ -22,4 +22,13 @@ Author.login.listen(function(username, password) {
     .catch( this.failed );
 } );
 
+Author.register.listen(function(payload) {
+  Request
+    .post('http://localhost:8000/author/registration/') //TODO: remove host
+    .send(payload)
+    .promise()
+    .then( this.completed )
+    .catch( this.failed );
+} );
+
 export default Author;

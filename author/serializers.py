@@ -17,7 +17,7 @@ class RegistrationSerializer(serializers.Serializer):
         Call .is_valid() to confirm validation.
         Call .create() to build/insert models after validation.
     """
-    username = serializers.CharField()
+    displayname = serializers.CharField()
     email = serializers.EmailField()
     password = serializers.CharField()
     bio = serializers.CharField()
@@ -39,7 +39,7 @@ class RegistrationSerializer(serializers.Serializer):
         try:
             user = User(
                 email = validated_data['email'],
-                username = validated_data['username'],
+                username = validated_data['displayname'],
                 first_name = validated_data['first_name'],
                 last_name = validated_data['last_name']
             )
@@ -62,12 +62,24 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ('username', 'email', 'first_name', 'last_name')
 
-class UserDetailsSerializer(serializers.ModelSerializer):
-    user = UserSerializer(many = False, read_only = True)
+class CompactAuthorSerializer(serializers.ModelSerializer):
+    id          = serializers.CharField(source='user.pk')
+    displayname = serializers.CharField(source='user.username')
 
     class Meta:
         model = UserDetails
-        fields = ('user', 'github_username', 'bio', 'server')
+        fields = ('id', 'displayname', 'host', 'url')
+
+class AuthorSerializer(serializers.ModelSerializer):
+    id          = serializers.CharField(source='user.pk')
+    displayname = serializers.CharField(source='user.username')
+    email       = serializers.EmailField(source='user.email')
+    first_name  = serializers.CharField(source='user.first_name')
+    last_name   = serializers.CharField(source='user.last_name')
+
+    class Meta:
+        model = UserDetails
+        fields = ('id', 'displayname', 'email', 'first_name', 'last_name', 'github_username', 'bio', 'host', 'url')
 
 class CompactUserSerializer(serializers.Serializer):
     """
@@ -77,12 +89,6 @@ class CompactUserSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
 
-class UserDetailSerializer(serializers.ModelSerializer):
-    user = UserSerializer(many=False, read_only=True)
-
-    class Meta:
-        model = UserDetails
-        fields = ('user', 'github_username', 'bio')
 
 class FollowerRelationshipSerializer(serializers.ModelSerializer):
     follower = UserSerializer(many=False, read_only=True)
