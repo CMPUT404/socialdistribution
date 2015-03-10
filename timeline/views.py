@@ -57,22 +57,77 @@ class CreatePost(APIView):
 
         return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
+
+class GetDeleteAddComments(APIView):
+    """
+    This view allows attaching comments to a post
+    and deleting comments from a post.
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self, commentid):
+        try:
+            comment = Comment.objects.get(id=commentid)
+        except:
+            raise Http404
+        return comment
+
+    def get(self, request, commentid, format=None):
+        """
+        For testing purposes only.
+        Gets an individual comment.
+        """
+        try:
+            comment = self.get_queryset(commentid)
+        except Http404:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data)
+
+    def post(self, request, postid, format=None):
+        """
+        Adds a comment to a post.
+        """
+        serializer = CommentSerializer(data = request.data)
+        if serializer.is_valid(raise_exception = True):
+            post = Post.objects.get(id=postid)
+            serializer.save(post = post, user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+
+    def delete(self, request, commentid, format=None):
+        """
+        Deletes a comment by id
+        """
+        try:
+            comment = self.get_queryset(commentid)
+        except Http404:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class GetPosts(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated, Custom,)
 
-    def get_queryset(self, username):
+    def get_queryset(self, username, postid):
         """
         This view should return a list of all the posts
         for the specified user.
         """
-        result = Post.objects.filter(user__username=username)
+        if postid:
+            result = Post.objects.filter(user__username=username, id=postid)
+        else:
+            result = Post.objects.filter(user__username=username)
         for post in result:
             self.check_object_permissions(self.request, post)
         return result
 
-    def get(self, request, username, format=None):
-        posts = self.get_queryset(username)
+    def get(self, request, username, postid=None, format=None):
+        # return multiple posts
+        posts = self.get_queryset(username, postid)
         serializer = PostSerializer(posts, many=True)
 
         # Insert mock external server data into the response

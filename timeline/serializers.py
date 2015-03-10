@@ -23,6 +23,17 @@ class ACLSerializer(serializers.ModelSerializer):
         model = ACL
         fields = ('permissions', 'shared_users')
 
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = CompactUserSerializer(many=False, read_only=True)
+    # post = PostSerializer(many=False, read_only=True)
+    date = UnixDateTimeField(read_only=True)
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'date', 'user')
+        read_only_fields = ('date')
+
+
 class PostSerializer(serializers.ModelSerializer):
     """
     Multiple posts are deserialized as a list object
@@ -45,15 +56,15 @@ class PostSerializer(serializers.ModelSerializer):
     user = CompactUserSerializer(many=False, read_only=True)
     date = UnixDateTimeField(read_only=True)
     # text = serializers.CharField()
-    # id = serializers.CharField(read_only=True)
+    comments = CommentSerializer(read_only=True, many=True)
     # date = serializers.CharField(read_only=True)
 
     class Meta:
         model = Post
-        fields = ('user', 'id', 'text', 'acl', 'date', 'image')
+        fields = ('user', 'id', 'text', 'date', 'image', 'comments', 'acl')
 
         # Fields that must not be set in HTTP request body
-        read_only_fields = ('user', 'id', 'date')
+        read_only_fields = ('user' 'id', 'date', 'comments',)
 
     def create(self, validated_data):
         data = deepcopy(validated_data)
@@ -62,9 +73,3 @@ class PostSerializer(serializers.ModelSerializer):
         post = Post.objects.create(acl=acl_object, user=self.context['user'], **data)
         return post
 
-class CommentSerializer(serializers.ModelSerializer):
-    date = UnixDateTimeField(read_only=True)
-    class Meta:
-        model = Comment
-        fields = ('id', 'text', 'date')
-        read_only_fields = ('date',)
