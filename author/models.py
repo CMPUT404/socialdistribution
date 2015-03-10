@@ -20,6 +20,8 @@ class Author(models.Model):
     def url(self):
       return self.host + 'author/' + str(self.user.pk)
 
+    def __unicode__(self):
+        return u'%s' %self.user.username
 
 class FollowerRelationship(models.Model):
     """

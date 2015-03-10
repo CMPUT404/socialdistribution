@@ -30,6 +30,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -103,3 +104,5 @@ REST_FRAMEWORK = {
     # )
     'EXCEPTION_HANDLER': 'backend.utils.custom_exception_handler'
 }
+
+GRAPPELLI_ADMIN_TITLE = "Social Distribution"
