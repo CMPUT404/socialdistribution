@@ -75,6 +75,8 @@ class Post(models.Model):
     image = models.ImageField(null=True, blank=True)
     author = models.ForeignKey(Author, blank=False, editable = False)
 
+    def __unicode__(self):
+        return u'%s %s' %(self.author.username, self.text)
 
 class Comment(models.Model):
     """
@@ -87,3 +89,6 @@ class Comment(models.Model):
     date = models.DateTimeField(auto_now_add=True, editable = False)
     post = models.ForeignKey('Post', related_name='comments')
     author = models.ForeignKey(Author, blank=False, editable = False)
+
+    def __unicode__(self):
+        return u'%s %s' %(self.author.username, self.text)
