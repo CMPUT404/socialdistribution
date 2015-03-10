@@ -46,7 +46,6 @@ export default React.createClass({
     if (this.props.forComment) {
       PostActions.newComment(this.props.post, content);
     } else {
-      content.comments = [];
       PostActions.newPost(content);
     }
   },

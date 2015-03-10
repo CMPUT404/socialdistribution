@@ -36,6 +36,7 @@ export default Reflux.createStore({
 
   getTimeline: function (authorId) {
     //TODO: ajax
+    this.getPosts();
     this.pushPosts();
   },
 
@@ -95,8 +96,8 @@ export default Reflux.createStore({
 
   newPost: function (post) {
     //TODO: ajax
-    post["id"] = UUID.v4();
-    this.postStore.add(post);
+    post.id = UUID.v4();
+    this.postStore.add(new Post(post));
     this.pushPosts();
   },
 
@@ -104,7 +105,7 @@ export default Reflux.createStore({
     //TODO: ajax
     comment.id = UUID.v4();
     var post = this.postStore.getPost(post.author.id, post.id);
-    post.comments.push(new Comment(comment));
+    post.addComment(new Comment(comment));
     this.pushPosts();
   },
 
@@ -117,7 +118,6 @@ export default Reflux.createStore({
 
     // if we're currently listening for author posts
     if (!Check.undefined(this.authorViewId)) {
-      console.log("here we are");
       postTypes.authorPosts = this.postStore.getPostsByAuthorId(this.authorViewId);
     }
 
