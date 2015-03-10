@@ -11,7 +11,7 @@ import AuthorActions from '../actions/author';
 // https://github.com/rackt/react-autocomplete/blob/master/examples/basic/main.js
 export default React.createClass({
 
-  mixins: [Navigation, Reflux.connect(AuthorStore, "authorNameList")],
+  mixins: [Navigation, Reflux.connect(AuthorStore)],
 
   getInitialState: function () {
     return {
@@ -34,7 +34,7 @@ export default React.createClass({
   render: function () {
     return (
       <Typeahead
-        options={this.state.authorList}
+        options={this.state.authorNameList}
         onSelect={this.onSelect}
         placeholder="Find friends..." />
     );

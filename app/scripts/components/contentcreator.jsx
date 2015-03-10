@@ -3,6 +3,7 @@ import Reflux from 'reflux';
 import { Link } from 'react-router';
 import { Input } from 'react-bootstrap';
 import { markdown as Markdown } from 'markdown';
+import Check from 'check-types';
 
 import PostActions from '../actions/post';
 
@@ -11,9 +12,7 @@ import PostActions from '../actions/post';
 export default React.createClass({
 
   getInitialState: function() {
-    return {
-      content: this.defaultContent()
-    };
+    return this.defaultContent();
   },
 
   defaultContent: function () {
@@ -53,20 +52,25 @@ export default React.createClass({
   },
 
   render: function() {
+
+    // don't go further if we don't have our current author prop
+    if (Check.emptyObject(this.props.currentAuthor)) {
+      return (<div></div>);
+    }
+
     var Submit = <Input className="pull-right" type="submit" value="Post" onClick={this.submitContent} />;
     return (
       <div className="media">
         <div className="media-left">
           <Link to="author" params={{id: this.props.currentAuthor.id}}>
-            <img className="media-object author-image" src={this.props.currentAuthor.image}/>
+            <img className="media-object author-image" src={this.props.currentAuthor.getImage()}/>
           </Link>
         </div>
         <div className="media-body content-creator">
-          <Input type="textarea" placeholder="Say something witty..." value={this.state.content.content} onChange={this.contentChange} />
-          <Input type="select" value={this.state.content.format} onChange={this.formatChange} buttonAfter={Submit}>
+          <Input type="textarea" placeholder="Say something witty..." value={this.state.content} onChange={this.contentChange} />
+          <Input type="select" value={this.state.format} onChange={this.formatChange} buttonAfter={Submit}>
             <option value="markdown">Markdown</option>
             <option value="text">Text</option>
-            <option value="HTML">HTML</option>
           </Input>
         </div>
       </div>

@@ -2,8 +2,8 @@ import React from 'react';
 import Reflux from 'reflux';
 import Check from 'check-types';
 import { Navigation } from 'react-router';
-import { NavItemLink } from 'react-router-bootstrap';
-import { Navbar, Nav, NavItem} from 'react-bootstrap';
+import { NavItemLink, ButtonLink } from 'react-router-bootstrap';
+import { Navbar, Nav, NavItem, ButtonToolbar, DropdownButton, MenuItem } from 'react-bootstrap';
 
 import UserSearch from './usersearch';
 import AuthorActions from '../actions/author';

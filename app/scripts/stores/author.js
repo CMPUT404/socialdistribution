@@ -1,5 +1,7 @@
 import Reflux from 'reflux';
 import UUID from 'uuid';
+
+import Author from '../objects/author';
 import AuthorActions from '../actions/author';
 
 var ALIST = [{
@@ -7,6 +9,7 @@ var ALIST = [{
   id: "1234",
   bio: "I'm a fun loving guy who loves to learn",
   image: "images/bert.jpg",
+  subscriptions: ["4567","9876"],
   friend_request_count: 3,
   notifications: []
 },
@@ -14,19 +17,23 @@ var ALIST = [{
   id: "4567",
   name: "Benny Bennassi",
   image: "images/benny.jpg",
-  bio: "I love satisfcation"
+  bio: "I love satisfcation",
+  subscriptions: ["1234","9876"],
+  friend_request_count: 1,
 },
 {
   id: "9876",
   name: "Kanye West",
   image: "images/kanye.jpg",
-  bio: "I think I'm the greatest rapper alive"
+  bio: "I think I'm the greatest rapper alive",
+  subscriptions: ["1234"]
 },
 {
   id: "2192",
   name: "David Guetta",
   image: "images/david.jpg",
-  bio: "I have an over inflated ego"
+  bio: "I have an over inflated ego",
+  subscriptions: ["4567","9876"],
 }];
 
 // Deals with store Author information. Both for the logged in user and other
@@ -36,7 +43,10 @@ export default Reflux.createStore({
   init: function() {
 
     this.currentAuthor = {};
-    this.authorList = ALIST;
+    this.authorList = [];
+    this.subscriptionStore = new Map();
+
+    this.getAuthors();
 
     this.listenTo(AuthorActions.checkAuth, this.checkAuth);
     this.listenTo(AuthorActions.login.completed, this.loginCompleted);
@@ -44,7 +54,10 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.logout, this.logOut);
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
     this.listenTo(AuthorActions.getAuthorViewData, this.getAuthorViewData);
+<<<<<<< HEAD
     this.listenTo(AuthorActions.getAuthorAndListen, this.getAuthorViewData);
+=======
+>>>>>>> origin/master
     this.listenTo(AuthorActions.subscribeTo, this.subscribeTo);
     this.listenTo(AuthorActions.unsubscribeFrom, this.unsubscribeFrom);
   },
@@ -81,13 +94,13 @@ export default Reflux.createStore({
     return null;
   },
 
-  // check that our author is still logged in, update state of components
-  checkAuth: function () {
-    // TODO: ajax get author info rather than simply spoofing a successful auth
-    var author = ALIST[1];
-    if (author) {
-      this.loginCompleted(author);
+  getAuthorById: function (id) {
+    for (let author of this.authorList) {
+      if (author.isAuthor(id)) {
+        return author;
+      }
     }
+    return undefined;
   },
 
   getAuthorViewData: function (authorId) {
@@ -120,7 +133,10 @@ export default Reflux.createStore({
       this.loginCompleted(author);
     }
   },
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/master
   // Handles logging the user in using the provided credentials
   // Also need to set our basic auth token somewhere
   loginCompleted: function(author) {

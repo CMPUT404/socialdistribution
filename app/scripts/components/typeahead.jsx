@@ -16,6 +16,7 @@ export default React.createClass({
   // simple regex
   filter: function (value, options) {
 
+    console.log(options);
     if (this.state.value.length == 0) {
       return new Array();
     }

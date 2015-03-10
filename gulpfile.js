@@ -5,7 +5,7 @@ var del         = require('del');
 var source      = require('vinyl-source-stream');
 var browserify  = require('browserify');
 var runSequence = require('run-sequence');
-var babelify    = require("babelify");
+var babelify    = require('babelify');
 
 var env = 'dev';
 
@@ -21,7 +21,7 @@ gulp.task('scripts', function() {
   var bundler = browserify('./app/scripts/app.js', {
     debug: true,
     extensions: ['.js','.jsx']
-  }).transform(to5ify);
+  }).transform(babelify);
 
   return bundler.bundle()
     .pipe(source('app.js'))

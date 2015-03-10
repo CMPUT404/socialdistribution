@@ -9,7 +9,7 @@ import Login from './components/login';
 var routes = (
 	<Route path="/" name="timeline" handler={Layout}>
     <DefaultRoute handler={Timeline} />
-    <Route name="author" path="/author/?:id?" handler={Author} />
+    <Route name="author" path="/author/:id?" handler={Author} />
     <Route name="login" handler={Login} />
 	</Route>
 );

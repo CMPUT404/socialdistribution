@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from timeline.models import Post, Comment
+from timeline.models import Post, Comment, ACL
 import time
 import datetime
+from copy import deepcopy
 from author.serializers import CompactUserSerializer
 
 
@@ -15,6 +16,23 @@ class UnixDateTimeField(serializers.DateTimeField):
         except(AttributeError, TypeError):
             return None
 
+class ACLSerializer(serializers.ModelSerializer):
+    permissions = serializers.CharField()
+    shared_users = serializers.ListField(child=serializers.CharField())
+    class Meta:
+        model = ACL
+        fields = ('permissions', 'shared_users')
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = CompactUserSerializer(many=False, read_only=True)
+    # post = PostSerializer(many=False, read_only=True)
+    date = UnixDateTimeField(read_only=True)
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'date', 'user')
+        read_only_fields = ('date')
+
 
 class PostSerializer(serializers.ModelSerializer):
     """
@@ -26,6 +44,7 @@ class PostSerializer(serializers.ModelSerializer):
                 user:{username:'', first_name:'', last_name:''},
                 id:'',
                 text:'',
+                acl:{'permissions':300, 'shared_users':[]},
                 date:'',
                 image:''
             }
@@ -33,19 +52,24 @@ class PostSerializer(serializers.ModelSerializer):
 
     Only for retrieval. Should not be used for insertion.
     """
+    acl = ACLSerializer(many=False)
     user = CompactUserSerializer(many=False, read_only=True)
     date = UnixDateTimeField(read_only=True)
+    # text = serializers.CharField()
+    comments = CommentSerializer(read_only=True, many=True)
+    # date = serializers.CharField(read_only=True)
+
     class Meta:
         model = Post
-        fields = ('user', 'id', 'text', 'public', 'fof', 'date', 'image')
+        fields = ('user', 'id', 'text', 'date', 'image', 'comments', 'acl')
 
         # Fields that must not be set in HTTP request body
-        read_only_fields = ('user' 'id', 'date',)
+        read_only_fields = ('user' 'id', 'date', 'comments',)
 
+    def create(self, validated_data):
+        data = deepcopy(validated_data)
+        acl_data = data.pop('acl', {"permissions": 300,"shared_users": []})
+        acl_object = ACL.objects.create(**acl_data)
+        post = Post.objects.create(acl=acl_object, user=self.context['user'], **data)
+        return post
 
-class CommentSerializer(serializers.ModelSerializer):
-    date = UnixDateTimeField(read_only=True)
-    class Meta:
-        model = Comment
-        fields = ('id', 'text', 'date')
-        read_only_fields('date')

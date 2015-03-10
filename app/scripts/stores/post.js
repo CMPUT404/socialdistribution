@@ -36,7 +36,7 @@ export default Reflux.createStore({
 
   getTimeline: function (authorId) {
     //TODO: ajax
-    this.trigger({posts: this.orderPosts(this.posts)});
+    this.pushPosts();
   },
 
   // used to find specific author posts for author views
