@@ -9,6 +9,9 @@ urlpatterns = [
     # POST /logout
     url(r'^logout/?$', viewsauth.Logout.as_view(), name='logout'),
 
+    # GET POST /author/profile
+    url(r'^profile/?$', viewsauth.AuthorProfile.as_view(), name='profile'),
+
     # GET /author/friends/:username
     url(r'^friends/(?P<id>[0-9a-zA-Z_]+)/?$', views.GetAuthorFriends.as_view(),
         name = 'user_friends'),

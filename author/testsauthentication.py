@@ -59,6 +59,22 @@ class AuthorAuthentication(TestCase):
         Author.objects.all().delete()
         User.objects.all().delete()
 
+    def pretty_print_dict(self, data):
+        """Pretty prints a dictionary object"""
+        print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+
+    def util_register_and_get_header(self):
+        """Register base user and retrieve header information"""
+        response = c.post('/author/registration/', self.user_dict)
+        self.assertEquals(response.status_code, 201, "User and Author not created")
+
+        content = json.loads(response.content)
+        new_auth_headers = {
+            'HTTP_AUTHORIZATION': 'Token %s'  %content['token']
+        }
+
+        return new_auth_headers
+
     def test_registration(self):
         """
         Test a registration where all values are given in the JSON body
@@ -176,3 +192,102 @@ class AuthorAuthentication(TestCase):
         response = c.post('/author/logout/', **self.auth_headers)
 
         self.assertEquals(response.status_code, 200, "User not logged out")
+
+    def test_get_profile(self):
+        new_auth_headers = self.util_register_and_get_header()
+        response = c.get('/author/profile', **new_auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        content = json.loads(response.content)
+        # self.pretty_print_dict(content)
+
+        self.assertEquals(content['email'], EMAIL)
+        self.assertEquals(content['bio'], BIO)
+
+    def test_author_update(self):
+        new_auth_headers = self.util_register_and_get_header()
+
+        # All fields are good and should return 200
+        update_author_dict = {
+            'first_name':FIRST_NAME + "u",
+            'last_name':LAST_NAME + "u",
+            'email':EMAIL + "u",
+            'github_username':GITHUB_USERNAME + "u",
+            'bio':BIO + "u" }
+
+        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        # self.pretty_print_dict(json.loads(response.content))
+
+        # Compare the response content to that content in the database
+        user = User.objects.get(username = USERNAME)
+        details = Author.objects.get(user = user)
+
+        self.assertEquals(user.email, update_author_dict['email'])
+        self.assertEquals(user.first_name, update_author_dict['first_name'])
+        self.assertEquals(user.last_name, update_author_dict['last_name'])
+
+        self.assertEquals(details.bio, update_author_dict['bio'])
+        self.assertEquals(details.github_username, update_author_dict['github_username'])
+
+    def test_author_update_bad_authorization(self):
+        # Given header is not for the owner
+        response = c.post('/author/registration/', self.user_dict)
+        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
+
+        new_auth_headers = {
+            'HTTP_AUTHORIZATION': 'Token 1929223'
+        }
+
+        old = User.objects.get(last_name = LAST_NAME)
+
+        update_author_dict = {
+            'email':EMAIL + "u",
+            'bio':BIO + "u" }
+
+        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        self.assertEquals(response.status_code, 401)
+
+        new = User.objects.get(last_name = LAST_NAME)
+        self.assertEquals(old, new, "Author profile should not have been updated")
+
+    def test_author_update_partial(self):
+        new_auth_headers = self.util_register_and_get_header()
+
+        # All fields are good and should return 200
+        update_author_dict = {
+            'email':EMAIL + "u",
+            'bio':BIO + "u" }
+
+        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        # self.pretty_print_dict(json.loads(response.content))
+
+        # Compare the response content to that content in the database
+        user = User.objects.get(username = USERNAME)
+        details = Author.objects.get(user = user)
+
+        self.assertEquals(user.email, update_author_dict['email'])
+
+        self.assertEquals(details.bio, update_author_dict['bio'])
+
+    def test_author_update_bad_fields(self):
+        """Good fields will still be parsed; bad fields ignored"""
+        new_auth_headers = self.util_register_and_get_header()
+
+        # All fields are good and should return 200
+        update_author_dict = {
+            'bad_email':EMAIL + "u",
+            'bio':BIO + "u" }
+
+        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        self.assertEquals(response.status_code, 200)
+
+        # Compare the response content to that content in the database
+        user = User.objects.get(username = USERNAME)
+        details = Author.objects.get(user = user)
+
+        self.assertTrue(user.email != update_author_dict['bad_email'])
+        self.assertEquals(details.bio, update_author_dict['bio'])
