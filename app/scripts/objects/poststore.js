@@ -7,11 +7,11 @@ export default class {
   constructor () {
     // a list of all posts in chronological order, simply reverse the array to
     // get the timeline
-    this.allPosts = [];
+    this.timeline = new Array();
 
-    // map of authors to posts based on their index position in allPosts again
+    // map of authors to posts based on their index position in timeline again
     // in chronological order, reverse the map value to get a user profile
-    this.userMap = new Map();
+    this.authorMap = new Map();
   }
 
   // adds a post to the store and updates caches in various ways
@@ -22,35 +22,35 @@ export default class {
     }
 
     // add post to the master list
-    var length = this.allPosts.push(post);
-    var allPostIndex = length - 1;
-
+    this.timeline.push(post);
     // now update the user's post list
     var authorId = post.author.id;
-    var userPosts = this.userMap.get(authorId);
+    var userPosts = this.authorMap.get(authorId);
 
     if (Check.undefined(userPosts)) {
-      this.userMap.set(authorId, [allPostIndex]);
+      this.authorMap.set(authorId, [post]);
     } else {
-      userPosts.push(allPostIndex);
+      userPosts.push(post);
     }
   }
 
-  // removes a post from the store, a bit cumbersome
-  removePost (post) {
+  // removes a post from the store, needs the full post object so we can figure
+  // out author id
+  remove (post) {
     // first remove from user map
-    var posts = this.userMap.get(post.author.id);
+    var posts = this.getPostsByAuthorId(post.author.id);
     var postIndex = posts.indexOf(post);
-    var allPostsIndex = posts[postIndex];
-    posts.slice(postIndex, 1);
 
-    // now remove it from the master list
-    this.allPosts.slice(allPostIndex, 1);
+    // now remove from timeline
+    var timelineIndex = this.timeline.indexOf(post);
+    this.timeline.slice(timelineIndex, 1);
   }
 
   getTimeline (offset = 0, pagination = 25) {
-    // return newest posts first
-    return this.allPosts.reverse().slice(offset, offset + pagination);
+    // make a copy of the array as not to reverse the real deal, then return newest
+    // posts first
+    var timeline = this.timeline.slice(0);
+    return timeline.reverse();//.slice(offset, offset + pagination);
   }
 
   // assumes that if this is being called, we have reason to believe that this
@@ -58,22 +58,20 @@ export default class {
   getPost (authorId, postId) {
 
     // get author posts
-    var postIndices = this.getPostsByAuthorId(authorId);
+    var posts = this.getPostsByAuthorId(authorId);
 
     // then find post in array
-    for (let allPostIndex of postIndices) {
-      var post = this.allPosts[allPostIndex];
+    for (let post of posts) {
       if (post.id == postId) {
         return post;
       }
     }
 
-    // throw this because if we get here, the app logic is wrong
-    throw "No post matching (authorId, postId): " + authorId + " - " + postId;
+    return undefined;
   }
 
   getPostsByAuthorId (authorId) {
-    var posts = this.userMap.get(authorId);
+    var posts = this.authorMap.get(authorId);
     if (Check.undefined(posts)) {
       return [];
     }
@@ -84,6 +82,6 @@ export default class {
   }
 
   getAuthorViewPosts (authorId, offset = 0, pagination = 25) {
-    return this.getPostsByAuthorId(authorId).reverse().slice(offset, offset + pagination);
+    return this.getPostsByAuthorId(authorId).reverse();//.slice(offset, offset + pagination);
   }
 }

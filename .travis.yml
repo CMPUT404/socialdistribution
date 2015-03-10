@@ -2,9 +2,10 @@ language: python
 python: "2.7"
 install:
     - "npm install"
+    - "npm install bower"
     - "bower install"
-    - "npm test"
-    - "pip install django"
     - "pip install -r requirements.txt"
+    - "./manage.py migrate"
 script:
-    - "python manage.py test app"
+    - "npm run-script mocha"
+    - "./manage.py test"
