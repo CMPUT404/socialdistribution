@@ -280,16 +280,15 @@ class TimelineAPITestCase(TestCase):
         #self.assertTrue(response.data["acl"]["permissions"] == 200, "privacy not marked public")
 
     def test_add_comment_to_public_post(self):
-        post = {'text':TEXT, 'public':True, 'fof':True}
-        response = c.post('/author/post', data = post, **self.auth_headers)
+        acl = {"permissions":200, "shared_users":[]}
+        post = {"text":TEXT, "acl":acl}
+        response = c.post('/author/post', json.dumps(post), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
-        self.assertTrue(response.data['public'], 'privacy not marked public')
-        self.assertTrue(response.data['fof'], "fof not marked public")
         # get the post id
         post_id = Post.objects.all()[0].id
-        comment = {'text':TEXT}
+        comment = {"text":TEXT}
         # comment on the post
-        response = c.post('/author/posts/%s/comments' %post_id, data=comment, **self.auth_headers)
+        response = c.post('/author/posts/%s/comments' %post_id, json.dumps(comment), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
         comment_id = response.data['id']
         # get the comment and ensure data is as expected
@@ -297,16 +296,15 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.data['text'], TEXT)
 
     def test_delete_comment(self):
-        post = {'text':TEXT, 'public':True, 'fof':True}
-        response = c.post('/author/post', data = post, **self.auth_headers)
+        acl = {"permissions":200, "shared_users":[]}
+        post = {"text":TEXT, "acl":acl}
+        response = c.post('/author/post', json.dumps(post), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
-        self.assertTrue(response.data['public'], 'privacy not marked public')
-        self.assertTrue(response.data['fof'], "fof not marked public")
         # get the post id
         post_id = Post.objects.all()[0].id
-        comment = {'text':TEXT}
+        comment = {"text":TEXT}
         # comment on the post
-        response = c.post('/author/posts/%s/comments' %post_id, data=comment, **self.auth_headers)
+        response = c.post('/author/posts/%s/comments' %post_id, json.dumps(comment), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
         comment_id = response.data['id']
         # delete the comment
@@ -320,16 +318,15 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 404)
 
     def test_get_post_with_comments(self):
-        post = {'text':TEXT, 'public':True, 'fof':True}
-        response = c.post('/author/post', data = post, **self.auth_headers)
+        acl = {"permissions":200, "shared_users":[]}
+        post = {"text":TEXT, "acl":acl}
+        response = c.post('/author/post', json.dumps(post), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
-        self.assertTrue(response.data['public'], 'privacy not marked public')
-        self.assertTrue(response.data['fof'], "fof not marked public")
         # get the post id
         post_id = Post.objects.all()[0].id
-        comment = {'text':TEXT}
+        comment = {"text":TEXT}
         # comment on the post
-        response = c.post('/author/posts/%s/comments' %post_id, data=comment, **self.auth_headers)
+        response = c.post('/author/posts/%s/comments' %post_id, json.dumps(comment), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
         # get the post
         response = c.get('/author/%s/posts/%s' %(self.user_a.username, post_id), **self.auth_headers)
