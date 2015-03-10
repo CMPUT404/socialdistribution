@@ -9,6 +9,43 @@ from author.models import (
     FriendRelationship,
     FriendRequest )
 
+class AuthorUpdateSerializer(serializers.Serializer):
+    """
+    Validates incoming form data for author profile updates
+
+    Update passwords is done separately.
+    Username cannot be updated.
+    """
+    email = serializers.EmailField(required = False)
+    bio = serializers.CharField(required = False)
+    first_name = serializers.CharField(required = False)
+    last_name = serializers.CharField(required = False)
+    github_username = serializers.CharField(required = False)
+
+    def update(self, instance, validated_data):
+        """
+        Updates UserDetails model with validated_data
+
+        Takes:
+            instance: An instantiated UserDetails model.
+            validated_dated: Scrubed data from an HTTP request.
+        """
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.github_username = validated_data.get('github_username', \
+        instance.github_username)
+
+        instance.save()
+
+        instance.user.email = validated_data.get('email', instance.user.email)
+        instance.user.last_name = validated_data.get('last_name', \
+            instance.user.last_name)
+        instance.user.first_name = validated_data.get('first_name', \
+            instance.user.first_name)
+
+        instance.user.save()
+
+        return instance
+
 class RegistrationSerializer(serializers.Serializer):
     """
     Validates incoming form data for user registration

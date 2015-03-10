@@ -4,17 +4,48 @@ from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 
 from rest_framework import status
 
-from author.serializers import RegistrationSerializer, AuthorSerializer
+from author.serializers import (
+    RegistrationSerializer,
+    AuthorSerializer,
+    AuthorUpdateSerializer )
+
 from author.models import Author
 
 """
-All views related to authentication
+All views related to authentication/registration and update
 """
+
+class AuthorProfile(APIView):
+    """
+    Takes incoming JSON, validates it and updates or returns profile
+    associated with the authorization header.
+    """
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+        details = Author.objects.get(user = request.user)
+        serializer = AuthorSerializer(details)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = AuthorUpdateSerializer(data = request.DATA)
+
+        if serializer.is_valid(raise_exception = True):
+            user_details = Author.objects.get(user = request.user)
+            instance = serializer.update(user_details, serializer.data)
+
+            details = AuthorSerializer(instance)
+
+            return Response(details.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AuthorRegistration(APIView):
     """
