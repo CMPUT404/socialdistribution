@@ -10,42 +10,42 @@ import AuthorActions from '../actions/author';
 import ContentViewer from './contentviewer';
 import ContentCreator from './contentcreator';
 import Follow from './follow';
+import Spinner from './spinner';
 
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
 export default React.createClass({
 
-mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
+  mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
 
-  statics: {
-
-    // since the author component can sometimes be mounted in the background,
-    // ensure we update the author if we're not coming back to the same one
-    willTransitionTo: function (transition, params) {
-      AuthorActions.getAuthorAndListen(params.id);
-    },
-
-    willTransitionFrom: function () {
-      AuthorActions.unbindAuthorListener();
-    }
-  },
+  // statics: {
+  //
+  //   // since the author component can sometimes be mounted in the background,
+  //   // ensure we update the author if we're not coming back to the same one
+  //   willTransitionTo: function (transition, params) {
+  //     AuthorActions.getAuthorAndListen(params.id);
+  //   },
+  //
+  //   willTransitionFrom: function () {
+  //     AuthorActions.unbindAuthorListener();
+  //   }
+  // },
 
   getInitialState: function() {
     return {
-      displayAuthor: {},
-      authorPosts: []
+      displayAuthor: null,
+      authorPosts: [],
     };
   },
 
   componentDidMount: function () {
-    AuthorActions.getAuthorAndListen(this.getParams().id);
+    AuthorActions.fetchDetails(this.getParams().id);
   },
 
   render: function() {
-
     // if we haven't gotten our initial data yet, put a spinner in place
-    if (_.isEmpty(this.state.displayAuthor)) {
-      return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
+    if (_.isNull(this.state.displayAuthor) || _.isNull(this.state.authorPosts)) {
+      return (<Spinner />);
     }
 
     // this comes from the RouterState mixin and lets us pull an author id out
@@ -54,7 +54,7 @@ mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
     var contentCreator, follow;
 
     // see if the viewer is logged in
-    if (!_.isEmpty(this.props.currentAuthor)) {
+    if (!_.isNull(this.props.currentAuthor)) {
 
       // if viewing their own profile
       if (this.props.currentAuthor.isAuthor(authorViewId)) {
@@ -71,11 +71,13 @@ mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
             <img className="media-object profile-image" src={this.state.displayAuthor.getImage()} />
           </div>
           <div className="media-body">
-            <h4 className="media-heading">{this.state.displayAuthor.name}</h4>
+            <h4 className="media-heading">{this.state.displayAuthor.displayname}</h4>
+            <h2 className="media-heading">{this.state.displayAuthor.getName()}</h2>
             <p><strong>Bio:</strong> {this.state.displayAuthor.bio}</p>
-            <p><strong>Following:</strong> {this.state.displayAuthor.getSubscriptionCount()}</p>
-            <p><strong>Followers:</strong> {this.state.displayAuthor.getSubscriberCount()}</p>
-            <p><a href={this.state.displayAuthor.github} target="_blank">Github</a></p>
+            <p><strong>Email:</strong> {this.state.displayAuthor.email}</p>
+            {/**<p><strong>Following:</strong> {this.state.displayAuthor.getSubscriptionCount()}</p>*/}
+            {/**<p><strong>Followers:</strong> {this.state.displayAuthor.getSubscriberCount()}</p>**/}
+            <p><a href={this.state.displayAuthor.getGithub()} target="_blank">Github</a></p>
             {follow}
           </div>
         </div>

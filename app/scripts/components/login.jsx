@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
+import Reflux from 'reflux';
 import { Navigation } from 'react-router';
 import { Grid, Row, Col, Input, PageHeader, Button } from 'react-bootstrap';
 
@@ -15,7 +16,7 @@ export default React.createClass({
     willTransitionTo: function (transition, params) {
       // Using the author store is a hack, but until
       // https://github.com/rackt/react-router/pull/590 is merged/closed
-      if (!_.isEmpty(AuthorStore.currentAuthor)) {
+      if (AuthorStore.isLoggedIn()) {
         transition.redirect("timeline");
       }
     }
@@ -28,13 +29,19 @@ export default React.createClass({
     };
   },
 
-  usernameChange: function(evt) {
-    this.setState({username: evt.target.value});
+  shouldComponentUpdate: function(nextProps) {
+    // when the currentAuthor props changes
+    // we  need to get out. lets transition
+    if (!_.isNull(nextProps.currentAuthor)) {
+      this.transitionTo('timeline');
+      return false;
+    }
+
+    return true;
   },
 
-  passwordChange: function(evt) {
-    this.setState({password: evt.target.value});
-  },
+  usernameChange : function(evt) { this.setState({username: evt.target.value}); },
+  passwordChange : function(evt) { this.setState({password: evt.target.value}); },
 
   logIn: function(evt) {
     evt.preventDefault();

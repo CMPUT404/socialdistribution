@@ -1,53 +1,30 @@
+import _ from 'lodash';
 import Reflux from 'reflux';
+import Request from '../utils/request';
 
 import Author from '../objects/author';
 import AuthorActions from '../actions/author';
-
-var ALIST = [{
-  name: "Bert McGert",
-  id: "1234",
-  bio: "I'm a fun loving guy who loves to learn",
-  image: "images/bert.jpg",
-  subscriptions: ["4567","9876"],
-  friend_request_count: 3,
-  notifications: []
-},
-{
-  id: "4567",
-  name: "Benny Bennassi",
-  image: "images/benny.jpg",
-  bio: "I love satisfcation",
-  subscriptions: ["1234","9876"],
-  friend_request_count: 1,
-},
-{
-  id: "9876",
-  name: "Kanye West",
-  image: "images/kanye.jpg",
-  bio: "I think I'm the greatest rapper alive",
-  subscriptions: ["1234"]
-},
-{
-  id: "2192",
-  name: "David Guetta",
-  image: "images/david.jpg",
-  bio: "I have an over inflated ego",
-  subscriptions: ["4567","9876"],
-}];
 
 // Deals with store Author information. Both for the logged in user and other
 // author's we need to load with their content.
 export default Reflux.createStore({
 
   init: function() {
-
-    this.currentAuthor = {};
+    // isEmpty calls on ES6 or prototype classes will return true
+    // Hence, this must be null when no user is active
+    this.currentAuthor = null;
     this.authorList = [];
-    this.subscriptionStore = new Map();
 
     this.getAuthors();
 
     this.listenTo(AuthorActions.checkAuth, this.checkAuth);
+
+    // Actions
+    this.listenTo(AuthorActions.login, 'onLogin');
+    this.listenTo(AuthorActions.register, 'onRegister');
+    this.listenTo(AuthorActions.fetchDetails, 'onFetchDetails');
+
+    // Handler declarations
     this.listenTo(AuthorActions.login.completed, this.loginCompleted);
     this.listenTo(AuthorActions.login.failed, this.ajaxFailed);
     this.listenTo(AuthorActions.logout, this.logOut);
@@ -57,20 +34,72 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.unsubscribeFrom, this.unsubscribeFrom);
     this.listenTo(AuthorActions.register.completed, this.registrationComplete);
     this.listenTo(AuthorActions.register.failed, this.ajaxFailed);
+    this.listenTo(AuthorActions.fetchDetails.completed, this.fetchComplete);
+    this.listenTo(AuthorActions.register.failed, this.ajaxFailed);
+
+  },
+
+  // Action Executioners
+  onLogin: function(username, password) {
+    Request
+      .get('http://localhost:8000/author/login/') //TODO: remove host
+      .auth(username, password)
+      .promise()
+      .then( AuthorActions.login.completed )
+      .catch( AuthorActions.login.failed );
+  },
+
+  onRegister: function(payload) {
+    Request
+      .post('http://localhost:8000/author/registration/') //TODO: remove host
+      .send(payload)
+      .promise()
+      .then( AuthorActions.register.completed )
+      .catch( AuthorActions.register.failed );
+  },
+
+  onFetchDetails: function(id) {
+    if (this.isLoggedIn() && id === this.currentAuthor.id) {
+      AuthorActions.fetchDetails.completed(this.currentAuthor);
+    } else {
+      Request
+        .get('http://localhost:8000/author/' + id + '/') //TODO: remove host
+        .token(this.getToken())
+        .promise()
+        .then( AuthorActions.fetchDetails.completed )
+        .catch( AuthorActions.fetchDetails.failed );
+    }
+  },
+
+  // if in a static method and need acces to store state
+  // use the next two methods
+  isLoggedIn: function() {
+    return !_.isNull(this.currentAuthor);
+  },
+
+  getAuthor: function() {
+    return this.currentAuthor;
+  },
+
+  getToken: function() {
+    var token = null;
+
+    if (this.isLoggedIn()) {
+        token = this.currentAuthor.token;
+    }
+
+    return token;
   },
 
   // TODO: ajax this
   getAuthors: function () {
-    var authorListData = ALIST;
-    for (let author of authorListData) {
-      this.addAuthorToList(author);
-    }
+
   },
 
   // call this to cache an author in the author list. Also handles updating
   // updating the subscriptionStore
   addAuthorToList: function (authorData) {
-    this.authorList.push(new Author(authorData, this.subscriptionStore));
+    this.authorList.push(new Author(authorData));
   },
 
   // gets a list of all authors from the server for search purposes
@@ -109,6 +138,8 @@ export default Reflux.createStore({
     }
   },
 
+  // Action Handlers
+
   subscribeTo: function (author) {
     // find authors and add subscriber
     this.currentAuthor.subscribeTo(author);
@@ -124,18 +155,21 @@ export default Reflux.createStore({
 
   // check that our author is still logged in, update state of components
   checkAuth: function () {
-    // TODO: ajax get author info rather than simply spoofing a successful auth
-    var author = this.authorList[0];
-    if (author) {
-      this.loginCompleted(author);
-    }
+    this.trigger({currentAuthor: this.currentAuthor});
   },
+
+  logOut: function() {
+    this.currentAuthor = null;
+    this.trigger({currentAuthor: this.currentAuthor, loggedOut: true});
+  },
+
+  // AJAX Handlers //
 
   // Handles logging the user in using the provided credentials
   // Also need to set our basic auth token somewhere
-  loginCompleted: function(author) {
+  loginCompleted: function(authorData) {
     //TODO: store basic auth token in localStorage
-    this.currentAuthor = author;
+    this.currentAuthor = new Author(authorData.author, authorData.token);
     this.trigger({currentAuthor: this.currentAuthor});
   },
 
@@ -143,12 +177,13 @@ export default Reflux.createStore({
     this.loginCompleted(author);
   },
 
+  fetchComplete: function(author) {
+    this.trigger({displayAuthor: author});
+  },
+
   ajaxFailed: function(error) {
     alertify.error(error);
   },
 
-  logOut: function() {
-    this.currentAuthor = {};
-    this.trigger({currentAuthor: this.currentAuthor, loggedOut: true});
-  }
+
 });

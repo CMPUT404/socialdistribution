@@ -8,8 +8,8 @@ import Login from './components/login';
 import Register from './components/register';
 
 var routes = (
-	<Route path="/" name="timeline" handler={Layout}>
-		<DefaultRoute handler={Timeline} />
+	<Route path="/" name="layout" handler={Layout}>
+		<DefaultRoute name="timeline" handler={Timeline} />
 		<Route name="author" path="/author/:id?" handler={Author} />
 		<Route name="login" handler={Login} />
 		<Route name="register" handler={Register} />
