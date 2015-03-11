@@ -183,7 +183,7 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.data), 1, "Only one post should have been retrieved")
 
-        post = response.data[0]
+        post = response.data['posts'][0]
 
         self.assertEquals(post["author"]["displayname"], USER_A["username"], "Wrong post author")
         self.assertEquals(post["text"], TEXT, "Wrong post content")
@@ -197,12 +197,12 @@ class TimelineAPITestCase(TestCase):
         response = c.get("/author/%s/posts" %id, content_type="application/json", **self.auth_headers)
 
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(len(response.data), 3, "Three posts should have been retrieved")
+        self.assertEquals(len(response.data['posts']), 3, "Three posts should have been retrieved")
 
         post_ids = []
 
         # With the exception of post id, every post has the same text
-        for post in response.data:
+        for post in response.data['posts']:
             post_ids.append(post["id"])
             self.assertEquals(post["text"], TEXT, "Wrong post content")
 
@@ -404,7 +404,7 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 201)
         # get the post
         response = c.get('/author/%s/posts/%s' %(self.author_a.id, post_id), **self.auth_headers)
-        self.assertEquals(response.data[0]['comments'][0]['text'], TEXT)
+        self.assertEquals(response.data['posts'][0]['comments'][0]['text'], TEXT)
 
     def test_create_post_no_auth(self):
         response = c.post('/author/post', {'text':TEXT})
