@@ -479,7 +479,7 @@ class TimelineAPITestCase(TestCase):
 
         self.check_user_in_timeline(users, data)
 
-        self.pretty_print_dict(data)
+        # self.pretty_print_dict(data)
 
     def test_retrieve_timeline_bogus_user(self):
         self.auth_headers = {
