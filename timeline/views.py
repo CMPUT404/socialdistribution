@@ -217,7 +217,7 @@ class GetPosts(APIView):
         # pl = json.loads(pl)
         # pl += self.get_extern_posts(1)
 
-        return Response(serializer.data)
+        return Response({"posts": serializer.data})
 
     def get_extern_posts(self, uuid):
         """Returns a list posts from external nodes"""
