@@ -1,6 +1,8 @@
-# 404
----
+# 404 Social Distribution
+
 [![Build Status](https://travis-ci.org/CMPUT404/socialdistribution.svg?branch=master)](https://travis-ci.org/CMPUT404/socialdistribution)
+
+[Project Specifications](https://github.com/abramhindle/CMPUT404-project-socialdistribution)
 
 Overview: Our stack consists of a React.js app and a backend powered by Django
 Rest Framework. For more information, check out our [API Documentation](https://github.com/CMPUT404/socialdistribution/wiki).
