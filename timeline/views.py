@@ -19,7 +19,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
 from django.http import JsonResponse
-
 import json
 
 class TimelineBuilder():
@@ -47,11 +46,12 @@ class TimelineBuilder():
     def count(self):
         return len(self.posts)
 
-    def get_timeline(self):
-        return {"posts":self.posts}
-
     def get_posts(self):
-        return self.posts
+        #return list of unique posts
+        return {post['id']:post for post in self.posts}.values()
+
+    def get_timeline(self):
+        return {"posts":self.get_posts()}
 
     def __str__(self):
         return unicode(self.get_json())
@@ -87,23 +87,33 @@ class GetTimeline(APIView):
     # Pagination will come in another milestone
 
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, Custom,)
+
+    def get_queryset(self, id):
+
+        result = Post.objects.filter(author__id=id)
+        for post in result:
+            self.check_object_permissions(self.request, post)
+        return result
 
     def get(self, request, format=None):
 
         timeline = TimelineBuilder()
+        author = Author.objects.get(user = request.user)
 
-        timeline.add_queryset(Post.objects.filter(author = request.user))
-
-        # Get friend posts and add to TimelineBuilder
-        friends = FriendRelationship.objects.filter(friend = request.user)\
+        timeline.add_queryset(self.get_queryset(author.id))
+        # Get friend posts and visible friend of friend posts and add to TimelineBuilder
+        friends = FriendRelationship.objects.filter(friend = author)\
             .values('friendor')
-
         for friendor in friends:
-            timeline.add_queryset(Post.objects.filter(author__id = friendor['friendor']))
+            timeline.add_queryset(self.get_queryset(friendor['friendor']))
+            fof = FriendRelationship.objects.filter(friend = friendor['friendor'])\
+                .values('friendor')
+            for friendor in fof:
+                timeline.add_queryset(self.get_queryset(friendor['friendor']))
 
-        timeline.add_queryset(Post.objects.exclude(author__id__in = friends)
-            .exclude(author__id = request.user.id))
+        # timeline.add_queryset(Post.objects.exclude(author__id__in = friends)
+        #     .exclude(author__id = request.user.id))
 
         return JsonResponse(timeline.get_timeline(), safe=False)
 
@@ -125,67 +135,15 @@ class CreatePost(APIView):
     def post(self, request, format=None):
         data = json.loads(request.body)
         author = Author.objects.get(user = request.user)
-        # acl_data = data.get('acl', {"permissions": 300,"shared_users": []})
-        # acl = ACL.objects.create(**acl_data)
+
         serializer = PostSerializer(data = data, context={'author':author})
-        # acl_serializer = ACLSerializer(data = request.data['acl'])
         if serializer.is_valid(raise_exception = True):
             post = serializer.create(serializer.validated_data)
+            self.check_object_permissions(request, post)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
-
-
-class GetDeleteAddComments(APIView):
-    """
-    This view allows attaching comments to a post
-    and deleting comments from a post.
-    """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated, )
-
-    def get_queryset(self, commentid):
-        try:
-            comment = Comment.objects.get(id=commentid)
-        except:
-            raise Http404
-        return comment
-
-    def get(self, request, commentid, format=None):
-        """
-        For testing purposes only.
-        Gets an individual comment.
-        """
-        try:
-            comment = self.get_queryset(commentid)
-        except Http404:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = CommentSerializer(comment)
-        return Response(serializer.data)
-
-    def post(self, request, postid, format=None):
-        """
-        Adds a comment to a post.
-        """
-        serializer = CommentSerializer(data = request.data)
-        if serializer.is_valid(raise_exception = True):
-            author = Author.objects.get(user = request.user)
-            post = Post.objects.get(id=postid)
-            serializer.save(post = post, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors)
-
-    def delete(self, request, commentid, format=None):
-        """
-        Deletes a comment by id
-        """
-        try:
-            comment = self.get_queryset(commentid)
-        except Http404:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        comment.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class GetPosts(APIView):
@@ -227,3 +185,75 @@ class GetPosts(APIView):
         # Mock data with a date in the future for testing sorting
 
         return [{'user':{'username':'jmaguire', 'first_name':'Jerry', 'last_name':'Maguire'}, 'date': '2015-02-25', 'text': u'You complete me', 'image': None, 'id': 99,}]
+
+
+class DeletePost(APIView):
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated, IsAuthor,)
+
+    def delete(self, request, postid, format=None):
+        """
+        Deletes a post by id
+        """
+        try:
+            post = Post.objects.get(id=postid)
+            self.check_object_permissions(self.request, post)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GetDeleteAddComments(APIView):
+    """
+    This view allows attaching comments to a post
+    and deleting comments from a post.
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated, Custom,)
+
+    def get_queryset(self, commentid):
+        try:
+            comment = Comment.objects.get(id=commentid)
+            self.check_object_permissions(self.request, comment.post)
+        except:
+            raise Http404
+        return comment
+
+    def get(self, request, commentid, format=None):
+        """
+        For testing purposes only.
+        Gets an individual comment.
+        """
+        try:
+            comment = self.get_queryset(commentid)
+        except Http404:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data)
+
+    def post(self, request, postid, format=None):
+        """
+        Adds a comment to a post.
+        """
+        serializer = CommentSerializer(data = request.data)
+        if serializer.is_valid(raise_exception = True):
+            author = Author.objects.get(user = request.user)
+            post = Post.objects.get(id=postid)
+            self.check_object_permissions(request, post)
+            serializer.save(post = post, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+
+    def delete(self, request, commentid, format=None):
+        """
+        Deletes a comment by id
+        """
+        try:
+            comment = Comment.objects.get(id=commentid)
+            self.check_object_permissions(request, comment)
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
