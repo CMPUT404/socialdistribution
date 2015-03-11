@@ -70,5 +70,6 @@ class PostSerializer(serializers.ModelSerializer):
         data = deepcopy(validated_data)
         acl_data = data.pop('acl', {"permissions": 300,"shared_users": []})
         acl_object = ACL.objects.create(**acl_data)
-        post = Post.objects.create(acl=acl_object, author=self.context['author'], **data)
+        post = Post(acl=acl_object, author=self.context['author'], **data)
+        post.save()
         return post

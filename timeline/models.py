@@ -76,7 +76,7 @@ class Post(models.Model):
     author = models.ForeignKey(Author, blank=False, editable = False)
 
     def __unicode__(self):
-        return u'%s %s' %(self.author.username, self.text)
+        return u'%s %s' %(self.author.user.username, self.text)
 
 class Comment(models.Model):
     """

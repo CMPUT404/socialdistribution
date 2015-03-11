@@ -97,6 +97,7 @@ class TimelineAPITestCase(TestCase):
         Author.objects.all().delete()
         User.objects.all().delete()
         Post.objects.all().delete()
+        FriendRelationship.objects.all().delete()
         ACL.objects.all().delete()
         Token.objects.all().delete()
 
@@ -112,7 +113,9 @@ class TimelineAPITestCase(TestCase):
         If fof set to True, the created FoF will be retuned as a User Model
         """
         FriendRelationship.objects.create(friendor = self.author_b, friend = self.author_a)
+        FriendRelationship.objects.create(friendor = self.author_a, friend = self.author_b)
         FriendRelationship.objects.create(friendor = self.author_c, friend = self.author_a)
+        FriendRelationship.objects.create(friendor = self.author_a, friend = self.author_c)
 
         pac_1 = ACL.objects.create(**ACL_PUBLIC)
         pac_2 = ACL.objects.create(**ACL_PUBLIC)
@@ -138,6 +141,7 @@ class TimelineAPITestCase(TestCase):
         pac_3 = ACL.objects.create(**ACL_PUBLIC)
 
         FriendRelationship.objects.create(friendor = author_d, friend = self.author_b)
+        FriendRelationship.objects.create(friendor = self.author_b, friend = author_d)
         Post.objects.create(text = TEXT + "D", author = author_d, acl = pac_3)
 
         return user_d
@@ -353,6 +357,34 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 201)
         #self.assertTrue(response.data["acl"]["permissions"] == 200, "privacy not marked public")
 
+    def test_delete_post(self):
+        acl = {"permissions":200, "shared_users":[]}
+        post = {"text":TEXT, "acl":acl}
+        response = c.post('/author/post', json.dumps(post), content_type="application/json", **self.auth_headers)
+        self.assertEquals(response.status_code, 201)
+        # get the post id
+        post_id = response.data['id']
+        # post_id = Post.objects.all()[0].id
+        # delete the post
+        response = c.delete('/author/posts/%s' %post_id, **self.auth_headers)
+        self.assertEquals(response.status_code, 204)
+        # ensure post has been removed
+        self.assertEquals(len(Post.objects.filter(id=post_id)), 0, "Post not deleted")
+        # delete a post that does not exist
+        response = c.delete('/author/posts/comments/%s' %post_id, **self.auth_headers)
+        self.assertEquals(response.status_code, 404)
+
+    def test_attempt_delete_post_non_author(self):
+        acl = {"permissions":200, "shared_users":[]}
+        post = {"text":TEXT, "acl":acl}
+        response = c.post('/author/post', json.dumps(post), content_type="application/json", **self.auth_headers)
+        self.assertEquals(response.status_code, 201)
+        # get the post id
+        post_id = response.data['id']
+        # deny user c's request
+        response = c.delete('/author/posts/%s' %post_id, **self.auth_headers_c)
+        self.assertEquals(response.status_code, 403)
+
     def test_add_comment_to_public_post(self):
         acl = {"permissions":200, "shared_users":[]}
         post = {"text":TEXT, "acl":acl}
@@ -369,19 +401,41 @@ class TimelineAPITestCase(TestCase):
         response = c.get('/author/posts/comments/%s' %comment_id, **self.auth_headers)
         self.assertEquals(response.data['text'], TEXT)
 
-    def test_delete_comment(self):
+    def test_delete_comment_by_comment_author(self):
         acl = {"permissions":200, "shared_users":[]}
         post = {"text":TEXT, "acl":acl}
         response = c.post('/author/post', json.dumps(post), content_type="application/json", **self.auth_headers)
         self.assertEquals(response.status_code, 201)
         # get the post id
-        post_id = Post.objects.all()[0].id
+        post_id = response.data['id']
         comment = {"text":TEXT}
-        # comment on the post
-        response = c.post('/author/posts/%s/comments' %post_id, json.dumps(comment), content_type="application/json", **self.auth_headers)
+        # comment on the post with different user
+        response = c.post('/author/posts/%s/comments' %post_id, json.dumps(comment), content_type="application/json", **self.auth_headers_c)
         self.assertEquals(response.status_code, 201)
         comment_id = response.data['id']
-        # delete the comment
+        # delete the comment (by comment author)
+        response = c.delete('/author/posts/comments/%s' %comment_id, **self.auth_headers_c)
+        self.assertEquals(response.status_code, 204)
+        # ensure comment has been removed
+        response = c.get('/author/posts/comments/%s' %comment_id, **self.auth_headers)
+        self.assertEquals(response.status_code, 404)
+        # delete a comment that does not exist
+        response = c.delete('/author/posts/comments/%s' %comment_id, **self.auth_headers)
+        self.assertEquals(response.status_code, 404)
+
+    def test_attempt_delete_comment_post_author(self):
+        acl = {"permissions":200, "shared_users":[]}
+        post = {"text":TEXT, "acl":acl}
+        response = c.post('/author/post', json.dumps(post), content_type="application/json", **self.auth_headers)
+        self.assertEquals(response.status_code, 201)
+        # get the post id
+        post_id = response.data['id']
+        comment = {"text":TEXT}
+        # comment on the post with different user
+        response = c.post('/author/posts/%s/comments' %post_id, json.dumps(comment), content_type="application/json", **self.auth_headers_c)
+        self.assertEquals(response.status_code, 201)
+        comment_id = response.data['id']
+        # delete the comment (by post author)
         response = c.delete('/author/posts/comments/%s' %comment_id, **self.auth_headers)
         self.assertEquals(response.status_code, 204)
         # ensure comment has been removed
@@ -468,6 +522,7 @@ class TimelineAPITestCase(TestCase):
         response = c.get('/author/timeline', **self.auth_headers)
         self.assertEquals(response.status_code, 200)
         data = json.loads(response.content)['posts']
+        # self.pretty_print_dict(data)
 
         self.assertEquals(len(data), 4, "Wrong # of posts returned")
 
@@ -490,7 +545,13 @@ class TimelineAPITestCase(TestCase):
 
     def test_comments_in_timeline(self):
         # comment on the post
-        post_id = self.post.id
+        FriendRelationship.objects.create(friend = self.author_c, friendor = self.author_b)
+        FriendRelationship.objects.create(friend = self.author_b, friendor = self.author_c)
+        post = Post.objects.create(text = TEXT,
+            author = self.author_b, acl=ACL.objects.create(**ACL_DEFAULT))
+
+        post_id = post.id
+
         comment = {"text":TEXT + " COMMENT"}
 
         response = c.post('/author/posts/%s/comments' %post_id,
@@ -500,14 +561,14 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 201)
 
         # Comments should be embedded in posts
-        response = c.get('/author/timeline', **self.auth_headers)
+        response = c.get('/author/timeline', **self.auth_headers_c)
         self.assertEquals(response.status_code, 200)
 
         data = json.loads(response.content)['posts']
 
         self.assertEquals(len(data), 1, "Too many posts returned")
         self.assertEquals(data[0]['text'], unicode(TEXT), 'Wrong post text')
-        self.assertEquals(data[0]['author']['displayname'], self.user_a.username)
+        self.assertEquals(data[0]['author']['displayname'], self.user_b.username)
 
         # Comment data
         self.assertEquals(data[0]['comments'][0]['author']['displayname'],
