@@ -5,7 +5,7 @@ def isAuthor(request, obj):
     author = Author.objects.get(user = request.user)
     return obj.author.id == author.id
 
-def IsOwner(request, obj):
+def isOwner(request, obj):
     # owned by author or author of parent object
     if isAuthor(request, obj):
         return True
@@ -102,7 +102,7 @@ class Custom(permissions.BasePermission):
 
         # we'll always allow GET, HEAD or OPTIONS requests.
         if request.method == "DELETE":
-            return IsOwner(request, obj) #Obviously not author at this point
+            return isOwner(request, obj) #Obviously not author at this point
         return switch[obj.acl.permissions](request, obj)
 
         #return (isPublic(request, obj) or isAuthor(request, obj) or isFriend(request, obj) or isFoF(request, obj))
