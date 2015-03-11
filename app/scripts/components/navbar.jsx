@@ -6,6 +6,7 @@ import { NavItemLink, ButtonLink } from 'react-router-bootstrap';
 import { Navbar, Nav, NavItem, ButtonToolbar, DropdownButton, MenuItem } from 'react-bootstrap';
 
 import UserSearch from './usersearch';
+import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
 
 //TODO: Display the logged in author name with author_image in the navbar.
@@ -22,7 +23,7 @@ export default React.createClass({
   render: function() {
     var navList;
 
-    if (!_.isEmpty(this.props.currentAuthor)) {
+    if (!_.isNull(this.props.currentAuthor)) {
       navList = [
         <NavItemLink key="timeline" to="/">Timeline</NavItemLink>,
         <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>Profile</NavItemLink>,

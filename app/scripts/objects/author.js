@@ -2,33 +2,43 @@ import _ from 'lodash';
 
 export default class {
 
-  constructor(data, subscriptionStore) {
+  constructor(author, token = null) {
 
-    if (_.isEmpty(data)) {
+    if (_.isEmpty(author)) {
       throw "Empty data object passed to Author constructor";
     }
 
-    this.id = data.id;
-    this.name = data.name;
-    this.github = data.github;
-    this.bio = data.bio;
-    this.image = data.image;
-    this.notifications = data.notifications;
-    this.subscriptionCount = data.subscriptions.length;
-    this.subscriptionStore = subscriptionStore;
+    this.token           = token;
+    this.id              = author.id;
+    this.bio             = author.bio;
+    this.url             = author.url;
+    this.image           = author.image;
+    this.host            = author.host;
+    this.email           = author.email;
+    this.first_name      = author.first_name;
+    this.last_name       = author.last_name;
+    this.displayname     = author.displayname;
+    this.github_username = author.github_username;
+
+    // this.notifications = data.notifications;
+    // this.subscriptionCount = data.subscriptions.length;
+    // this.subscriptionStore = subscriptionStore;
 
     // create or update list of subscriptions for each author this author is
     // subscribed to
-    for (let authorId of data.subscriptions) {
-      var subscriptions = this.subscriptionStore.get(authorId);
-      if (_.isUndefined(subscriptions)) {
-        this.subscriptionStore.set(authorId, [this.id]);
-      } else {
-        subscriptions.push(this.id);
-      }
-    }
+    // for (let authorId of data.subscriptions) {
+    //   var subscriptions = this.subscriptionStore.get(authorId);
+    //   if (_.isUndefined(subscriptions)) {
+    //     this.subscriptionStore.set(authorId, [this.id]);
+    //   } else {
+    //     subscriptions.push(this.id);
+    //   }
+    // }
   }
 
+  getName() {
+    return this.first_name + ' ' + this.last_name;
+  }
   getImage () {
     return _.isUndefined(this.image) ? 'images/placeholder.jpg' : this.image;
   }
@@ -37,6 +47,10 @@ export default class {
     return this.id == authorId;
   }
 
+  getGithub () {
+    var url = this.github_username ? 'http://github.com/' + this.github_username : '';
+    return url;
+  }
   // checks whether both authors subscribe to each other
   hasFriend (author) {
     return this.follows(author.id) && author.follows(this.id) ? true : false;

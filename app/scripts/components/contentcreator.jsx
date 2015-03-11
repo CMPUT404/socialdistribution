@@ -53,7 +53,7 @@ export default React.createClass({
   render: function() {
 
     // don't go further if we don't have our current author prop
-    if (_.isEmpty(this.props.currentAuthor)) {
+    if (_.isNull(this.props.currentAuthor)) {
       return (<div></div>);
     }
 

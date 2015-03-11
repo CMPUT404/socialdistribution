@@ -32,4 +32,12 @@ SuperAgent.Request.prototype.promise = function() {
   } );
 };
 
+SuperAgent.Request.prototype.token = function(token) {
+  if (!_.isNull(token)) {
+    return this.set('Authorization', 'Token ' + token);
+  } else {
+    return this;
+  }
+};
+
 export default SuperAgent;

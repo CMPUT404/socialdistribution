@@ -9,11 +9,11 @@ import AuthorStore from '../stores/author';
 export default React.createClass({
 
   statics: {
-    // When an authenticated user tries to register
+    // When an authenticated user tries to re-login
     willTransitionTo: function (transition, params) {
       // Using the author store is a hack, but until
       // https://github.com/rackt/react-router/pull/590 is merged/closed
-      if (!_.isEmpty(AuthorStore.currentAuthor)) {
+      if (AuthorStore.isLoggedIn()) {
         transition.redirect("timeline");
       }
     }

@@ -13,14 +13,14 @@ export default Reflux.createStore({
 
   init: function() {
     // fetches the list of most recent posts
-    this.postStore = new PostStore();
+    // this.postStore = new PostStore();
 
     // this helps us keep track of what author the user is currently viewing so
     // that we can push specific post updates when they are on that page
     this.authorViewId = undefined;
 
     // TODO: remove this once we are populating our own data
-    this.getPosts();
+    // this.getPosts();
 
     // Listeners
     this.listenTo(PostActions.newPost, this.newPost);
@@ -49,52 +49,11 @@ export default Reflux.createStore({
 
     // listen on author id
     this.authorViewId = authorId;
-    this.pushPosts();
+    // this.pushPosts();
   },
 
   unbindAuthorListener: function () {
     this.authorViewId = undefined;
-  },
-
-  // Used to mock data out
-  defaultPosts: function () {
-
-    var uuid = UUID.v4();
-    var post = new Post({
-      id: uuid,
-      author: {
-        id: "4567",
-        name: "Benny Bennassi",
-        image: "images/benny.jpg"
-      },
-      content: "Check out my new hit satisfaction",
-      type: "raw",
-      timestamp: "1423950298",
-      comments: [{
-        id: UUID.v4(),
-        author: {
-          name: "Kanye West",
-          id: "9876",
-          image: "images/kanye.jpg"
-        },
-        content: "Wow, that's fly dude!",
-        type: "raw",
-        timestamp: "1424036698"
-      },
-      {
-        id: UUID.v4(),
-        author: {
-          name: "David Guetta",
-          id: "2192",
-          image: "images/david.jpg"
-        },
-        content: "## I dunno man, needs more Dub...",
-        type: "markdown",
-        timestamp: "1424209498"
-      }]
-    });
-
-    this.postStore.add(post);
   },
 
   newPost: function (post) {
