@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Reflux from 'reflux';
-import UUID from 'uuid';
 
 import PostActions from '../actions/post';
 import AuthorActions from '../actions/author';
@@ -58,9 +57,9 @@ export default Reflux.createStore({
 
   newPost: function (post) {
     //TODO: ajax
-    post.id = UUID.v4();
-    this.postStore.add(new Post(post));
-    this.pushPosts();
+    // post.id = UUID.v4();
+    // this.postStore.add(new Post(post));
+    // this.pushPosts();
   },
 
   newComment: function (post, comment) {

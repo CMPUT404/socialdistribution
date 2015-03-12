@@ -2,10 +2,9 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import SuperAgent from 'superagent';
 
-SuperAgent.Request.prototype.promise = function() {
+SuperAgent.Request.prototype.promise = function createPromise(done, fail) {
   var self = this;
-
-  return new Promise( function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     self
       .set('Accept', 'application/json')
       .end( (res) => {
@@ -29,7 +28,7 @@ SuperAgent.Request.prototype.promise = function() {
           }
         }
       } );
-  } );
+  }).then(done).catch(fail);
 };
 
 SuperAgent.Request.prototype.token = function(token) {

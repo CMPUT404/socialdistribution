@@ -1,23 +1,24 @@
 import _ from 'lodash';
 import React from 'react';
-import Reflux from 'reflux';
 import { Col, Button } from 'react-bootstrap';
-import { State, Navigation } from 'react-router';
+import { Navigation } from 'react-router';
 
-import PostStore from '../stores/post';
-import AuthorStore from '../stores/author';
+import AuthorActions from '../actions/author';
 import PostActions from '../actions/post';
-import UserSearch from './usersearch';
+
 import ContentCreator from './contentcreator';
 import ContentViewer from './contentviewer';
-
+import UserSearch from './usersearch';
 import Spinner from './spinner';
 
+import AuthorStore from '../stores/author';
+
+import ActionListener from '../mixins/action-listener';
 
 // Represents a collection of posts within the logged in user's social network.
 export default React.createClass({
 
-  mixins: [Reflux.connect(PostStore), State, Navigation],
+  mixins: [Navigation, ActionListener],
 
   statics: {
     willTransitionTo: function (transition, params) {
@@ -26,6 +27,7 @@ export default React.createClass({
       }
     }
   },
+
   getInitialState: function() {
     return {
       // starts at null and if no reuslt it
@@ -34,24 +36,15 @@ export default React.createClass({
     };
   },
 
-  componentDidMount: function () {
+  componentDidMount: function() {
+    // Listen to logout then transition
+    this.listen(AuthorActions.logout, () => this.transitionTo('login'));
+    // refresh posts?
     this.refresh();
   },
 
   refresh: function () {
     // PostActions.getTimeline(this.props.currentAuthor.id);
-  },
-
-  shouldComponentUpdate: function(nextProps) {
-    // When an author logs out we want to make sure that we
-    // kick them out of the timeline page
-    // And redirect them back to the login page
-    if (_.isNull(nextProps.currentAuthor)) {
-      this.transitionTo('login');
-      return false;
-    }
-
-    return true;
   },
 
   render: function() {

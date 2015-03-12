@@ -1,7 +1,9 @@
-var should = require('chai').should();
+import chai from 'chai';
 
-import PostStore from '../app/scripts/objects/poststore';
-import Post from '../app/scripts/objects/post';
+import PostStore from '../../app/scripts/objects/poststore';
+import Post from '../../app/scripts/objects/post';
+
+var should = chai.should();
 
 describe('PostStore', function () {
 

@@ -1,21 +1,22 @@
 import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
+import { addons } from 'react/addons';
 import { Navigation } from 'react-router';
 import { Grid, Row, Col, Input, PageHeader, Button } from 'react-bootstrap';
 
 import AuthorActions from '../actions/author';
 import AuthorStore from '../stores/author';
 
+import ActionListener from '../mixins/action-listener';
+
 export default React.createClass({
 
-  mixins: [Navigation],
+  mixins: [Navigation, ActionListener, addons.LinkedStateMixin],
 
   statics: {
     // When an authenticated user tries to re-login
     willTransitionTo: function (transition, params) {
-      // Using the author store is a hack, but until
-      // https://github.com/rackt/react-router/pull/590 is merged/closed
       if (AuthorStore.isLoggedIn()) {
         transition.redirect("timeline");
       }
@@ -24,24 +25,14 @@ export default React.createClass({
 
   getInitialState: function () {
     return {
-      username: "",
-      password: ""
+      username: '',
+      password: ''
     };
   },
 
-  shouldComponentUpdate: function(nextProps) {
-    // when the currentAuthor props changes
-    // we  need to get out. lets transition
-    if (!_.isNull(nextProps.currentAuthor)) {
-      this.transitionTo('timeline');
-      return false;
-    }
-
-    return true;
+  componentDidMount: function() {
+    this.listen(AuthorActions.login.complete, () => this.transitionTo('timeline'));
   },
-
-  usernameChange : function(evt) { this.setState({username: evt.target.value}); },
-  passwordChange : function(evt) { this.setState({password: evt.target.value}); },
 
   logIn: function(evt) {
     evt.preventDefault();
@@ -67,8 +58,8 @@ export default React.createClass({
         </Row>
         <Row>
           <form onSubmit={this.logIn}>
-            <Input type="text"  label='Text' placeholder="Username" value={this.state.username} onChange={this.usernameChange} required/>
-            <Input type="password" label='Password' placeholder="secret" value={this.state.password} onChange={this.passwordChange} required/>
+            <Input type="text" label="Username" placeholder="Username"  valueLink={this.linkState('username')} required/>
+            <Input type="password" label='Password' placeholder="secret" valueLink={this.linkState('password')} required/>
 
             <Input className="pull-right" bsStyle="primary" type="submit" value="Login" />
           </form>

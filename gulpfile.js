@@ -6,6 +6,11 @@ var source      = require('vinyl-source-stream');
 var browserify  = require('browserify');
 var runSequence = require('run-sequence');
 var babelify    = require('babelify');
+var babel       = require("gulp-babel");
+var mocha       = require('gulp-mocha');
+
+// require hook
+require("babel/register");
 
 var env = 'dev';
 
@@ -107,4 +112,10 @@ gulp.task('build', function() {
   runSequence(['clean:dev', 'clean:dist'],
               ['scripts', 'compass', 'imagemin', 'copy'],
               'bundle');
+});
+
+gulp.task('test', function () {
+    return gulp.src('tests/**/*-test.js')
+        .pipe(babel())
+        .pipe(mocha({reporter: 'nyan'}));
 });
