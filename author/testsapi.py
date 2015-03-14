@@ -1,4 +1,6 @@
-from django.test import TestCase, Client
+from rest_framework.test import APITestCase, APIClient
+from rest_framework.authtoken.models import Token
+
 from django.contrib.auth.models import User
 from author.models import (
     Author,
@@ -8,9 +10,10 @@ from author.models import (
 
 import uuid
 import json
-from rest_framework.authtoken.models import Token
 
-c = Client()
+from backend import scaffold
+
+c = scaffold.SocialAPIClient()
 
 # Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "gituser"
@@ -39,12 +42,7 @@ USER = {
 USER_A = {'username':"User_A", 'password':uuid.uuid4()}
 USER_B = {'username':"User_B", 'password':uuid.uuid4()}
 
-# Utility function to get around funky DRF responses that use nesting
-def get_dict_response(response):
-    """Returns a dictionary of the http response containing a list of ordered dictionaries"""
-    return json.loads(json.dumps(response.data))
-
-class AuthorModelAPITests(TestCase):
+class AuthorModelAPITests(APITestCase):
     """
     Basic testing of the Author model creation and database insertion
     """
@@ -76,9 +74,7 @@ class AuthorModelAPITests(TestCase):
             bio = BIO,
             host = HOST)
 
-        token, created = Token.objects.get_or_create(user=self.user_a)
-        self.auth_headers = {
-            'HTTP_AUTHORIZATION': "Token %s" %token }
+        c.token_credentials(self.author)
 
     def tearDown(self):
         """Remove all created objects from mock database"""
@@ -87,6 +83,7 @@ class AuthorModelAPITests(TestCase):
         FriendRelationship.objects.all().delete()
         FriendRequest.objects.all().delete()
         FollowerRelationship.objects.all().delete()
+        c.credentials()
 
     def test_set_up(self):
         """ Assert that that the user model was created in setUp()"""
@@ -100,16 +97,14 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(user.email, EMAIL)
 
     def test_retrieve_details(self):
-        response = c.get('/author/%s' %self.author.id,
-            content_type="application/json", **self.auth_headers)
+        response = c.get('/author/%s' % self.author.id,
+            content_type="application/json")
 
         self.assertEquals(response.status_code, 200)
-
-        user_dict = get_dict_response(response)
-        self.assertEquals(user_dict['email'], EMAIL)
+        self.assertEquals(response.data['email'], EMAIL)
 
     def test_invalid_retrieve_details(self):
-        response = c.get('/author/no_user_here', **self.auth_headers)
+        response = c.get('/author/no_user_here')
         self.assertEquals(response.status_code, 404)
 
     def test_relation_user_dne(self):
@@ -117,46 +112,26 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(response.status_code, 404)
 
     def test_retrieve_friends(self):
-        FriendRelationship.objects.create(friendor = self.author_a, friend = self.author)
-        FriendRelationship.objects.create(friendor = self.author_b, friend = self.author)
+        friendors = [self.author_a, self.author_b]
+        scaffold.create_friends(self.author, friendors, create_post = False)
 
         response = c.get('/author/friends/%s' %self.author.id)
-
         self.assertEquals(response.status_code, 200)
-        self.users_in_response(response.data['friendors'])
+        scaffold.authors_in_relation(self, response.data['friendors'], friendors)
 
     def test_retrieve_requests(self):
-        FriendRequest.objects.create(requestor = self.author_a, requestee = self.author)
-        FriendRequest.objects.create(requestor = self.author_b, requestee = self.author)
+        requestors = [self.author_a, self.author_b]
+        scaffold.create_requestors(self.author, requestors)
 
         response = c.get('/author/friendrequests/%s' %self.author.id)
 
         self.assertEquals(response.status_code, 200)
-        self.users_in_response(response.data['requestors'])
+        scaffold.authors_in_relation(self, response.data['requestors'], requestors)
 
     def test_retrieve_followers(self):
-        FollowerRelationship.objects.create(follower = self.author_a, followee = self.author)
-        FollowerRelationship.objects.create(follower = self.author_b, followee = self.author)
+        followers = [self.author_a, self.author_b]
+        scaffold.create_followers(self.author, followers)
 
-        response = c.get('/author/followers/%s' %self.author.id, **self.auth_headers)
-
+        response = c.get('/author/followers/%s' %self.author.id)
         self.assertEquals(response.status_code, 200)
-        self.users_in_response(response.data['followers'])
-
-    def users_in_response(self, data, users=None):
-        """
-        Test to ensure that all usernames added to relationship are in the returned data
-
-        Called after a retrieve relationship test has passed
-
-        usernames: a list of usernames
-        data: list of usernames to be checked against
-        """
-
-        if users == None:
-            users = [self.author_a.id, self.author_b.id]
-
-        users = map( lambda x: str(x).replace('-', ''), users)
-
-        for name in users:
-            self.assertTrue(unicode(name) in data)
+        scaffold.authors_in_relation(self, response.data['followers'], followers)

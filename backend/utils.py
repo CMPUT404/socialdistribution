@@ -22,7 +22,7 @@ def custom_exception_handler(exc, context):
         return Response(data, status=exc.status_code)
 
     elif isinstance(exc, Http404):
-        msg = _('Not found.')
+        msg = ('Not found.')
         data = {'error': six.text_type(msg)}
         return Response(data, status=status.HTTP_404_NOT_FOUND)
 

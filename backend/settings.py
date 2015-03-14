@@ -41,7 +41,7 @@ INSTALLED_APPS = (
     'rest_framework.authtoken',
     'author',
     'sysadmin',
-    'timeline',
+    'content',
     'corsheaders',
 )
 
@@ -98,11 +98,19 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
-    # TODO:
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.JSONParser',
+    ),
+    # TODO
+    # Can we assume some connections will not be authenticated ?
     # 'DEFAULT_PERMISSION_CLASSES': (
     #     'rest_framework.permissions.IsAuthenticated',
-    # )
-    'EXCEPTION_HANDLER': 'backend.utils.custom_exception_handler'
+    # ),
+    'EXCEPTION_HANDLER': 'backend.utils.custom_exception_handler',
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    )
 }
 
 GRAPPELLI_ADMIN_TITLE = "Social Distribution"

@@ -1,16 +1,19 @@
-from django.test import TestCase, Client
+from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth.models import User
 
 from django.db import transaction
 from django.db import IntegrityError
 
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
 from author.models import Author
+
+from backend import scaffold
 
 import uuid
 import json
 import base64
-
-c = Client()
 
 # Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "jmaguire"
@@ -19,6 +22,7 @@ HOST = "http://examples.com/"
 
 # Values to be inserted and checked in the User model
 # required User model attributes
+RUSERNAME = "jmaquire2"
 USERNAME = "jmaguire"
 PASSWORD = str(uuid.uuid4())
 
@@ -27,11 +31,7 @@ FIRST_NAME = "Jerry"
 LAST_NAME = "Maguire"
 EMAIL = "jmaguire@smi.com"
 
-auth_headers = {
-    'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode('%s:%s' %(USERNAME, PASSWORD)),
-}
-
-class AuthorAuthentication(TestCase):
+class AuthorAuthentication(APITestCase):
     """
     Basic testing of the Author model creation and database insertion
     """
@@ -51,35 +51,50 @@ class AuthorAuthentication(TestCase):
             'username':USERNAME,
             'password':PASSWORD }
 
-        self.auth_headers = {
-            'HTTP_AUTHORIZATION': "" }
+        # Create an already registered user for testing
+        self.registed_user = {
+            'username':RUSERNAME,
+            'password':PASSWORD,
+            'first_name':FIRST_NAME,
+            'email':EMAIL,
+            'last_name':LAST_NAME }
+
+        self.user = User.objects.create_user(**self.registed_user)
+        self.author = Author.objects.create(
+            user = self.user,
+            github_username = GITHUB_USERNAME,
+            bio = BIO,
+            host = HOST )
+
+        # Use for non authenticated requests
+        self.c = scaffold.SocialAPIClient()
+
+        self.basic_client = scaffold.SocialAPIClient()
+        self.basic_client.basic_credentials(RUSERNAME, PASSWORD)
+
+        self.token_client = scaffold.SocialAPIClient()
+        self.token_client.token_credentials(self.author)
+
+        self.bad_auth_client = scaffold.SocialAPIClient()
+        self.bad_auth_client.bad_credentials(True)
 
     def tearDown(self):
         """Remove all created objects from mock database"""
         Author.objects.all().delete()
         User.objects.all().delete()
+        self.basic_client.credentials()
+        self.token_client.credentials()
+        self.bad_auth_client.credentials()
 
-    def pretty_print_dict(self, data):
+    def pretty_print(self, data):
         """Pretty prints a dictionary object"""
         print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
-
-    def util_register_and_get_header(self):
-        """Register base user and retrieve header information"""
-        response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and Author not created")
-
-        content = json.loads(response.content)
-        new_auth_headers = {
-            'HTTP_AUTHORIZATION': 'Token %s'  %content['token']
-        }
-
-        return new_auth_headers
 
     def test_registration(self):
         """
         Test a registration where all values are given in the JSON body
         """
-        response = c.post('/author/registration/', self.user_dict)
+        response = self.c.post('/author/registration', self.user_dict)
 
         self.assertEquals(response.status_code, 201, "User and Author not created")
 
@@ -99,59 +114,46 @@ class AuthorAuthentication(TestCase):
         """
         try:
             with transaction.atomic():
-                response = c.post('/author/registration/', self.user_dict)
+                response = self.c.post('/author/registration', self.user_dict)
                 self.assertEquals(response.status_code, 201)
 
-                response = c.post('/author/registration/', self.user_dict)
+                response = self.c.post('/author/registration', self.user_dict)
                 self.assertEquals(response.status_code, 400)
             self.assertTrue(True, 'Duplicate users not allowed')
         except IntegrityError:
             pass
 
     def test_registration_without_username(self):
-        """
-        Should not be able to register without displayname
-        """
         self.user_dict.pop('displayname', None)
-        response = c.post('/author/registration/', self.user_dict)
+        response = self.c.post('/author/registration', self.user_dict)
 
         self.assertEquals(response.status_code, 400, "User should not be created")
 
     def test_registration_without_email(self):
-        """
-        Should not be able to register without email
-        """
         self.user_dict.pop('email', None)
-        response = c.post('/author/registration/', self.user_dict)
+        response = self.c.post('/author/registration', self.user_dict)
 
-        self.assertEquals(response.status_code, 400, "User should not be created")
+        self.assertEquals(response.status_code, 201, "User should be created")
+        scaffold.assertUserExists(self, response.data['author']['displayname'])
 
     def test_registration_without_name(self):
-        """
-        Should not be able to register without names
-        """
         self.user_dict.pop('first_name', None)
-        response = c.post('/author/registration/', self.user_dict)
+        response = self.c.post('/author/registration', self.user_dict)
 
-        self.assertEquals(response.status_code, 400, "User should not be created")
+        self.assertEquals(response.status_code, 201, "User should be created")
+        scaffold.assertUserExists(self, response.data['author']['displayname'])
 
     def test_registration_without_github(self):
-        """
-        Should not be able to register without github
-        """
         self.user_dict.pop('github_username', None)
-        response = c.post('/author/registration/', self.user_dict)
+        response = self.c.post('/author/registration', self.user_dict)
 
-        self.assertEquals(response.status_code, 400, "User should not be created")
+        self.assertEquals(response.status_code, 201, "User should be created")
+        scaffold.assertUserExists(self, response.data['author']['displayname'])
 
     def test_login(self):
-        response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and Author not created")
-
-        response = c.get('/author/login/', **auth_headers)
+        response = self.basic_client.get('/author/login')
         content = json.loads(response.content)
 
-        # TODO: maybe validate the token?
         self.assertIsNot(content['token'], '', 'Empty Token')
         self.assertIsNotNone(content['token'], 'Empty Token')
 
@@ -162,7 +164,7 @@ class AuthorAuthentication(TestCase):
         # Can't test for host since it will be auto-created
         keys.remove('host')
 
-
+        self.user_dict['displayname'] = RUSERNAME
 
         for key in keys:
             self.assertEquals(profile[key], self.user_dict[key])
@@ -170,43 +172,25 @@ class AuthorAuthentication(TestCase):
         self.assertEquals(response.status_code, 200, 'user not logged in')
 
     def test_bad_login(self):
-        response = c.post('/author/registration/', self.user_dict)
-
-        self.assertEquals(response.status_code, 201, "User and Author not created")
-
-        new_auth_headers = {
-            'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode('%s:%s' %(USERNAME, 'basepassword')),
-        }
-        response = c.get('/author/login/', **new_auth_headers)
+        response = self.bad_auth_client.get('/author/login')
         self.assertEquals(response.status_code, 401, 'user not logged in')
 
     def test_logout(self):
-        response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and Author not created")
-
-        token = json.loads(response.content)['token']
-
-        user = User.objects.get(username = USERNAME)
-        self.auth_headers['HTTP_AUTHORIZATION'] = "Token %s" % token
-
-        response = c.post('/author/logout/', **self.auth_headers)
+        response = self.basic_client.post('/author/logout')
 
         self.assertEquals(response.status_code, 200, "User not logged out")
 
     def test_get_profile(self):
-        new_auth_headers = self.util_register_and_get_header()
-        response = c.get('/author/profile', **new_auth_headers)
+        response = self.token_client.get('/author/profile')
+
         self.assertEquals(response.status_code, 200)
 
-        content = json.loads(response.content)
-        # self.pretty_print_dict(content)
+        # scaffold.pretty_print(response.data)
 
-        self.assertEquals(content['email'], EMAIL)
-        self.assertEquals(content['bio'], BIO)
+        self.assertEquals(response.data['email'], EMAIL)
+        self.assertEquals(response.data['bio'], BIO)
 
     def test_author_update(self):
-        new_auth_headers = self.util_register_and_get_header()
-
         # All fields are good and should return 200
         update_author_dict = {
             'first_name':FIRST_NAME + "u",
@@ -215,13 +199,13 @@ class AuthorAuthentication(TestCase):
             'github_username':GITHUB_USERNAME + "u",
             'bio':BIO + "u" }
 
-        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        response = self.token_client.post('/author/profile', update_author_dict)
         self.assertEquals(response.status_code, 200)
 
-        # self.pretty_print_dict(json.loads(response.content))
+        # scaffold.pretty_print(response.data)
 
         # Compare the response content to that content in the database
-        user = User.objects.get(username = USERNAME)
+        user = User.objects.get(username = RUSERNAME)
         details = Author.objects.get(user = user)
 
         self.assertEquals(user.email, update_author_dict['email'])
@@ -232,61 +216,48 @@ class AuthorAuthentication(TestCase):
         self.assertEquals(details.github_username, update_author_dict['github_username'])
 
     def test_author_update_bad_authorization(self):
-        # Given header is not for the owner
-        response = c.post('/author/registration/', self.user_dict)
-        self.assertEquals(response.status_code, 201, "User and UserDetails not created")
-
-        new_auth_headers = {
-            'HTTP_AUTHORIZATION': 'Token 1929223'
-        }
-
-        old = User.objects.get(last_name = LAST_NAME)
+        old = User.objects.get(username = RUSERNAME)
 
         update_author_dict = {
             'email':EMAIL + "u",
             'bio':BIO + "u" }
 
-        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        response = self.bad_auth_client.post('/author/profile', update_author_dict)
         self.assertEquals(response.status_code, 401)
 
         new = User.objects.get(last_name = LAST_NAME)
         self.assertEquals(old, new, "Author profile should not have been updated")
 
     def test_author_update_partial(self):
-        new_auth_headers = self.util_register_and_get_header()
-
         # All fields are good and should return 200
         update_author_dict = {
             'email':EMAIL + "u",
             'bio':BIO + "u" }
 
-        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        response = self.token_client.post('/author/profile', update_author_dict)
         self.assertEquals(response.status_code, 200)
 
-        # self.pretty_print_dict(json.loads(response.content))
+        # scaffold.pretty_print(response.data)
 
         # Compare the response content to that content in the database
-        user = User.objects.get(username = USERNAME)
+        user = User.objects.get(username = RUSERNAME)
         details = Author.objects.get(user = user)
 
         self.assertEquals(user.email, update_author_dict['email'])
-
         self.assertEquals(details.bio, update_author_dict['bio'])
 
     def test_author_update_bad_fields(self):
         """Good fields will still be parsed; bad fields ignored"""
-        new_auth_headers = self.util_register_and_get_header()
-
         # All fields are good and should return 200
         update_author_dict = {
             'bad_email':EMAIL + "u",
             'bio':BIO + "u" }
 
-        response = c.post('/author/profile', update_author_dict, **new_auth_headers)
+        response = self.token_client.post('/author/profile', update_author_dict)
         self.assertEquals(response.status_code, 200)
 
         # Compare the response content to that content in the database
-        user = User.objects.get(username = USERNAME)
+        user = User.objects.get(username = RUSERNAME)
         details = Author.objects.get(user = user)
 
         self.assertTrue(user.email != update_author_dict['bad_email'])
