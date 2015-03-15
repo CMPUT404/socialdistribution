@@ -1,8 +1,10 @@
 import json
+
 from backend.utils import UserNotFound
 from django.contrib.auth.models import User
+
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
@@ -15,7 +17,7 @@ from author.models import (
     FriendRelationship,
     FriendRequest )
 
-from author.serializers import AuthorSerializer
+from author.serializers import AuthorSerializer, FriendRequestSerializer
 
 def create_relationship_list(queryset, lookup):
     """
@@ -35,34 +37,15 @@ def get_author(id):
     except:
         return None
 
-# GET /author/:id
-class GetAuthorDetails(APIView):
-    """
-    Retrieve user details, given a valid username.
-
-    JSON Response
-    {
-        user:{username:"", email:"", first_name:"", last_name:""},
-        github_username:"",
-        bio:"",
-        server:""
-    }
-    """
-
-    # TODO complete authorization permissions
-    # Can anyone authenticated user access profile, or must be marked public?
-    authentication_classes = (TokenAuthentication,)
+class GetAuthorDetails(generics.RetrieveAPIView):
+    authentication_classes = (BasicAuthentication, TokenAuthentication, )
     permission_classes = (IsAuthenticated,)
+    serializer_class = AuthorSerializer
+    lookup_url_kwarg = "id"
 
-    def get(self, request, *args, **kwargs):
-        author = get_author(kwargs['id'])
-
-        if author:
-            serializer = AuthorSerializer(author)
-
-            return Response(serializer.data, status = status.HTTP_200_OK)
-        else:
-            raise UserNotFound()
+    def get_queryset(self):
+        return Author.objects.filter(id =
+            self.kwargs.get(self.lookup_url_kwarg))
 
 # GET /author/friends/:id
 class GetAuthorFriends(ListAPIView):
@@ -189,6 +172,3 @@ class GetAuthorFriendRequests(ListAPIView):
             return Response({'requestee':author.id, 'requestors':relations})
         else:
             raise UserNotFound()
-
-# PUT /author/update
-# TODO

@@ -67,16 +67,26 @@ class Post(models.Model):
     """
     Post
     """
-    id = UUIDField(auto = True, primary_key = True)
-    text = models.TextField(blank=False)
-    date = models.DateField(auto_now_add=True, editable = False)
+    guid = UUIDField(auto = True, primary_key = True)
+    title = models.CharField(blank = True, max_length = 200)
+    content = models.TextField(blank=False)
+    pubDate = models.DateTimeField(auto_now_add=True, editable = False)
     acl = models.OneToOneField(ACL)
-    #acl = models.CharField(max_length=512, blank = False, default = DEFAULT_ACL)
     image = models.ImageField(null=True, blank=True)
     author = models.ForeignKey(Author, blank=False, editable = False)
 
     def __unicode__(self):
-        return u'%s %s' %(self.author.user.username, self.text)
+        return u'%s %s' %(self.author.user.username, self.content)
+
+    # Use in serializers to add url source and origin information
+    # Eg, where the query came from, and where you should query next time
+    @property
+    def source(self):
+        return None
+
+    @property
+    def origin(self):
+        return None
 
 class Comment(models.Model):
     """
@@ -84,11 +94,11 @@ class Comment(models.Model):
 
     A comment's privacy is inherited from the Post public attribute
     """
-    id = UUIDField(auto = True, primary_key = True)
-    text = models.TextField(blank=False)
-    date = models.DateTimeField(auto_now_add=True, editable = False)
+    guid = UUIDField(auto = True, primary_key = True)
+    content = models.TextField(blank=False)
+    pubDate = models.DateTimeField(auto_now_add=True, editable = False)
     post = models.ForeignKey('Post', related_name='comments')
     author = models.ForeignKey(Author, blank=False, editable = False)
 
     def __unicode__(self):
-        return u'%s %s' %(self.author.username, self.text)
+        return u'%s %s' %(self.author.username, self.content)

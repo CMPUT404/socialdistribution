@@ -55,12 +55,12 @@ class RegistrationSerializer(serializers.Serializer):
         Call .create() to build/insert models after validation.
     """
     displayname = serializers.CharField()
-    email = serializers.EmailField()
+    email = serializers.EmailField(required = False)
     password = serializers.CharField()
-    bio = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    github_username = serializers.CharField()
+    bio = serializers.CharField(required = False)
+    first_name = serializers.CharField(required = False)
+    last_name = serializers.CharField(required = False)
+    github_username = serializers.CharField(required = False)
 
     # Follow the same pattern to validate other fields if you desire.
     def validate_username(self, value):
@@ -73,26 +73,20 @@ class RegistrationSerializer(serializers.Serializer):
         """
         Returns a created Author model after saving to the database
         """
-        try:
-            user = User(
-                email = validated_data['email'],
-                username = validated_data['displayname'],
-                first_name = validated_data['first_name'],
-                last_name = validated_data['last_name']
-            )
-            user.set_password(validated_data['password'])
-            user.save()
-        except:
-            raise serializers.ValidationError("Error creating User")
-        else:
-            author = Author(
-                user = user,
-                github_username = validated_data['github_username'],
-                bio = validated_data['bio']
-            )
-            author.save()
+        # Rename the displayname key
+        validated_data['username'] = validated_data.pop('displayname')
 
-            return author
+        _author = {}
+        _author['github_username'] = validated_data.pop('github_username', '')
+        _author['bio'] = validated_data.pop('bio', '')
+
+        user = User.objects.create_user(**validated_data)
+        user.save()
+
+        author = Author(user = user, **_author)
+        author.save()
+
+        return author
 
 class CompactAuthorSerializer(serializers.ModelSerializer):
     displayname = serializers.CharField(source='user.username')
@@ -111,31 +105,23 @@ class AuthorSerializer(serializers.ModelSerializer):
         model = Author
         fields = ('id', 'displayname', 'email', 'first_name', 'last_name', 'github_username', 'bio', 'host', 'url')
 
-class CompactUserSerializer(serializers.Serializer):
-    """
-    A compact user serializer that returns only relevant information to posts/comments
-    """
-    username = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-
-
 class FollowerRelationshipSerializer(serializers.ModelSerializer):
-    follower = CompactUserSerializer(many=False, read_only=True)
+    follower = CompactAuthorSerializer(many=False, read_only=True)
 
     class Meta:
         model = FollowerRelationship
         fields = ('follower',)
 
 class FriendRelationshipSerializer(serializers.ModelSerializer):
-    friendor = CompactUserSerializer(many=False, read_only=True)
+    friendor = CompactAuthorSerializer(many=False, read_only=True)
 
     class Meta:
         model = FriendRelationship
         fields = ('friendor',)
 
 class FriendRequestSerializer(serializers.ModelSerializer):
-    requestor = CompactUserSerializer(many=False, read_only=True)
+    # requestor = CompactAuthorSerializer(many=False, read_only=True)
+    requestor = serializers.StringRelatedField(many = True)
 
     class Meta:
         model = FriendRequest
