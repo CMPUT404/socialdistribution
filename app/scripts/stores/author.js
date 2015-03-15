@@ -17,58 +17,21 @@ export default Reflux.createStore({
 
     this.getAuthors();
 
-    this.listenTo(AuthorActions.checkAuth, this.checkAuth);
-
-    // Actions
     this.listenTo(AuthorActions.login, 'onLogin');
+    this.listenTo(AuthorActions.logout, 'logOut');
     this.listenTo(AuthorActions.register, 'onRegister');
+    this.listenTo(AuthorActions.checkAuth, 'onCheckAuth');
     this.listenTo(AuthorActions.fetchDetails, 'onFetchDetails');
 
-    // Handler declarations
-    this.listenTo(AuthorActions.login.completed, this.loginCompleted);
-    this.listenTo(AuthorActions.login.failed, this.ajaxFailed);
-    this.listenTo(AuthorActions.logout, this.logOut);
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
     this.listenTo(AuthorActions.getAuthorAndListen, this.getAuthorViewData);
     this.listenTo(AuthorActions.subscribeTo, this.subscribeTo);
     this.listenTo(AuthorActions.unsubscribeFrom, this.unsubscribeFrom);
-    this.listenTo(AuthorActions.register.completed, this.registrationComplete);
-    this.listenTo(AuthorActions.register.failed, this.ajaxFailed);
-    this.listenTo(AuthorActions.fetchDetails.completed, this.fetchComplete);
-    this.listenTo(AuthorActions.register.failed, this.ajaxFailed);
 
-  },
-
-  // Action Executioners
-  onLogin: function(username, password) {
-    Request
-      .get('http://localhost:8000/author/login/') //TODO: remove host
-      .auth(username, password)
-      .promise()
-      .then( AuthorActions.login.completed )
-      .catch( AuthorActions.login.failed );
-  },
-
-  onRegister: function(payload) {
-    Request
-      .post('http://localhost:8000/author/registration/') //TODO: remove host
-      .send(payload)
-      .promise()
-      .then( AuthorActions.register.completed )
-      .catch( AuthorActions.register.failed );
-  },
-
-  onFetchDetails: function(id) {
-    if (this.isLoggedIn() && id === this.currentAuthor.id) {
-      AuthorActions.fetchDetails.completed(this.currentAuthor);
-    } else {
-      Request
-        .get('http://localhost:8000/author/' + id + '/') //TODO: remove host
-        .token(this.getToken())
-        .promise()
-        .then( AuthorActions.fetchDetails.completed )
-        .catch( AuthorActions.fetchDetails.failed );
-    }
+    // Ajax fail listeners
+    this.listenTo(AuthorActions.login.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.register.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.fetchDetails.fail, this.ajaxFailed);
   },
 
   // if in a static method and need acces to store state
@@ -85,7 +48,7 @@ export default Reflux.createStore({
     var token = null;
 
     if (this.isLoggedIn()) {
-        token = this.currentAuthor.token;
+        return this.currentAuthor.token;
     }
 
     return token;
@@ -138,7 +101,80 @@ export default Reflux.createStore({
     }
   },
 
-  // Action Handlers
+  // Fires authentication AJAX
+  onLogin: function(username, password) {
+    Request
+      .get('http://localhost:8000/author/login/') //TODO: remove host
+      .auth(username, password)
+      .promise(this.loginComplete, AuthorActions.login.fail);
+  },
+
+  // Create and save logged in user
+  loginComplete: function(authorData) {
+
+    //TODO: store auth token in localStorage
+
+    this.currentAuthor = new Author(authorData.author, authorData.token);
+    this.trigger({currentAuthor: this.currentAuthor});
+    AuthorActions.login.complete(this.currentAuthor);
+  },
+
+  // Fires registration AJAX
+  onRegister: function(payload) {
+    Request
+      .post('http://localhost:8000/author/registration/') //TODO: remove host
+      .send(payload)
+      .promise(this.registrationComplete, AuthorActions.register.fail);
+  },
+
+  // Treat post-registration as a login
+  registrationComplete: function(authorData) {
+    this.loginComplete(authorData);
+    AuthorActions.register.complete();
+  },
+
+  // check that our author is still logged in, update state of components
+  // On page refreshes
+  onCheckAuth: function() {
+
+    // TODO: check localStorage here
+
+    this.trigger({currentAuthor: this.currentAuthor});
+    AuthorActions.checkAuth.complete(this.currentAuthor);
+  },
+
+  // Fetches author details via AJAX
+  onFetchDetails: function(id) {
+    // If logged-in user wants to see their own profile
+    // no need to AJAX, we already have that info from login/register
+    if (this.isLoggedIn() && id === this.currentAuthor.id) {
+      this.fetchComplete(this.currentAuthor);
+    } else {
+      Request
+        .get('http://localhost:8000/author/' + id + '/') //TODO: remove host
+        .token(this.getToken())
+        .promise(this.fetchComplete, AuthorActions.fetchDetails.fail);
+    }
+  },
+
+  fetchComplete: function(author) {
+    this.trigger({displayAuthor: author});
+    AuthorActions.fetchDetails.complete(author);
+  },
+
+  // This is a listener not a handler
+  // `logOut` doesn't require any AJAX calls
+  logOut: function() {
+    this.currentAuthor = null;
+    this.trigger({currentAuthor: this.currentAuthor});
+  },
+
+  // Catches all failed requests via actions listeners
+  ajaxFailed: function(error) {
+    alertify.error(error);
+  },
+
+  // WIP..
 
   subscribeTo: function (author) {
     // find authors and add subscriber
@@ -152,38 +188,5 @@ export default Reflux.createStore({
     this.currentAuthor.unsubscribeFrom(author);
     // TODO: ajax call here to persist
   },
-
-  // check that our author is still logged in, update state of components
-  checkAuth: function () {
-    this.trigger({currentAuthor: this.currentAuthor});
-  },
-
-  logOut: function() {
-    this.currentAuthor = null;
-    this.trigger({currentAuthor: this.currentAuthor, loggedOut: true});
-  },
-
-  // AJAX Handlers //
-
-  // Handles logging the user in using the provided credentials
-  // Also need to set our basic auth token somewhere
-  loginCompleted: function(authorData) {
-    //TODO: store basic auth token in localStorage
-    this.currentAuthor = new Author(authorData.author, authorData.token);
-    this.trigger({currentAuthor: this.currentAuthor});
-  },
-
-  registrationComplete: function(author) {
-    this.loginCompleted(author);
-  },
-
-  fetchComplete: function(author) {
-    this.trigger({displayAuthor: author});
-  },
-
-  ajaxFailed: function(error) {
-    alertify.error(error);
-  },
-
 
 });

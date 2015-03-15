@@ -20,6 +20,7 @@ export default React.createClass({
 
     // hack to rerender follow button rather than making the whole app rerender
     // because the current user updates
+    // TODO: remove this by usiung action-listener..
     setTimeout(function () {this.forceUpdate()}.bind(this), 50);
   },
 

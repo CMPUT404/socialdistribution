@@ -21,6 +21,6 @@ export function start() {
 	// TODO: Use Router.HistoryLocation for prod
 	// Gulp webserver doesn't support this properly for dev
   Router.run(routes, function (Handler) {
-		React.render(<Handler />, document.body);
+		React.render(<Handler />, document.getElementById('app'));
 	});
 }

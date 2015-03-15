@@ -2,32 +2,23 @@ import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import { Link } from 'react-router';
+import { addons } from 'react/addons';
 import { Input } from 'react-bootstrap';
 import { markdown as Markdown } from 'markdown';
 
 import PostActions from '../actions/post';
 
-    // Responsible for creating posts/comments and notifying the Post store when
+// Responsible for creating posts/comments and notifying the Post store when
 // this happens.
 export default React.createClass({
 
-  getInitialState: function() {
-    return this.defaultContent();
-  },
+  mixins: [addons.LinkedStateMixin],
 
-  defaultContent: function () {
+  getInitialState: function() {
     return {
       format: "markdown",
       content: ""
     };
-  },
-
-  formatChange: function(event) {
-    this.setState({format: event.target.value});
-  },
-
-  contentChange: function(event) {
-    this.setState({content: event.target.value});
   },
 
   submitContent: function() {
@@ -66,8 +57,8 @@ export default React.createClass({
           </Link>
         </div>
         <div className="media-body content-creator">
-          <Input type="textarea" placeholder="Say something witty..." value={this.state.content} onChange={this.contentChange} />
-          <Input type="select" value={this.state.format} onChange={this.formatChange} buttonAfter={Submit}>
+          <Input type="textarea" placeholder="Say something witty..." valueLink={this.linkState('content')} />
+          <Input type="select" valueLink={this.linkState('format')} buttonAfter={Submit}>
             <option value="markdown">Markdown</option>
             <option value="text">Text</option>
           </Input>

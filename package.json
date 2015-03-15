@@ -11,24 +11,26 @@
     "react-bootstrap": "~0.16.0",
     "react-router": "~0.11.4",
     "react-router-bootstrap": "^0.9.1",
-    "reflux": "~0.2.5",
+    "reflux": "~0.2.6",
     "superagent": "^0.21.0"
   },
   "devDependencies": {
-    "babel-jest": "~4.0.0",
     "babel": "~4.7.7",
+    "babel-core": "^4.7.12",
     "babelify": "~5.0.4",
     "browserify": "~7.0.0",
     "chai": "^2.1.1",
     "del": "~1.1.0",
     "gulp": "~3.8.10",
     "gulp-autoprefixer": "~2.0.0",
+    "gulp-babel": "^4.0.0",
     "gulp-compass": "^2.0.3",
     "gulp-filter": "~1.0.2",
     "gulp-htmlmin": "~0.2.0",
     "gulp-imagemin": "~2.0.0",
     "gulp-load-plugins": "~0.8.0",
     "gulp-minify-css": "~0.3.11",
+    "gulp-mocha": "^2.0.0",
     "gulp-plumber": "~0.6.6",
     "gulp-rev-all": "~0.7.2",
     "gulp-rev-replace": "~0.3.1",
@@ -36,7 +38,6 @@
     "gulp-uglify": "~1.0.2",
     "gulp-useref": "~1.0.2",
     "gulp-webserver": "~0.8.8",
-    "jest-cli": "~0.4.0",
     "markdown": "^0.5.0",
     "mocha": "^2.2.1",
     "moment": "^2.9.0",
@@ -53,21 +54,7 @@
   },
   "scripts": {
     "start": "./node_modules/gulp/bin/gulp.js serve",
-    "test": "./node_modules/jest-cli/bin/jest.js",
-    "build": "./node_modules/gulp/bin/gulp.js build",
-    "mocha": "mocha --compilers js:babel/register --require chai"
-  },
-  "jest": {
-    "scriptPreprocessor": "./node_modules/babel-jest",
-    "testFileExtensions": [
-      "es6",
-      "js"
-    ],
-    "unmockedModulePathPatterns": [
-      "./node_modules/react"
-    ],
-    "moduleFileExtensions": [
-      "js","es6","json"
-    ]
+    "test": "./node_modules/gulp/bin/gulp.js test",
+    "build": "./node_modules/gulp/bin/gulp.js build"
   }
 }
