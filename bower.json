@@ -19,6 +19,7 @@
     "modernizr": "~2.8.3",
     "bootstrap": "~3.3.2",
     "alertifyjs": "~0.3.16",
-    "font-awesome": "~4.3.0"
+    "font-awesome": "~4.3.0",
+    "octicons": "~2.2.0"
   }
 }

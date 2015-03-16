@@ -180,16 +180,6 @@ class AuthorAuthentication(APITestCase):
 
         self.assertEquals(response.status_code, 200, "User not logged out")
 
-    def test_get_profile(self):
-        response = self.token_client.get('/author/profile')
-
-        self.assertEquals(response.status_code, 200)
-
-        # scaffold.pretty_print(response.data)
-
-        self.assertEquals(response.data['email'], EMAIL)
-        self.assertEquals(response.data['bio'], BIO)
-
     def test_author_update(self):
         # All fields are good and should return 200
         update_author_dict = {

@@ -53,7 +53,7 @@ export default React.createClass({
     }
 
     return (
-      <Col md={12}>
+      <Col md={8} mdOffset={2}>
         <UserSearch key="search" />
         <div className="jumbotron">
           <h3>Mood?</h3>

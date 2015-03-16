@@ -97,7 +97,8 @@ class AuthorModelAPITests(APITestCase):
         self.assertEquals(user.email, EMAIL)
 
     def test_retrieve_details(self):
-        response = c.get('/author/%s' % self.author.id,
+        # Reg. unauthenticated client from APITestCase
+        response = self.client.get('/author/%s' % self.author.id,
             content_type="application/json")
 
         self.assertEquals(response.status_code, 200)

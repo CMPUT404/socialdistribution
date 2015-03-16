@@ -80,6 +80,8 @@ class RegistrationSerializer(serializers.Serializer):
         _author['github_username'] = validated_data.pop('github_username', '')
         _author['bio'] = validated_data.pop('bio', '')
 
+        #TODO: set host
+
         user = User.objects.create_user(**validated_data)
         user.save()
 
@@ -103,7 +105,8 @@ class AuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('id', 'displayname', 'email', 'first_name', 'last_name', 'github_username', 'bio', 'host', 'url')
+        fields = ('id', 'displayname', 'email', 'first_name', \
+                  'last_name', 'github_username', 'bio', 'host', 'url', 'image')
 
 class FollowerRelationshipSerializer(serializers.ModelSerializer):
     follower = CompactAuthorSerializer(many=False, read_only=True)

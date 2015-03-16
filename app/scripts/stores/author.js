@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Reflux from 'reflux';
+
 import Request from '../utils/request';
 
 import Author from '../objects/author';
@@ -152,14 +153,25 @@ export default Reflux.createStore({
     } else {
       Request
         .get('http://localhost:8000/author/' + id + '/') //TODO: remove host
-        .token(this.getToken())
         .promise(this.fetchComplete, AuthorActions.fetchDetails.fail);
     }
   },
 
   fetchComplete: function(author) {
-    this.trigger({displayAuthor: author});
+    var displayAuthor = new Author(author, null);
+    this.trigger({displayAuthor: displayAuthor});
     AuthorActions.fetchDetails.complete(author);
+
+    if (author.github_username) {
+      Request
+        .get('https://api.github.com/users/' + author.github_username + '/events')
+        .promise((result) => {
+          this.trigger({gitHubStream: result});
+        }, (error) => {
+          this.trigger({gitHubStream: []});
+          this.ajaxFailed('GitHub: ' + error);
+      });
+    }
   },
 
   // This is a listener not a handler
