@@ -1,6 +1,6 @@
 import React from 'react';
 import Reflux from 'reflux';
-import { Grid, Col, Row } from 'react-bootstrap';
+import { Grid } from 'react-bootstrap';
 import RouteHandler from 'react-router/modules/mixins/RouteHandler';
 
 import Navbar from './navbar';
@@ -42,9 +42,7 @@ export default React.createClass({
       <Grid fluid={true}>
         <Navbar currentAuthor={this.state.currentAuthor} />
         <Grid>
-          <Col md={8} mdOffset={2}>
-            {AppHandler}
-          </Col>
+          {AppHandler}
         </Grid>
       </Grid>
     );

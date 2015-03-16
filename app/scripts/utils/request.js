@@ -23,7 +23,10 @@ SuperAgent.Request.prototype.promise = function createPromise(done, fail) {
                       .map( k => k + ": " + res.body.error[k] )
                       .join('</br>'));
             }
-          }  else {
+          } else if (_.has(data, 'message')){
+            // GitHub error
+            reject(data.message);
+          } else {
             reject('Unrecognized error format!');
           }
         }

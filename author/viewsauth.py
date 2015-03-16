@@ -29,11 +29,6 @@ class AuthorProfile(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, format=None):
-        details = Author.objects.get(user = request.user)
-        serializer = AuthorSerializer(details)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def post(self, request):
         serializer = AuthorUpdateSerializer(data = request.DATA)
 

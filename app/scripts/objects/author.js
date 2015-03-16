@@ -39,18 +39,19 @@ export default class {
   getName() {
     return this.first_name + ' ' + this.last_name;
   }
+
   getImage () {
-    return _.isUndefined(this.image) ? 'images/placeholder.jpg' : this.image;
+    return _.isNull(this.image) ? 'images/placeholder.jpg' : this.image;
   }
 
   isAuthor (authorId) {
     return this.id == authorId;
   }
 
-  getGithub () {
-    var url = this.github_username ? 'http://github.com/' + this.github_username : '';
-    return url;
+  getGithubUrl () {
+    return this.github_username ? 'http://github.com/' + this.github_username : null;
   }
+
   // checks whether both authors subscribe to each other
   hasFriend (author) {
     return this.follows(author.id) && author.follows(this.id) ? true : false;

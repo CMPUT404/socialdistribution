@@ -38,8 +38,6 @@ def get_author(id):
         return None
 
 class GetAuthorDetails(generics.RetrieveAPIView):
-    authentication_classes = (BasicAuthentication, TokenAuthentication, )
-    permission_classes = (IsAuthenticated,)
     serializer_class = AuthorSerializer
     lookup_url_kwarg = "id"
 

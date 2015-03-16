@@ -1,9 +1,8 @@
-import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import { addons } from 'react/addons';
 import { Navigation } from 'react-router';
-import { Grid, Row, Col, Input, PageHeader, Button } from 'react-bootstrap';
+import { Row, Col, Input, PageHeader, Button } from 'react-bootstrap';
 
 import AuthorActions from '../actions/author';
 import AuthorStore from '../stores/author';
@@ -51,7 +50,7 @@ export default React.createClass({
 
   render: function() {
     return (
-      <Col md={6} mdOffset={3}>
+      <Col md={4} mdOffset={4}>
         <Row>
           <PageHeader>Login</PageHeader>
           <Button className="pull-right" bsStyle="info" onClick={this.toRegister}>Sign Up?</Button>

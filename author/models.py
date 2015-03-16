@@ -3,6 +3,9 @@ from django.contrib.auth.models import User
 
 from uuidfield import UUIDField
 
+def get_image_path(instance, filename):
+    return os.path.join('photos', str(instance.id), filename)
+
 # Consider just making a custom User model if using UUID
 # http://stackoverflow.com/questions/3641483/django-user-model-and-custom-primary-key-field
 class Author(models.Model):
@@ -14,11 +17,12 @@ class Author(models.Model):
     id = UUIDField(auto = True, primary_key = True)
     host = models.URLField(blank = False, null = False)
     bio = models.TextField(blank=False, null=False)
-    github_username = models.CharField(max_length=40, blank=True)
+    github_username = models.CharField(max_length=40, blank=True, null=True)
+    image = models.ImageField(upload_to=get_image_path, blank=True, null=True)
 
     @property
     def url(self):
-      return self.host + 'author/' + str(self.user.pk)
+      return self.host + 'author/' + str(self.id)
 
     def __unicode__(self):
         return u'%s' %self.user.username

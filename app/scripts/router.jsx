@@ -6,6 +6,7 @@ import Timeline from './components/timeline';
 import Author from './components/author';
 import Login from './components/login';
 import Register from './components/register';
+import Posts from './components/posts';
 
 var routes = (
 	<Route path="/" name="layout" handler={Layout}>
@@ -13,6 +14,7 @@ var routes = (
 		<Route name="author" path="/author/:id?" handler={Author} />
 		<Route name="login" handler={Login} />
 		<Route name="register" handler={Register} />
+		<Route name="posts" handler={Posts} />
 	</Route>
 );
 
