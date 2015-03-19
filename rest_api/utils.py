@@ -21,6 +21,7 @@ def custom_exception_handler(exc, context):
     # Marshal DRF into a standardized format
     response = exception_handler(exc, context)
     if response is not None:
+        print response
         return Response({'error': response.detail}, status=response.status_code);
 
     elif isinstance(exc, exceptions.APIException):

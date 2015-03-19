@@ -39,7 +39,7 @@ class Post(models.Model):
     contentType = models.CharField(blank = False, max_length = 16)
     categories = ListField(blank = True)
     pubDate = models.DateTimeField(auto_now_add=True, editable = False)
-    visibility = models.charField(blank=False, max_length=10)
+    visibility = models.CharField(blank=False, max_length=10)
     image = models.ImageField(null=True, blank=True)
     author = models.ForeignKey(Author, blank=False, editable = False)
 
