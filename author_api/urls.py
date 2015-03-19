@@ -29,7 +29,7 @@ urlpatterns = [
         name = 'registration'),
 
     # Keep last
-    # GET  /author/:username
+    # GET  /author/:id
     url(r'^(?P<id>[0-9a-zA-Z_]+)/?$', views.GetAuthorDetails.as_view(),
         name = 'author_details')
 ]
