@@ -1,11 +1,13 @@
-from author.models import User
-from author.models import Author, FriendRelationship
+# TODO: Author imported but never used
+from author_api.models import Author, FriendRelationship
 
-from content.models import Post, Comment
-from content.serializers import (
+from models import Post, Comment
+from serializers import (
     PostSerializer,
     CommentSerializer )
-from content.permissions import IsFriend, IsAuthor, Custom
+
+# TODO: IsFriend imported but never used
+from permissions import IsFriend, IsAuthor, Custom
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated

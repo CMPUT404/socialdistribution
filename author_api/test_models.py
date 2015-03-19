@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 
-from author.models import Author
+from models import Author
 
 import uuid
 

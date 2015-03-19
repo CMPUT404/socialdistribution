@@ -1,7 +1,6 @@
 import json
 
-from backend.utils import UserNotFound
-from django.contrib.auth.models import User
+from rest_api.utils import UserNotFound
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
@@ -11,13 +10,14 @@ from rest_framework import generics
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 
-from author.models import (
+from models import (
     Author,
     FollowerRelationship,
     FriendRelationship,
     FriendRequest )
 
-from author.serializers import AuthorSerializer, FriendRequestSerializer
+# TODO: FriendRequestSerializer is never used
+from serializers import AuthorSerializer, FriendRequestSerializer
 
 def create_relationship_list(queryset, lookup):
     """

@@ -1,6 +1,4 @@
 from django.contrib.auth import login, logout
-from django.contrib.auth.models import User
-
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -9,12 +7,12 @@ from rest_framework.authtoken.models import Token
 
 from rest_framework import status
 
-from author.serializers import (
+from serializers import (
     RegistrationSerializer,
     AuthorSerializer,
     AuthorUpdateSerializer )
 
-from author.models import Author
+from models import Author
 
 """
 All views related to authentication/registration and update

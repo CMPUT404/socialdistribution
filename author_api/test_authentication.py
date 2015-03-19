@@ -1,19 +1,12 @@
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APITestCase
 from django.contrib.auth.models import User
-
 from django.db import transaction
 from django.db import IntegrityError
-
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient
-
-from author.models import Author
-
-from backend import scaffold
+from models import Author
+from rest_api import scaffold
 
 import uuid
 import json
-import base64
 
 # Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "jmaguire"

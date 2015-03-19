@@ -6,18 +6,17 @@ context = the unit text class (self)
 
 from django.contrib.auth.models import User
 
-from author.models import (
+from author_api.models import (
     Author,
     FriendRelationship,
     FriendRequest,
     FollowerRelationship )
 
-from content.models import Post, Comment, ACL
+from content_api.models import Post, Comment, ACL
 
 from rest_framework.authtoken.models import Token
 from rest_framework.test import (
     APIClient,
-    APIRequestFactory,
     ForceAuthClientHandler)
 
 import uuid

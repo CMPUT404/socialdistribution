@@ -1,12 +1,8 @@
 from rest_framework import serializers
-
-from content.models import Post, Comment, ACL
-
-from author.models import Author
-from author.serializers import CompactAuthorSerializer
-
+from models import Post, Comment, ACL
+from author_api.models import Author
+from author_api.serializers import CompactAuthorSerializer
 import time
-import datetime
 
 # TODO
 # Date defaults to ISO-8601 as mentioned in class (but differs than example json).

@@ -1,10 +1,10 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from author.models import (
+from models import (
     Author,
     FriendRelationship,
     FriendRequest,
-    FollowerRelationship )
+    FollowerRelationship)
 
 import uuid
 import json
