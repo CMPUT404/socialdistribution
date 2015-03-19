@@ -7,6 +7,6 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^author/', include('author_api.urls')),
     # lets us access endpoints through /post or /author
-    url(r'^posts/', include('content_api.urls')),
-    url(r'^author/', include('content_api.urls')),
+    url(r'^post/?', include('content_api.urls')),
+    # url(r'^author/', include('content_api.urls')),
 )

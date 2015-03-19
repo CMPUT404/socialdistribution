@@ -7,5 +7,5 @@ class PostOptions(admin.ModelAdmin):
 class CommentOptions(admin.ModelAdmin):
     list_display = ['guid', 'author', 'pubDate', 'post', 'content']
 
-admin.site.register(Post, PostOptions)
-admin.site.register(Comment, CommentOptions)
+# admin.site.register(Post, PostOptions)
+# admin.site.register(Comment, CommentOptions)

@@ -69,7 +69,7 @@ class CommentSerializer(serializers.ModelSerializer):
         return comment
 
 class PostSerializer(serializers.ModelSerializer):
-    acl = ACLSerializer(many = False)
+    # acl = ACLSerializer(many = False)
     author = CompactAuthorSerializer(many = False, read_only = True)
     comments = CommentSerializer(read_only = True, many = True)
     # pubDate = UnixDateTimeField(read_only=True)
@@ -78,17 +78,18 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('guid', 'title', 'source', 'origin', 'content', 'pubDate', 'acl', 'image', 'author', 'comments')
-        read_only_fields = ('guid', 'pubDate', 'comments', 'author')
+        fields = ('guid', 'title', 'source', 'origin', 'content', 'contentType', \
+                    'pubDate', 'visibility', 'image', 'author', 'comments')
+        read_only_fields = ('guid', 'pubDate', 'comments', 'author', 'visibility')
 
     # DRF does not currently support creation of nested relations...
     def create(self, validated_data):
         request = self.context.get('request', None)
 
         _author = Author.objects.get(user = request.user)
-        _acl = ACL.objects.create(**validated_data.pop('acl'))
+        # _acl = ACL.objects.create(**validated_data.pop('acl'))
 
-        post = Post(acl = _acl, author = _author, **validated_data)
+        post = Post(author = _author, **validated_data)
         post.save()
 
         return post

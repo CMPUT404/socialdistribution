@@ -121,7 +121,8 @@ class GetPostsByAuthor(BasePostListRetrieval):
         return posts
 
 # TODO, The below two endpoints may be redundant. Can we get rid of one?
-class GetSinglePost(PostMixin, PostPermissionsMixin, generics.RetrieveAPIView):
+# class GetSinglePost(PostMixin, PostPermissionsMixin, generics.RetrieveAPIView):
+class GetSinglePost(PostMixin, generics.RetrieveAPIView):
     """
     Returns a single post given only the postid
 
@@ -131,8 +132,13 @@ class GetSinglePost(PostMixin, PostPermissionsMixin, generics.RetrieveAPIView):
     lookup_url_kwarg = 'postid'
 
     def get_queryset(self):
+
         _postid = self.kwargs.get(self.lookup_url_kwarg)
-        post = Post.objects.get(guid = _postid)
+
+        try:
+            post = Post.objects.get(guid = _postid)
+        except:
+            return None
 
         return post
 

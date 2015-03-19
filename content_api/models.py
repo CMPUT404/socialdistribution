@@ -67,10 +67,12 @@ class Post(models.Model):
     Post
     """
     guid = UUIDField(auto = True, primary_key = True)
-    title = models.CharField(blank = True, max_length = 200)
+    title = models.CharField(blank = False, max_length = 200)
     content = models.TextField(blank=False)
+    contentType = models.CharField(blank = False, max_length = 16)
+    categories = ListField(blank = True)
     pubDate = models.DateTimeField(auto_now_add=True, editable = False)
-    acl = models.OneToOneField(ACL)
+    visibility = models.CharField(blank = False, max_length = 10)
     image = models.ImageField(null=True, blank=True)
     author = models.ForeignKey(Author, blank=False, editable = False)
 
@@ -95,6 +97,7 @@ class Comment(models.Model):
     """
     guid = UUIDField(auto = True, primary_key = True)
     content = models.TextField(blank=False)
+    contentType = models.CharField(blank = True, max_length = 16)
     pubDate = models.DateTimeField(auto_now_add=True, editable = False)
     post = models.ForeignKey('Post', related_name='comments')
     author = models.ForeignKey(Author, blank=False, editable = False)
