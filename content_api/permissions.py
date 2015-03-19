@@ -1,5 +1,5 @@
 from rest_framework import permissions
-from author.models import Author, FriendRelationship
+from author_api.models import Author, FriendRelationship
 
 def isAuthor(request, obj):
     author = Author.objects.get(user = request.user)

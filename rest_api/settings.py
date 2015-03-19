@@ -1,5 +1,5 @@
 """
-Django settings for backend project.
+Django settings for our Social Distribution REST API.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.7/topics/settings/
@@ -39,9 +39,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'author',
+    'author_api',
     'sysadmin',
-    'content',
+    'content_api',
     'corsheaders',
 )
 
@@ -58,9 +58,9 @@ MIDDLEWARE_CLASSES = (
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-ROOT_URLCONF = 'backend.urls'
+ROOT_URLCONF = 'rest_api.urls'
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+WSGI_APPLICATION = 'rest_api.wsgi.application'
 
 
 # Database
@@ -106,7 +106,7 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': (
     #     'rest_framework.permissions.IsAuthenticated',
     # ),
-    'EXCEPTION_HANDLER': 'backend.utils.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'rest_api.utils.custom_exception_handler',
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',

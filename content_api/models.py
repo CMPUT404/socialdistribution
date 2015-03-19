@@ -1,10 +1,9 @@
 from django.db import models
-from author.models import Author
-
+from author_api.models import Author
 from uuidfield import UUIDField
-
-import json
 import ast
+
+# TODO: use an enum here
 # 100 = 'private'
 # 200 = 'public'
 # 300 = 'all friends'

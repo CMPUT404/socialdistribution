@@ -1,5 +1,5 @@
-from django.conf.urls import url, include
-from author import views, viewsauth
+from django.conf.urls import url
+import views, viewsauth
 
 urlpatterns = [
 

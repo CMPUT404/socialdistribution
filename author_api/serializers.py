@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import serializers
 
-from author.models import (
+from models import (
     Author,
     FollowerRelationship,
     FriendRelationship,

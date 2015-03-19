@@ -1,17 +1,15 @@
-from rest_framework.test import APITestCase, APIClient
-from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
 
 from django.contrib.auth.models import User
-from author.models import (
+from models import (
     Author,
     FriendRelationship,
     FriendRequest,
-    FollowerRelationship )
+    FollowerRelationship)
 
 import uuid
-import json
 
-from backend import scaffold
+from rest_api import scaffold
 
 c = scaffold.SocialAPIClient()
 

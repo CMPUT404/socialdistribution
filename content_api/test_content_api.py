@@ -1,15 +1,11 @@
-from django.test import TestCase, Client, RequestFactory
+from django.test import TestCase
 from django.contrib.auth.models import User
-
-from author.models import Author, FriendRelationship
-from content.models import Post, Comment, ACL
-# from content.views import GetPosts, CreatePost
+from author_api.models import Author, FriendRelationship
+from models import Post, Comment, ACL
 from rest_framework.authtoken.models import Token
-
 import uuid
-import json
 
-from backend import scaffold as s
+from rest_api import scaffold as s
 
 # Values to be inserted and checked in the Author model
 USERNAME = "programmer"
