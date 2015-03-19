@@ -3,21 +3,6 @@ from author_api.models import Author
 from uuidfield import UUIDField
 import ast
 
-# TODO: use an enum here
-# 100 = 'private'
-# 200 = 'public'
-# 300 = 'all friends'
-# 301 = 'friends on same host'
-# 302 = 'friends of friends'
-# 500 = 'specific users'
-
-DEFAULT_ACL = {
-    "permissions": 300,
-    "shared_users": []
-}
-
-ALLOWED_ACL_FLAGS = [100, 200, 300, 301, 302, 500]
-
 class ListField(models.TextField):
     __metaclass__ = models.SubfieldBase
     description = "Stores a python list"
@@ -44,24 +29,6 @@ class ListField(models.TextField):
         value = self._get_val_from_obj(obj)
         return self.get_db_prep_value(value)
 
-class ACL(models.Model):
-    """
-    ACL
-    """
-    permissions = models.IntegerField()
-    shared_users = ListField()
-
-    def __setattr__(self, attrname, val):
-        if attrname == 'permissions':
-            try:
-                val = int(val)
-            except:
-                raise TypeError ("Permissions must be of type int or string representation of an int")
-            if val not in ALLOWED_ACL_FLAGS:
-                raise ValueError ("Invalid permission flag")
-
-        super(ACL, self).__setattr__(attrname, val)
-
 class Post(models.Model):
     """
     Post
@@ -72,7 +39,7 @@ class Post(models.Model):
     contentType = models.CharField(blank = False, max_length = 16)
     categories = ListField(blank = True)
     pubDate = models.DateTimeField(auto_now_add=True, editable = False)
-    visibility = models.CharField(blank = False, max_length = 10)
+    visibility = models.charField(blank=False, max_length=10)
     image = models.ImageField(null=True, blank=True)
     author = models.ForeignKey(Author, blank=False, editable = False)
 

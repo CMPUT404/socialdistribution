@@ -17,12 +17,18 @@ def custom_exception_handler(exc, context):
             "error":"message body"
         }
     """
-    if isinstance(exc, exceptions.APIException):
+
+    # Marshal DRF into a standardized format
+    response = exception_handler(exc, context)
+    if response is not None:
+        return Response({'error': response.detail}, status=response.status_code);
+
+    elif isinstance(exc, exceptions.APIException):
         data = {'error': exc.detail}
         return Response(data, status=exc.status_code)
 
     elif isinstance(exc, Http404):
-        msg = ('Not found.')
+        msg = ('Entity not found.')
         data = {'error': six.text_type(msg)}
         return Response(data, status=status.HTTP_404_NOT_FOUND)
 

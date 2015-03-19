@@ -8,8 +8,7 @@ from serializers import (
 
 # TODO: IsFriend imported but never used
 from permissions import IsFriend, IsAuthor, Custom
-
-from rest_framework import generics
+from rest_framework import generics, mixins, viewsets, response as Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 
@@ -95,10 +94,6 @@ class PostPermissionsMixin(object):
         self.check_object_permissions(self.request, post)
         return post
 
-class GetTimeline(BasePostListRetrieval):
-    # This query is filtered for permissions and then cached
-    queryset = Post.objects.all()
-
 class GetPostsByAuthor(BasePostListRetrieval):
     """
     Returns a listing of posts for the given author ID
@@ -134,7 +129,6 @@ class GetSinglePost(PostMixin, generics.RetrieveAPIView):
     def get_queryset(self):
 
         _postid = self.kwargs.get(self.lookup_url_kwarg)
-
         try:
             post = Post.objects.get(guid = _postid)
         except:
@@ -159,3 +153,14 @@ class GetSinglePostByAuthor(PostMixin, PostPermissionsMixin, generics.RetrieveAP
         post = Post.objects.get(author_id = _id, guid = _postid)
 
         return post
+
+class PostViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    authentication_classes = (BasicAuthentication, TokenAuthentication, )
+    permission_classes = (IsAuthenticated, Custom,)
+
+    def list(self, request):
+        queryset = Post.objects.get(visibility="PUBLIC")
+        serializer = PostSerializer(queryset, many=True)
+        return Response(serializer.data)

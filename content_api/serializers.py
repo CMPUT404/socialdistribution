@@ -85,10 +85,7 @@ class PostSerializer(serializers.ModelSerializer):
     # DRF does not currently support creation of nested relations...
     def create(self, validated_data):
         request = self.context.get('request', None)
-
         _author = Author.objects.get(user = request.user)
-        # _acl = ACL.objects.create(**validated_data.pop('acl'))
-
         post = Post(author = _author, **validated_data)
         post.save()
 

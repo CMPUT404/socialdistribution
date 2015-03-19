@@ -2,6 +2,9 @@ from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 import views
 
+router = routers.SimpleRouter()
+router.register(r'post', views.PostViewSet)
+
 urlpatterns = [
 
     # GET  /author/:id/posts
@@ -30,3 +33,5 @@ urlpatterns = [
     # POST /post
     url(r'^$', views.CreatePost.as_view()),
 ]
+
+urlpatterns += router.urls
