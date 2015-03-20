@@ -3,7 +3,10 @@ from author_api.models import Author, FriendRelationship
 
 def isAuthor(request, obj):
     author = Author.objects.get(user = request.user)
-    return obj.author.id == author.id
+    if hasattr(obj, 'author'):
+      return obj.author.id == author.id
+    else:
+      return False
 
 def isOwner(request, obj):
     # owned by author or author of parent object

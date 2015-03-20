@@ -1,12 +1,13 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 from author_api.views import AuthorViewSet
-from content_api.views import PostViewSet#, CommentViewSet
+from content_api.views import PostViewSet, PublicPostViewSet
 from rest_framework_nested import routers
 
 router = routers.SimpleRouter(trailing_slash=False)
 router.register(r'author', AuthorViewSet)
 router.register(r'post', PostViewSet)
+router.register(r'post', PublicPostViewSet)
 
 urlpatterns = patterns('',
     url(r'^', include(router.urls)),
