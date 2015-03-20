@@ -1,15 +1,15 @@
 from rest_framework.response import Response
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, mixins
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.exceptions import APIException
-from django.shortcuts import get_object_or_404
 from models import Post, Comment
 from serializers import PostSerializer, CommentSerializer
 from permissions import IsAuthor, Custom
 from author_api.models import Author
 from author_api.serializers import AuthorSerializer
+from renderers import PostsJSONRenderer
 
 #
 # Delete Posts and Comments
@@ -132,7 +132,11 @@ class AuthorPostViewSet(
 class PostViewSet(
   PostBaseView,
   PostPermissionsMixin,
-  viewsets.ModelViewSet
+  mixins.CreateModelMixin,
+  mixins.RetrieveModelMixin,
+  mixins.UpdateModelMixin,
+  mixins.DestroyModelMixin,
+  viewsets.GenericViewSet
 ):
     authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, Custom]
@@ -144,5 +148,13 @@ class PostViewSet(
         serializer = PostSerializer(post)
         return Response(serializer.data)
 
+
+class PublicPostsViewSet(
+    PostBaseView,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    renderer_classes = (PostsJSONRenderer,)
+
     def get_queryset(self):
-        return Post.objects.filter(visibility="PUBLIC")
+        return self.queryset.filter(visibility="PUBLIC")
