@@ -13,14 +13,14 @@ SuperAgent.Request.prototype.promise = function createPromise(done, fail) {
         if (res.ok) {
           resolve(data);
         } else {
-          if (_.has(data, 'error')) {
-            if (_.isString(data.error)) {
-              reject(data.error);
-            } else if (_.isArray(data.error)) {
-              reject(data.error.join(' </br>'));
+          if (_.has(data, 'detail')) {
+            if (_.isString(data.detail)) {
+              reject(data.detail);
+            } else if (_.isArray(data.detail)) {
+              reject(data.detail.join(' </br>'));
             } else {
-              reject(_.keys(data.error)
-                      .map( k => k + ": " + res.body.error[k] )
+              reject(_.keys(data.detail)
+                      .map( k => k + ": " + res.body.detail[k] )
                       .join('</br>'));
             }
           } else if (_.has(data, 'message')){

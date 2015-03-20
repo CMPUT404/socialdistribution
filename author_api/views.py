@@ -6,9 +6,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import generics
+from rest_framework import generics, viewsets
+from rest_framework.decorators import list_route
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
+
+from content_api.models import Post
+from content_api.serializers import PostSerializer
 
 from models import (
     Author,
@@ -170,3 +174,17 @@ class GetAuthorFriendRequests(ListAPIView):
             return Response({'requestee':author.id, 'requestors':relations})
         else:
             raise UserNotFound()
+
+class AuthorViewSet(viewsets.GenericViewSet):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer = AuthorSerializer
+    queryset = Author.objects.all()
+
+    # TIMELINE call
+    @list_route(methods=['get'])
+    def posts(self, request):
+        user = self.request.user
+        queryset = Post.objects.get(author__id=user.id)
+        serializer = PostSerializer(queryset, many=True)
+        return Response(serializer.data)

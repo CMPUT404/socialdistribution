@@ -12,7 +12,7 @@ from author_api.models import (
     FriendRequest,
     FollowerRelationship )
 
-from content_api.models import Post, Comment, ACL
+from content_api.models import Post, Comment
 
 from rest_framework.authtoken.models import Token
 from rest_framework.test import (
@@ -23,9 +23,7 @@ import uuid
 import json
 import base64
 
-ACL_PRIVATE = {"permissions":500}
-ACL_DEFAULT = {"permissions":300}
-ACL_PUBLIC = {"permissions":200}
+ACL_DEFAULT = "PUBLIC"
 
 # Post attributes
 TEXT = "Some post text"
@@ -90,7 +88,7 @@ def create_authenticated_author(user_dict, author_dict):
 
     return (user, author, client)
 
-def create_multiple_posts(author, num, ptext = TEXT, acl = ACL_DEFAULT):
+def create_multiple_posts(author, num, ptext = TEXT, visibility = ACL_DEFAULT):
     """
     Returns a list of created posts for the given author
 
@@ -100,8 +98,7 @@ def create_multiple_posts(author, num, ptext = TEXT, acl = ACL_DEFAULT):
     posts = []
 
     for i in range(num):
-        _acl = ACL.objects.create(**acl)
-        posts.append(Post.objects.create(content = ptext, author = author, acl = _acl))
+        posts.append(Post.objects.create(content = ptext, author = author, visibility=visibility))
 
     return posts
 
@@ -128,26 +125,25 @@ def create_followers(_followee, followers):
     for f in followers:
         FollowerRelationship.objects.create(follower = f, followee = _followee)
 
-def create_friends(friend, friendors, create_post = True, aclist = ACL_PUBLIC):
+def create_friends(friend, friendors, create_post = True, visibility = ACL_DEFAULT):
     """
     Create Friends and Friends of Friends and associated posts
 
     Friendors: A list of author objects that will friend.
     Friend: An author object to be friended.
     Create_posts: If you want to create a post for each friend
-    acl: acl type for each post created
+    visibility: acl type for each post created
     """
     for friendor in friendors:
         FriendRelationship.objects.create(friendor = friendor, friend = friend)
 
         if create_post:
-            _acl = ACL.objects.create(**aclist)
-            Post.objects.create(content = TEXT, author = friendor, acl = _acl)
+            Post.objects.create(content = TEXT, author = friendor, visibility = visibility)
 
-def create_post_with_comment(pauthor, cauthor, _acl, ptext, ctext):
+def create_post_with_comment(pauthor, cauthor, visibility, ptext, ctext):
     """Takes post author, comment author and creates a post and associated comment"""
 
-    post = Post.objects.create(content = ptext, author = pauthor, acl = _acl)
+    post = Post.objects.create(content = ptext, author = pauthor, visbility=visibility)
     comment = Comment.objects.create(content = ctext, post = post, author = cauthor)
     return (post, comment)
 

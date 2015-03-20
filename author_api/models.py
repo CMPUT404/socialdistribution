@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from rest_api.utils import ListField
 from uuidfield import UUIDField
+from django.conf import settings
+import os
 
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
@@ -15,10 +17,14 @@ class Author(models.Model):
     """
     user = models.OneToOneField(User)
     id = UUIDField(auto = True, primary_key = True)
-    host = models.URLField(blank = False, null = False)
+    host = models.URLField(blank = False, null=False, default=settings.HOST)
     bio = models.TextField(blank=False, null=False)
     github_username = models.CharField(max_length=40, blank=True, null=True)
     image = models.ImageField(upload_to=get_image_path, blank=True, null=True)
+
+    @property
+    def host(self):
+      return settings.HOST
 
     @property
     def url(self):

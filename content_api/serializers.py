@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from models import Post, Comment, ACL
+from models import Post, Comment
 from author_api.models import Author
 from author_api.serializers import CompactAuthorSerializer
+from django.conf import settings
 import time
 
 # TODO
@@ -18,30 +19,18 @@ class UnixDateTimeField(serializers.DateTimeField):
         except(AttributeError, TypeError):
             return None
 
+
 class SourceSerializer(serializers.URLField):
     # Get path this post object was called from
     def get_attribute(self, post):
-        request = self.context.get('request', None)
+        return self.context.get('source', settings.HOST)
 
-        return request.build_absolute_uri(request.path_info)
 
 class OriginSerializer(serializers.URLField):
     # Get path this post object was called from
     def get_attribute(self, post):
-        request = self.context.get('request', None)
+        return self.context.get('origin', settings.HOST)
 
-        url = request.build_absolute_uri("http://%s/author/post/%s"
-            %(request.get_host(), post.guid))
-
-        return url
-
-class ACLSerializer(serializers.ModelSerializer):
-    permissions = serializers.CharField()
-    shared_users = serializers.ListField(child=serializers.CharField())
-
-    class Meta:
-        model = ACL
-        fields = ('permissions', 'shared_users')
 
 class CommentSerializer(serializers.ModelSerializer):
     author = CompactAuthorSerializer(many=False, read_only=True)
@@ -68,13 +57,14 @@ class CommentSerializer(serializers.ModelSerializer):
 
         return comment
 
+
 class PostSerializer(serializers.ModelSerializer):
-    # acl = ACLSerializer(many = False)
     author = CompactAuthorSerializer(many = False, read_only = True)
     comments = CommentSerializer(read_only = True, many = True)
     # pubDate = UnixDateTimeField(read_only=True)
     source = SourceSerializer(read_only = True)
     origin = OriginSerializer(read_only = True)
+    visibility = serializers.CharField()
 
     class Meta:
         model = Post
@@ -85,10 +75,7 @@ class PostSerializer(serializers.ModelSerializer):
     # DRF does not currently support creation of nested relations...
     def create(self, validated_data):
         request = self.context.get('request', None)
-
         _author = Author.objects.get(user = request.user)
-        # _acl = ACL.objects.create(**validated_data.pop('acl'))
-
         post = Post(author = _author, **validated_data)
         post.save()
 
