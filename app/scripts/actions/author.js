@@ -1,21 +1,18 @@
 import Reflux from 'reflux';
+import Async from './async';
 
-var async = { children: ['complete', 'fail'] };
-
-var Author = Reflux.createActions({
+export default Reflux.createActions({
   'update'               : {},
-  'register'             : async,
+  'register'             : Async,
   'logout'               : {},
-  'login'                : async,
+  'login'                : Async,
   'getAuthorNameList'    : {},
-  'checkAuth'            : async,
-  'fetchDetails'         : async,
-  'createPost'           : async,
-  'createComment'        : async,
+  'checkAuth'            : Async,
+  'fetchDetails'         : Async,
+  'createPost'           : Async,
+  'createComment'        : Async,
   'getAuthorAndListen'   : {},
   'unbindAuthorListener' : {},
   'subscribeTo'          : {},
   'unsubscribeFrom'      : {}
 });
-
-export default Author;

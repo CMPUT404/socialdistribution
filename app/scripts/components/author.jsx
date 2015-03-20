@@ -4,7 +4,6 @@ import Reflux from 'reflux';
 import { State } from 'react-router';
 import { Col, Row } from 'react-bootstrap';
 
-import PostStore from '../stores/post';
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
 import Follow from './follow';

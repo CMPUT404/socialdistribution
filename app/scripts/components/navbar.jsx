@@ -17,9 +17,11 @@ export default React.createClass({
     var navList = [<NavItemLink key="posts" to="posts">Posts</NavItemLink>]
 
     if (!_.isNull(this.props.currentAuthor)) {
-      navList.push(
+      navList.unshift(
         <NavItemLink key="timeline" to="timeline">Timeline</NavItemLink>,
-        <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>Profile</NavItemLink>,
+        <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>Profile</NavItemLink>
+      );
+      navList.push(
         <NavItem key="logout" onSelect={this.logout}>Logout</NavItem>);
     } else {
       navList.push(<NavItemLink key="login" to="login">Login</NavItemLink>);
