@@ -70,7 +70,11 @@ var Content = React.createClass({
           </Link>
           <h4>{title}</h4>
           {content}
-          <h6 className="timestamp">{timeSince}</h6>
+          <h6 className="timestamp">{timeSince} by
+            <Link to="author" params={{id: this.props.data.author.id}}>
+              <span> {this.props.data.author.displayname}</span>
+            </Link>
+          </h6>
           {comments}
         </div>
       </div>

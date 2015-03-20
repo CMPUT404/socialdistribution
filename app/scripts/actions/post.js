@@ -1,12 +1,7 @@
 import Reflux from 'reflux';
+import Async from './async';
 
-export default Reflux.createActions([
-  "newPost",
-  "editPost",
-  "deletePost",
-  "newComment",
-  "editComment",
-  "deleteComment",
-  "getTimeline",
-  "getAuthorPosts"
-]);
+export default Reflux.createActions({
+  "getTimeline"    : {},
+  "getPublicPosts" : Async
+});
