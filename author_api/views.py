@@ -1,27 +1,22 @@
-import json
-
 from rest_api.utils import UserNotFound
-
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import generics, viewsets
-from rest_framework.decorators import list_route
+from rest_framework import generics
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
-
-from content_api.models import Post
-from content_api.serializers import PostSerializer
+import json
 
 from models import (
     Author,
     FollowerRelationship,
     FriendRelationship,
-    FriendRequest )
+    FriendRequest
+)
 
 # TODO: FriendRequestSerializer is never used
-from serializers import AuthorSerializer, FriendRequestSerializer
+from serializers import AuthorSerializer
 
 def create_relationship_list(queryset, lookup):
     """
@@ -130,8 +125,10 @@ class GetAuthorFollowers(APIView):
     def delete(self, request, id, format=None):
         # unfollow
         followee = get_author(id)
-        formattted_request = str(request.body).strip("'<>()[]\"` ").replace('\'', '\"')
-        new_unfollower = json.loads(formattted_request)['follower']
+        formatted_request = str(request.body).strip("'<>()[]\"` ").replace('\'', '\"')
+        # TODO: we're getting parsed json by default, not sure if that changes
+        # things for above and below
+        new_unfollower = json.loads(formatted_request)['follower']
         new_unfollower = Author.objects.get(id=new_unfollower)
 
         # check whether the users are friends
@@ -174,20 +171,3 @@ class GetAuthorFriendRequests(ListAPIView):
             return Response({'requestee':author.id, 'requestors':relations})
         else:
             raise UserNotFound()
-
-class AuthorViewSet(viewsets.GenericViewSet):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    serializer = AuthorSerializer
-    queryset = Author.objects.all()
-
-    # TIMELINE call
-    @list_route(methods=['get'])
-    def posts(self, request):
-        user = self.request.user
-        # TODO: filter by author id and following ids as well
-        # author = Author.objects.get(user__id=user.id)
-        # followers = author.followers
-        queryset = Post.objects.all().filter(author__user__id=user.id)
-        serializer = PostSerializer(queryset, many=True)
-        return Response(serializer.data)

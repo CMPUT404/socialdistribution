@@ -1,22 +1,15 @@
-# TODO: Author imported but never used
-from author_api.models import Author, FriendRelationship
-
-from models import Post, Comment
-from serializers import (
-    PostSerializer,
-    CommentSerializer
-)
-
-# TODO: IsFriend imported but never used
-from permissions import IsAuthor, Custom
-from rest_framework import generics, viewsets, mixins
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework import generics, viewsets
 from rest_framework.decorators import list_route
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.exceptions import APIException
-
-from renderers import PostsJSONRenderer
+from django.shortcuts import get_object_or_404
+from models import Post, Comment
+from serializers import PostSerializer, CommentSerializer
+from permissions import IsAuthor, Custom
+from author_api.models import Author
+from author_api.serializers import AuthorSerializer
 
 #
 # Delete Posts and Comments
@@ -61,8 +54,13 @@ class CreateComment(generics.CreateAPIView):
 #
 # Post Retrieval for authors and timeline
 #
+class PostBaseView(object):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
 
-class PostMixin(object):
+
+# Handles permissions pertaining to posts and their various methods
+class PostPermissionsMixin(object):
     """
     Authentication may take one of two values:
         BasicAuthentication: An external node is accessing posts.
@@ -70,33 +68,31 @@ class PostMixin(object):
     """
     authentication_classes = (BasicAuthentication, TokenAuthentication, )
     permission_classes = (IsAuthenticated, Custom,)
-    serializer_class = PostSerializer
 
-class BasePostListRetrieval(PostMixin, generics.ListAPIView):
-    """
-    Returns a listing of posts.
-    """
-    renderer_classes = (PostsJSONRenderer,)
-
-class PostPermissionsMixin(object):
     # For querysets that only return a single object
     def get_object(self):
         post = self.get_queryset()
         self.check_object_permissions(self.request, post)
         return post
 
-class GetPostsByAuthor(BasePostListRetrieval):
+
+class AuthorPostViewSet(
+    PostBaseView,
+    viewsets.ViewSet,
+    PostPermissionsMixin
+):
+    authentication_classes = [BasicAuthentication, TokenAuthentication]
+    permission_classes = (Custom,)
+
     """
     Returns a listing of posts for the given author ID
 
     Takes:
         id: The uuid of an author model.
     """
-    lookup_url_kwarg = "id"
 
-    def get_queryset(self):
-        id = self.kwargs.get(self.lookup_url_kwarg)
-        posts = Post.objects.filter(author__id=id)
+    def list(self, request, author_id=None):
+        posts = self.queryset.filter(author__id=author_id)
         for post in posts:
             # We still want to return posts, but only those that we have permissions
             # for
@@ -105,52 +101,47 @@ class GetPostsByAuthor(BasePostListRetrieval):
             except APIException:
                 posts.remove(post)
 
+        serializer = PostSerializer(posts, many=True)
+        return Response({"posts": serializer.data})
 
-        return posts
+    def retrieve(self, request, pk=None, post_pk=None):
+
+        # If no post id, serve author, if present, serve author's post
+        if post_pk is None:
+            author = Author.objects.get(id=pk)
+            serializer = AuthorSerializer(author)
+        else:
+            post = self.queryset.get(author__id=pk, guid=post_pk)
+            serializer = PostSerializer(post)
+
+        return Response(serializer.data)
+
+    # TIMELINE call
+    @list_route(methods=['get'], permission_classes=[IsAuthenticated])
+    def posts(self, request):
+        user = self.request.user
+        # TODO: filter by author id and following ids as well
+        # author = Author.objects.get(user__id=user.id)
+        # followers = author.followers
+        queryset = Post.objects.all().filter(author__user__id=user.id)
+        serializer = PostSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
-class GetSinglePostByAuthor(PostMixin, PostPermissionsMixin, generics.RetrieveAPIView):
-    """
-    Returns a single post given an author id and a postid
-
-    Takes:
-        postid: The uuid of a post model.
-        id: The uuid of an author model.
-    """
-    lookup_url_kwargs = ('id', 'postid')
-
-    def get_queryset(self):
-        id = self.kwargs.get(self.lookup_url_kwargs[0])
-        postid = self.kwargs.get(self.lookup_url_kwargs[1])
-        return Post.objects.get(author__id=id, guid=postid)
-
-class PostBaseView():
-    serializer_class = PostSerializer
-    renderer_classes = (PostsJSONRenderer,)
-
-class PublicPostViewSet(
-    PostBaseView,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
-):
-    queryset = Post.objects.filter(visibility="PUBLIC")
-
-# Does everything except /post which has different permissions
+# Handles all interactions with post objects
 class PostViewSet(
   PostBaseView,
-  mixins.CreateModelMixin,
-  mixins.DestroyModelMixin,
-  mixins.RetrieveModelMixin,
-  mixins.UpdateModelMixin,
-  viewsets.GenericViewSet,
-  PostPermissionsMixin
+  PostPermissionsMixin,
+  viewsets.ModelViewSet
 ):
     authentication_classes = [BasicAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated, Custom]
-    queryset = Post.objects.all()
+    permission_classes = [IsAuthenticatedOrReadOnly, Custom]
 
     # For querysets that only return a single object
     def get_object(self):
-        post = self.get_queryset()
+        post = get_object_or_404(self.get_queryset())
         self.check_object_permissions(self.request, post)
         return post
+
+    def get_queryset(self):
+        return Post.objects.filter(visibility="PUBLIC")

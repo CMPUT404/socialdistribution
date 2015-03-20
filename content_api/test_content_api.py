@@ -82,6 +82,12 @@ class ContentAPITestCase(TestCase):
         post = Post.objects.get(author = self.author_a)
         self.assertEquals(post.content, TEXT)
 
+    def test_get_post(self):
+        response = self.client.get('/post/%s' % self.post.guid)
+        self.assertEquals(response.status_code, 200)
+        s.assertPostAuthor(self, response.data, self.author_a)
+        # s.pretty_print(response.data)
+
     def test_get_multiple_posts_by_author_with_http(self):
         # Create two posts, in addition to the post created in setUp()
         s.create_multiple_posts(self.author_a, 2, ptext = TEXT)
@@ -110,7 +116,7 @@ class ContentAPITestCase(TestCase):
         s.create_friends(self.author_a, [self.author_b, self.author_c])
 
         a_id = self.author_a.id
-        response = self.client.get("/author/%s/posts" %a_id)
+        response = self.client.get("/author/%s/posts" % a_id)
         self.assertEquals(response.status_code, 200)
 
         posts = response.data
@@ -267,7 +273,6 @@ class ContentAPITestCase(TestCase):
         response = self.client.post("/post", post)
 
         self.assertEquals(response.status_code, 201)
-        s.assertACLPermission(self, response.data, 200)
 
     def test_delete_post(self):
         post = Post.objects.create(content=TEXT, author = self.author_a, visibility=scaffold.ACL_DEFAULT)
@@ -363,7 +368,7 @@ class ContentAPITestCase(TestCase):
         Comment.objects.create(post = post, comment = TEXT, author = self.author_c)
 
         # get the post
-        response = self.client.get('/post/%s' %(self.author_a.id, pid))
+        response = self.client.get('/post/%s' % (pid))
         self.assertEquals(response.status_code, 200)
 
         # s.pretty_print(response.data)
@@ -437,8 +442,4 @@ class ContentAPITestCase(TestCase):
         response = self.no_auth.get('/author/posts')
         self.assertEquals(response.status_code, 401)
 
-    def test_retrieve_single_post(self):
-        response = self.client.get('/post/%s' %self.post.guid)
-        self.assertEquals(response.status_code, 200)
-        s.assertPostAuthor(self, response.data, self.author_a)
-        # s.pretty_print(response.data)
+

@@ -20,7 +20,7 @@ class Post(models.Model):
     author = models.ForeignKey(Author, blank=False, editable = False)
 
     def __unicode__(self):
-        return u'%s %s' %(self.author.user.username, self.content)
+        return u'%s %s %s' %(self.author.user.username, self.content, self.visibility)
 
 
 class Comment(models.Model):
@@ -37,4 +37,4 @@ class Comment(models.Model):
     author = models.ForeignKey(Author, blank=False, editable = False)
 
     def __unicode__(self):
-        return u'%s %s' %(self.author.username, self.content)
+        return u'%s %s' %(self.author.username, self.comment)
