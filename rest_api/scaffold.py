@@ -193,8 +193,8 @@ def assertPostContent(context, post, content):
     context.assertEquals(post["content"], content, "Post text does not match")
 
 def assertACLPermission(context, post, permission):
-    context.assertEquals(post['acl']['permissions'], str(permission),
-        "expected %s, got %s" %(permission, post['acl']['permissions']))
+    context.assertEquals(post['visibility'], str(permission),
+        "expected %s, got %s" %(permission, post['visibility']))
 
 def assertSharedUser(context, post, author):
     context.assertTrue(unicode(author.id) in post["acl"]["shared_users"],
