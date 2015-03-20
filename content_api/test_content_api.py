@@ -1,8 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from author_api.models import Author, FriendRelationship
-from models import Post, Comment, ACL
+from models import Post, Comment
 from rest_framework.authtoken.models import Token
+from rest_api import scaffold
 import uuid
 
 from rest_api import scaffold as s
@@ -22,11 +23,6 @@ USER_C = {"username":"User_C", "password":uuid.uuid4()}
 USER_D = {"username":"User_D", "password":uuid.uuid4()}
 USER_E = {"username":"User_E", "password":uuid.uuid4()}
 
-ACL_PRIVATE = {"permissions":500, "shared_users":[]}
-ACL_DEFAULT = {"permissions":300, "shared_users":[]}
-ACL_PUBLIC = {"permissions":200, "shared_users":[]}
-ACL_FOAF = {"permissions":302, "shared_users":[]}
-
 # optional User model attributes
 FIRST_NAME = "Jerry"
 LAST_NAME = "Maguire"
@@ -43,13 +39,11 @@ AUTHOR_PARAMS = {
 }
 
 
-class TimelineAPITestCase(TestCase):
+class ContentAPITestCase(TestCase):
     """
-    Testing Timeline API Prototypes
+    Testing Content API Prototypes
     """
     def setUp(self):
-        self.acl = ACL.objects.create(**ACL_DEFAULT)
-
         self.user_a, self.author_a, self.c = s.create_authenticated_author(USER_A,
             AUTHOR_PARAMS)
 
@@ -57,7 +51,7 @@ class TimelineAPITestCase(TestCase):
         self.user_c, self.author_c = s.create_author(USER_C, AUTHOR_PARAMS)
 
         self.post = Post.objects.create(content = TEXT,
-            author = self.author_a, acl=self.acl)
+            author = self.author_a, visibility="PUBLIC")
 
         self.no_auth = s.SocialAPIClient()
 
@@ -67,7 +61,6 @@ class TimelineAPITestCase(TestCase):
         User.objects.all().delete()
         Post.objects.all().delete()
         FriendRelationship.objects.all().delete()
-        ACL.objects.all().delete()
         Token.objects.all().delete()
 
         self.c.credentials()
@@ -156,76 +149,76 @@ class TimelineAPITestCase(TestCase):
         s.assertNumberPosts(self, response.data, 1)
         s.assertPostAuthor(self, response.data[0], author)
 
-    def test_attempt_get_posts_of_fof(self):
-        # Add Friends and a post each
-        s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
+    # def test_attempt_get_posts_of_fof(self):
+        # # Add Friends and a post each
+        # s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
 
-        # Create friend of friend and a post with private permissions
-        user, author = s.create_author(USER_D, AUTHOR_PARAMS)
-        s.create_friends(self.author_b, [author], create_post = True, aclist = ACL_PRIVATE)
+        # # Create friend of friend and a post with private permissions
+        # user, author = s.create_author(USER_D, AUTHOR_PARAMS)
+        # s.create_friends(self.author_b, [author], create_post = True, aclist=ACL_PRIVATE)
 
-        # author_a should not be able to retrieve post by author created above
-        aid = author.id
-        response = self.c.get("/author/%s/posts" %aid)
-        self.assertEquals(response.status_code, 403)
+        # # author_a should not be able to retrieve post by author created above
+        # aid = author.id
+        # response = self.c.get("/author/%s/posts" %aid)
+        # self.assertEquals(response.status_code, 403)
 
-    def test_get_posts_in_private_list(self):
-        # Add Posts
-        _acl = {"permissions":500, "shared_users":[str(self.author_a.id)]}
-        s.create_multiple_posts(self.author_b, num = 1, acl = _acl)
+    # def test_get_posts_in_private_list(self):
+        # # Add Posts
+        # _acl = {"permissions":500, "shared_users":[str(self.author_a.id)]}
+        # s.create_multiple_posts(self.author_b, num = 1, acl = _acl)
 
-        bid = self.author_b.id
-        response = self.c.get("/author/%s/posts" %bid)
+        # bid = self.author_b.id
+        # response = self.c.get("/author/%s/posts" %bid)
 
-        # s.pretty_print(response.data)
+        # # s.pretty_print(response.data)
 
-        self.assertEquals(response.status_code, 200)
-        s.assertPostAuthor(self, response.data[0], self.author_b)
-        s.assertSharedUser(self, response.data[0], self.author_a)
+        # self.assertEquals(response.status_code, 200)
+        # s.assertPostAuthor(self, response.data[0], self.author_b)
+        # s.assertSharedUser(self, response.data[0], self.author_a)
 
-    def test_attempt_get_posts_in_private_list(self):
-        # Add Posts
-        _acl = {"permissions":500, "shared_users":[str(self.author_c.id)]}
-        s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
+    # def test_attempt_get_posts_in_private_list(self):
+        # # Add Posts
+        # _acl = {"permissions":500, "shared_users":[str(self.author_c.id)]}
+        # s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
 
-        bid = self.author_b.id
-        response = self.c.get("/author/%s/posts" %bid)
-        self.assertEquals(response.status_code, 403)
+        # bid = self.author_b.id
+        # response = self.c.get("/author/%s/posts" %bid)
+        # self.assertEquals(response.status_code, 403)
 
-    def test_get_private_post_again(self):
-        # Add Posts
-        _acl = {"permissions":100, "shared_users":[]}
-        s.create_multiple_posts(self.author_a, num = 2, acl = _acl)
+    # def test_get_private_post_again(self):
+        # # Add Posts
+        # _acl = {"permissions":100, "shared_users":[]}
+        # s.create_multiple_posts(self.author_a, num = 2, acl = _acl)
 
-        aid = self.author_a.id
-        response = self.c.get("/author/%s/posts" %aid)
-        self.assertEquals(response.status_code, 200)
+        # aid = self.author_a.id
+        # response = self.c.get("/author/%s/posts" %aid)
+        # self.assertEquals(response.status_code, 200)
 
-        # s.pretty_print(response.data)
-        s.assertNumberPosts(self, response.data, 3)
-        #
-        # # TODO this is a bug. At least one post should be returned
-        # # Create user to attempt to retrieve private posts
-        # user, author, client = s.create_authenticated_author(USER_D, AUTHOR_PARAMS)
-        # response = client.get("/author/%s/posts" %aid)
-        #
-        # s.assertNumberPosts(self, response.data, 1)
-        #
+        # # s.pretty_print(response.data)
+        # s.assertNumberPosts(self, response.data, 3)
+        # #
+        # # # TODO this is a bug. At least one post should be returned
+        # # # Create user to attempt to retrieve private posts
+        # # user, author, client = s.create_authenticated_author(USER_D, AUTHOR_PARAMS)
+        # # response = client.get("/author/%s/posts" %aid)
+        # #
+        # # s.assertNumberPosts(self, response.data, 1)
+        # #
 
-    def test_attempt_get_private_post(self):
-        # Add Posts
-        _acl = {"permissions":100, "shared_users":[]}
-        s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
+    # def test_attempt_get_private_post(self):
+        # # Add Posts
+        # _acl = {"permissions":100, "shared_users":[]}
+        # s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
 
-        bid = self.author_b.id
-        response = self.c.get("/author/%s/posts" %bid)
-        self.assertEquals(response.status_code, 403)
+        # bid = self.author_b.id
+        # response = self.c.get("/author/%s/posts" %bid)
+        # self.assertEquals(response.status_code, 403)
 
     def test_create_post(self):
         ptext = TEXT + " message"
         post = {
             "content":ptext,
-            "acl":ACL_DEFAULT,
+            "visibility": scaffold.ACL_DEFAULT,
         }
 
         response = self.c.post("/author/post", post)
@@ -243,7 +236,7 @@ class TimelineAPITestCase(TestCase):
         ptext = TEXT + " message"
         post = {
             "content":ptext,
-            "acl":ACL_DEFAULT,
+            "visibility": scaffold.ACL_DEFAULT,
             "title":"sick title"
         }
 
@@ -258,21 +251,21 @@ class TimelineAPITestCase(TestCase):
         ptext = TEXT + " message"
         post = {
             "content":ptext,
-            "acl":ACL_DEFAULT,
+            "visibility": scaffold.ACL_DEFAULT,
         }
 
         response = self.no_auth.post('/author/post', post)
         self.assertEquals(response.status_code, 401)
 
-    def test_attempt_set_read_only_fields(self):
-        """Read only fields should be ignored in POST request"""
-        acl = {"permissions":300, "shared_users":["user_a"]}
-        post = {"content":TEXT, "id":4, "date":"2015-01-01",
-            "acl":acl}
+    # def test_attempt_set_read_only_fields(self):
+        # """Read only fields should be ignored in POST request"""
+        # acl = {"permissions":300, "shared_users":["user_a"]}
+        # post = {"content":TEXT, "id":4, "date":"2015-01-01",
+            # "acl":acl}
 
-        response = self.c.post("/author/post", post)
-        self.assertEquals(response.status_code, 201)
-        self.assertTrue(response.data["guid"] != 4, "ID was set; should not have been")
+        # response = self.c.post("/author/post", post)
+        # self.assertEquals(response.status_code, 201)
+        # self.assertTrue(response.data["guid"] != 4, "ID was set; should not have been")
 
     def test_create_blank_post(self):
         """Should not be able to create post with no text"""
@@ -281,21 +274,22 @@ class TimelineAPITestCase(TestCase):
 
     def test_public_post_set(self):
         """public and fof are False by default"""
-        post = Post.objects.create(content = TEXT,
-            author = self.author_a, acl = ACL.objects.create(**ACL_DEFAULT))
-        self.assertEquals(post.acl.permissions, 300)
+        post = Post.objects.create(
+          content = TEXT,
+          author = self.author_a,
+          visibility = scaffold.ACL_DEFAULT
+        )
+        self.assertEquals(post.visibility, scaffold.ACL_DEFAULT)
 
     def test_create_public_post_http(self):
-        acl = {"permissions":200, "shared_users":[]}
-        post = {"content":TEXT, "acl":acl}
+        post = {"content":TEXT, "visibility": scaffold.ACL_DEFAULT}
         response = self.c.post("/author/post", post)
 
         self.assertEquals(response.status_code, 201)
         s.assertACLPermission(self, response.data, 200)
 
     def test_delete_post(self):
-        _acl = ACL.objects.create(**ACL_DEFAULT)
-        post = Post.objects.create(content = TEXT, author = self.author_a, acl = _acl)
+        post = Post.objects.create(content = TEXT, author = self.author_a, visiblity=scaffold.ACL_DEFAULT)
 
         postid = post.guid
 
@@ -306,8 +300,7 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(len(Post.objects.filter(guid=postid)), 0, "Post not deleted")
 
     def test_attempt_delete_post_non_author(self):
-        _acl = ACL.objects.create(**ACL_DEFAULT)
-        post = Post.objects.create(content = TEXT, author = self.author_b, acl = _acl)
+        post = Post.objects.create(content = TEXT, author = self.author_b, visibility = scaffold.ACL_DEFAULT)
 
         postid = post.guid
 
@@ -316,8 +309,7 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 403)
 
     def test_add_comment_to_public_post(self):
-        _acl = ACL.objects.create(**ACL_PUBLIC)
-        post = Post.objects.create(content = TEXT, author = self.author_b, acl = _acl)
+        post = Post.objects.create(content = TEXT, author = self.author_b, visibility = scaffold.ACL_DEFAULT)
 
         postid = post.guid
 
@@ -335,9 +327,8 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(comment.author.user.username, self.author_a.user.username)
 
     def test_delete_comment_by_comment_author(self):
-        acl = ACL.objects.create(**ACL_PUBLIC)
         post, comment = s.create_post_with_comment(
-            self.author_b, self.author_a, acl, TEXT, TEXT)
+            self.author_b, self.author_a, scaffold.ACL_DEFAULT, TEXT, TEXT)
 
         cid = comment.guid
 
@@ -357,9 +348,8 @@ class TimelineAPITestCase(TestCase):
         self.assertEquals(response.status_code, 404)
 
     def test_attempt_delete_comment_post_author(self):
-        acl = ACL.objects.create(**ACL_PUBLIC)
         post, comment = s.create_post_with_comment(
-            self.author_b, self.author_a, acl, TEXT, TEXT)
+            self.author_b, self.author_a, scaffold.ACL_DEFAULT, TEXT, TEXT)
 
         cid = comment.guid
         pid = post.guid
@@ -384,17 +374,13 @@ class TimelineAPITestCase(TestCase):
             pass
 
     def test_get_post_with_comments(self):
-        acl = ACL.objects.create(**ACL_PUBLIC)
         post, comment = s.create_post_with_comment(
-            self.author_a, self.author_b, acl, TEXT, TEXT)
+            self.author_a, self.author_b, scaffold.ACL_DEFAULT, TEXT, TEXT)
 
-        cid = comment.guid
         pid = post.guid
 
         # Create one more comment
-        _comment = Comment.objects.create(
-            post = post, content = TEXT, author = self.author_c)
-        _cid = _comment.guid
+        Comment.objects.create(post = post, content = TEXT, author = self.author_c)
 
         # get the post
         response = self.c.get('/author/%s/posts/%s' %(self.author_a.id, pid))
@@ -406,13 +392,6 @@ class TimelineAPITestCase(TestCase):
         s.assertNumberComments(self, response.data, 2)
         s.assertAuthorsInComments(self, [self.author_b, self.author_c],
             response.data['comments'])
-
-    def test_get_private_post(self):
-        acl = ACL.objects.create(**ACL_PRIVATE)
-        post = Post.objects.create(author = self.author_b, content = TEXT, acl = acl)
-
-        response = self.c.get('/author/%s/posts' %self.author_b.id)
-        self.assertEquals(response.status_code, 403)
 
     def test_retrieve_timeline_own(self):
         response = self.c.get('/author/posts')

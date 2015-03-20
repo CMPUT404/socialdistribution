@@ -8,9 +8,12 @@ from serializers import (
 
 # TODO: IsFriend imported but never used
 from permissions import IsFriend, IsAuthor, Custom
-from rest_framework import generics, mixins, viewsets, response as Response
+from rest_framework import generics, mixins, viewsets
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.decorators import list_route
+from django.conf import settings
 
 from renderers import PostsJSONRenderer
 
@@ -154,13 +157,16 @@ class GetSinglePostByAuthor(PostMixin, PostPermissionsMixin, generics.RetrieveAP
 
         return post
 
-class PostViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    authentication_classes = (BasicAuthentication, TokenAuthentication, )
-    permission_classes = (IsAuthenticated, Custom,)
+    authentication_classes = [BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated, Custom]
 
+    """
+    Retrieves a list of all publically visiblie posts from the server.
+    """
     def list(self, request):
-        queryset = Post.objects.get(visibility="PUBLIC")
-        serializer = PostSerializer(queryset, many=True)
+        queryset = Post.objects.all()#.get(visibility="PUBLIC")
+        serializer = PostSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
