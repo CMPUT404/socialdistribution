@@ -6,6 +6,8 @@ import { Link } from 'react-router';
 import { markdown as Markdown } from 'markdown';
 import { Col } from 'react-bootstrap';
 
+import Spinner from '../spinner';
+
 // Represents an individual comment or post.
 var Content = React.createClass({
 
@@ -23,10 +25,13 @@ var Content = React.createClass({
   render: function() {
     var content, comments, title;
 
-    if (_.isUndefined(this.props.data)) {
-      return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
+    if (_.isNull(this.props.data)) {
+      return (<Spinner />);
     }
 
+    // by default, assume it's a comment
+    content = <p>{this.props.data.comment}</p>;
+    // overridden down here
     if (this.props.data.getType() === "Post") {
       title = this.props.data.title;
       if (this.props.data.hasComments()) {
@@ -36,17 +41,17 @@ var Content = React.createClass({
           );
         });
       }
-    }
 
-    switch(this.props.data.contentType) {
-      case 'text/x-markdown':
-        content = <div dangerouslySetInnerHTML={{__html: Content.convertMarkdown(this.props.data.content)}} />;
-        break;
-      case 'text/html':
-        content = <div dangerouslySetInnerHTML={{__html: this.props.data.content}} />;
-        break;
-      default:
-        content = <p>{this.props.data.content}</p>;
+      switch(this.props.data.contentType) {
+        case 'text/x-markdown':
+          content = <div dangerouslySetInnerHTML={{__html: Content.convertMarkdown(this.props.data.content)}} />;
+          break;
+        case 'text/html':
+          content = <div dangerouslySetInnerHTML={{__html: this.props.data.content}} />;
+          break;
+        default:
+          content = <p>{this.props.data.content}</p>;
+      }
     }
 
     // creates those nice "25 minutes ago" timestamps

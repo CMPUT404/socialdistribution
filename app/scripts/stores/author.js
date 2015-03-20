@@ -5,6 +5,7 @@ import Request from '../utils/request';
 
 import Post from '../objects/post';
 import Author from '../objects/author';
+import Comment from '../objects/comment';
 import AuthorActions from '../actions/author';
 
 // Deals with store Author information. Both for the logged in user and other
@@ -25,6 +26,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.checkAuth, 'onCheckAuth');
     this.listenTo(AuthorActions.createPost, 'onCreatePost');
     this.listenTo(AuthorActions.fetchDetails, 'onFetchDetails');
+    this.listenTo(AuthorActions.createComment, 'onCreateComment');
 
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
     this.listenTo(AuthorActions.getAuthorAndListen, this.getAuthorViewData);
@@ -36,6 +38,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.register.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.createPost.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.fetchDetails.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.createComment.fail, this.ajaxFailed);
 
   },
 
@@ -188,10 +191,34 @@ export default Reflux.createStore({
 
   createPostComplete: function(postData) {
     var post = new Post(postData);
-    post.author = new Author(post.author);
+
+    // Cyclic reference
+    post.author = this.currentAuthor;
+    // add new post
     this.currentAuthor.posts.push(post);
-    this.trigger({displayAuthor: this.currentAuthor});
+    // trigger update
+    this.trigger({displayPosts: this.currentAuthor.sortedPosts()});
+    // this is meant for other stores that are listening
     AuthorActions.createPost.complete(post);
+  },
+
+  onCreateComment: function(post, comment) {
+    Request
+      .post('http://localhost:8000/post/' + post.guid +'/comments')
+      .token(this.getToken())
+      .send(comment)
+      .promise(this.createCommentComplete.bind(this, post),
+              AuthorActions.createComment.fail);
+  },
+
+  createCommentComplete: function(post, commentData) {
+    var comment = new Comment(commentData);
+
+    comment.author = this.currentAuthor;
+    post.addComment(comment);
+
+    this.trigger({displayPosts: this.currentAuthor.sortedPosts()});
+    AuthorActions.createComment.complete(comment);
   },
 
   // This is a listener not a handler
