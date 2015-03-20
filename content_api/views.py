@@ -43,12 +43,6 @@ class DeleteComment(BaseDeleteView):
 #
 # Create Post and Comments
 #
-
-class CreatePost(generics.CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    serializer_class = PostSerializer
-
 class CreateComment(generics.CreateAPIView):
     """
     Create a comment in the given post using postid.
@@ -170,3 +164,25 @@ class PostViewSet(viewsets.ModelViewSet):
         queryset = Post.objects.all()#.get(visibility="PUBLIC")
         serializer = PostSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
+
+
+# class CommentViewSet(mixins.CreateModelMixin, viewsets.ModelViewSet):
+    # queryset = Comment.objects.all()
+    # serializer_class = CommentSerializer
+    # authentication_classes = [BasicAuthentication, TokenAuthentication]
+    # permission_classes = [IsAuthenticated]
+
+    # def create(self, request, post_id):
+        # post = Post.objects.get(guid=post_id)
+
+
+    # def get_serializer_context(self):
+        # """
+        # Provide the serializer_class with Post model context needed to create a Comment
+        # """
+        # return {
+            # 'request': self.request,
+            # 'format': self.format_kwarg,
+            # 'view': self,
+            # 'post': Post.objects.get(guid = self.kwargs.get(self.lookup_url_kwarg))
+        # }

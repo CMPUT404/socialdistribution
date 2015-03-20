@@ -309,12 +309,12 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(response.status_code, 403)
 
     def test_add_comment_to_public_post(self):
-        post = Post.objects.create(content = TEXT, author = self.author_b, visibility = scaffold.ACL_DEFAULT)
+        post = Post.objects.create(comment = TEXT, author = self.author_b, visibility = scaffold.ACL_DEFAULT)
 
         postid = post.guid
 
         # comment on the post
-        comment = {"content":TEXT}
+        comment = {"comment":TEXT}
         response = self.c.post('/author/posts/%s/comments' %postid, comment)
         # s.pretty_print(response.data)
         self.assertEquals(response.status_code, 201)
@@ -332,7 +332,7 @@ class ContentAPITestCase(TestCase):
 
         cid = comment.guid
 
-        response = self.c.delete('/author/posts/comments/%s' %cid)
+        response = self.c.delete('/post/%s/comments/%s' % (post.id, cid))
         self.assertEquals(response.status_code, 204)
 
         # ensure comment has been removed
@@ -342,11 +342,6 @@ class ContentAPITestCase(TestCase):
         except:
             pass
 
-    def test_delete_comment_does_not_exist(self):
-        # delete a comment that does not exist
-        response = self.c.delete('/author/posts/comments/232')
-        self.assertEquals(response.status_code, 404)
-
     def test_attempt_delete_comment_post_author(self):
         post, comment = s.create_post_with_comment(
             self.author_b, self.author_a, scaffold.ACL_DEFAULT, TEXT, TEXT)
@@ -355,7 +350,7 @@ class ContentAPITestCase(TestCase):
         pid = post.guid
 
         # delete the comment (by post author)
-        response = self.c.delete('/author/posts/comments/%s' %cid)
+        response = self.c.delete('/posts/%s/comments/%s' % (pid, cid))
         self.assertEquals(response.status_code, 204)
 
         # ensure comment has been removed
@@ -380,7 +375,7 @@ class ContentAPITestCase(TestCase):
         pid = post.guid
 
         # Create one more comment
-        Comment.objects.create(post = post, content = TEXT, author = self.author_c)
+        Comment.objects.create(post = post, comment = TEXT, author = self.author_c)
 
         # get the post
         response = self.c.get('/author/%s/posts/%s' %(self.author_a.id, pid))
