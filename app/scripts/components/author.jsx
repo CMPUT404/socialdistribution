@@ -7,11 +7,12 @@ import { Col, Row } from 'react-bootstrap';
 import PostStore from '../stores/post';
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
-import ContentViewer from './contentviewer';
-import ContentCreator from './contentcreator';
 import Follow from './follow';
 import Spinner from './spinner';
 import Stream from './github/stream';
+
+import ContentViewer from './content/content-viewer';
+import PostCreator from './content/post-creator';
 
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
@@ -35,8 +36,7 @@ export default React.createClass({
   getInitialState: function() {
     return {
       displayAuthor: null,
-      gitHubStream: null,
-      authorPosts: [],
+      gitHubStream: null
     };
   },
 
@@ -46,14 +46,14 @@ export default React.createClass({
 
   render: function() {
     // if we haven't gotten our initial data yet, put a spinner in place
-    if (_.isNull(this.state.displayAuthor) || _.isNull(this.state.authorPosts)) {
+    if (_.isNull(this.state.displayAuthor)) {
       return (<Spinner />);
     }
 
     // this comes from the RouterState mixin and lets us pull an author id out
     // of the uri so we can fetch their posts.
     var authorViewId = this.getParams().id;
-    var contentCreator, follow, ghStream, githubUrl;
+    var postCreator, follow, ghStream, githubUrl;
 
     githubUrl = this.state.displayAuthor.getGithubUrl();
 
@@ -62,7 +62,7 @@ export default React.createClass({
 
       // if viewing their own profile
       if (this.props.currentAuthor.isAuthor(authorViewId)) {
-        contentCreator = <div className="jumbotron"><ContentCreator currentAuthor={this.props.currentAuthor} /></div>;
+        postCreator = <div className="jumbotron"><PostCreator currentAuthor={this.props.currentAuthor} /></div>;
       } else {
         follow = <Follow currentAuthor={this.props.currentAuthor} author={this.state.displayAuthor} />;
       }
@@ -101,10 +101,10 @@ export default React.createClass({
               {follow}
             </div>
           </div>
-          {contentCreator}
+          {postCreator}
           <ContentViewer
             currentAuthor={this.props.currentAuthor}
-            posts={this.state.authorPosts} />
+            posts={this.state.displayAuthor.sortedPosts()} />
         </Col>
         <Col md={4}>
           {ghStream}

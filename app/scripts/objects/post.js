@@ -9,6 +9,13 @@ export default class extends Content {
   constructor (postData) {
     super(postData);
 
+    this.title = postData.title;
+    this.source = postData.source;
+    this.origin = postData.origin;
+    this.content = postData.content;
+    this.contentType = postData.contentType;
+    this.visibility = postData.visibility;
+    this.image = postData.image;
     this.comments = [];
 
     // if we have any comment data, marshal it into comment classes

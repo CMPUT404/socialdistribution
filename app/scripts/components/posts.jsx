@@ -4,7 +4,7 @@ import { Col, Button } from 'react-bootstrap';
 
 import PostActions from '../actions/post';
 
-import ContentViewer from './contentviewer';
+import ContentViewer from './content/content-viewer';
 import Spinner from './spinner';
 
 // Represents a collection of posts within the logged in user's social network.
