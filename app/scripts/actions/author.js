@@ -10,6 +10,8 @@ var Author = Reflux.createActions({
   'getAuthorNameList'    : {},
   'checkAuth'            : async,
   'fetchDetails'         : async,
+  'createPost'           : async,
+  'createComment'        : async,
   'getAuthorAndListen'   : {},
   'unbindAuthorListener' : {},
   'subscribeTo'          : {},

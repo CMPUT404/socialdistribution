@@ -20,6 +20,8 @@ export default class {
     this.displayname     = author.displayname;
     this.github_username = author.github_username;
 
+    this.posts = [];
+
     // this.notifications = data.notifications;
     // this.subscriptionCount = data.subscriptions.length;
     // this.subscriptionStore = subscriptionStore;
@@ -41,7 +43,8 @@ export default class {
   }
 
   getImage () {
-    return _.isNull(this.image) ? 'images/placeholder.jpg' : this.image;
+    return (_.isNull(this.image) || _.isUndefined(this.image)) ?
+            'images/placeholder.jpg' : this.image;
   }
 
   isAuthor (authorId) {
@@ -110,5 +113,9 @@ export default class {
   getSubscriberCount () {
     var subscriptions = this.getSubscriptions();
     return _.isUndefined(subscriptions) ? 0 : subscriptions.length;
+  }
+
+  sortedPosts() {
+    return _.sortByOrder(this.posts, ['pubDate'], [false]);
   }
 }

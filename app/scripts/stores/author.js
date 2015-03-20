@@ -3,6 +3,7 @@ import Reflux from 'reflux';
 
 import Request from '../utils/request';
 
+import Post from '../objects/post';
 import Author from '../objects/author';
 import AuthorActions from '../actions/author';
 
@@ -22,6 +23,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.logout, 'logOut');
     this.listenTo(AuthorActions.register, 'onRegister');
     this.listenTo(AuthorActions.checkAuth, 'onCheckAuth');
+    this.listenTo(AuthorActions.createPost, 'onCreatePost');
     this.listenTo(AuthorActions.fetchDetails, 'onFetchDetails');
 
     this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
@@ -32,7 +34,9 @@ export default Reflux.createStore({
     // Ajax fail listeners
     this.listenTo(AuthorActions.login.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.register.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.createPost.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.fetchDetails.fail, this.ajaxFailed);
+
   },
 
   // if in a static method and need acces to store state
@@ -172,6 +176,22 @@ export default Reflux.createStore({
           this.ajaxFailed('GitHub: ' + error);
       });
     }
+  },
+
+  onCreatePost: function(post) {
+    Request
+      .post('http://localhost:8000/post')
+      .token(this.getToken())
+      .send(post)
+      .promise(this.createPostComplete, AuthorActions.createPost.fail);
+  },
+
+  createPostComplete: function(postData) {
+    var post = new Post(postData);
+    post.author = new Author(post.author);
+    this.currentAuthor.posts.push(post);
+    this.trigger({displayAuthor: this.currentAuthor});
+    AuthorActions.createPost.complete(post);
   },
 
   // This is a listener not a handler

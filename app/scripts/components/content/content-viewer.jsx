@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-import ContentCreator from './contentcreator';
+import CommentCreator from './comment-creator';
 import Content from './content';
 
 // This is used to bundle up user content we wish to display. Namely posts and
@@ -19,7 +19,7 @@ export default React.createClass({
     if (this.props.posts.length > 0) {
       for (let post of this.props.posts) {
         posts.push(
-          <div className="panel panel-default" key={"post-"+post.id}>
+          <div className="panel panel-default" key={"post-"+post.guid}>
             <div className="panel-body">
               <ul className="media-list">
                 <li className="media">
@@ -28,7 +28,7 @@ export default React.createClass({
               </ul>
             </div>
             <div className="panel-footer">
-              <ContentCreator key={"comment-creator-" + post.id} currentAuthor={this.props.currentAuthor} post={post} forComment={true} />
+              <CommentCreator currentAuthor={this.props.currentAuthor} post={post} />
             </div>
           </div>
         );
