@@ -1,5 +1,6 @@
 from rest_framework import permissions
 from author_api.models import Author, FriendRelationship
+from django.conf import settings
 
 def isAuthor(request, obj):
     author = Author.objects.get(user = request.user)
@@ -36,9 +37,10 @@ def isFriend(request, obj):
             return True
     return False
 
+# Checks first to see if the authenticated Author is friends with the entity's
+# author and if the specified author host is the same as ours
 def isFriendOnSameHost(request, obj):
-    # TODO Add the actual check
-    return True
+    return isFriend(request, obj) and obj.author.host == settings.HOST
 
 def isFoF(request, obj):
     # if obj.acl["permissions"] == 302:
@@ -95,6 +97,7 @@ class Custom(permissions.BasePermission):
             "PUBLIC"  : isPublic,
             "FRIENDS" : isFriend,
             "FOAF"    : isFoF,
+            "FOH"     : isFriendOnSameHost,
             "PRIVATE" : isPrivateList,
             "SERVERONLY" : isOnSameHost
         }
