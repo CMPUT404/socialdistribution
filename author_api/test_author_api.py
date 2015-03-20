@@ -136,12 +136,9 @@ class AuthorModelAPITests(APITestCase):
         scaffold.authors_in_relation(self, response.data['followers'], followers)
 
     def test_get_posts_by_author_with_http(self):
-        aid = self.author_a.id
-        response = c.get("/author/%s/posts" %aid)
+        aid = self.author.id
+        scaffold.create_post_with_comment(self.author, self.author, "PRIVATE","POST","TEXT")
+        response = c.get("/author/%s/posts" % aid)
 
         self.assertEquals(response.status_code, 200)
-        post = response.data[0]
-
-        s.assertNumberPosts(self, response.data, 1)
-        s.assertPostAuthor(self, post, self.author_a)
-        s.assertPostContent(self, post, TEXT)
+        scaffold.assertNumberPosts(self, response.data, 1)

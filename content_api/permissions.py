@@ -1,10 +1,9 @@
 from rest_framework import permissions
 from author_api.models import Author, FriendRelationship
 from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
 
 def isAuthor(request, obj):
-    author = Author.objects.get(user=request.user)
+    author = Author.objects.get(user__id=request.user.id)
     return obj.author.id == author.id
 
 def isOwner(request, obj):

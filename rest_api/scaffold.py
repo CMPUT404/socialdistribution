@@ -174,7 +174,7 @@ def assertAuthorsInComments(context, authors, comments):
     cross_check(context, authors, comments)
 
 def assertNumberPosts(context, posts, expected):
-    context.assertEquals(len(posts), expected,
+    context.assertEquals(len(posts["posts"]), expected,
         "expected %s, got %s posts" %(expected, len(posts)))
 
 def assertNumberComments(context, post, expected):

@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins
 from rest_framework.decorators import list_route
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from models import Post, Comment
 from serializers import PostSerializer, CommentSerializer
@@ -9,6 +9,7 @@ from permissions import IsAuthor, Custom
 from author_api.models import Author
 from author_api.serializers import AuthorSerializer
 from renderers import PostsJSONRenderer
+from django.shortcuts import get_object_or_404
 
 #
 # Delete Posts and Comments
@@ -70,9 +71,12 @@ class PostPermissionsMixin(object):
 
     # For querysets that only return a single object
     def get_object(self):
-        post = self.get_queryset()
-        self.check_object_permissions(self.request, post)
-        return post
+        post = self.get_queryset().first()
+        if post is None:
+            return None
+        else:
+            self.check_object_permissions(self.request, post)
+            return post
 
 
 class AuthorPostViewSet(
@@ -107,7 +111,7 @@ class AuthorPostViewSet(
         # Careful, gotchya here, if author_pk is none, it means we are dealing with
         # /author/:id and that the author id is going to be in pk
         if author_pk is None:
-            author = Author.objects.get(id=pk)
+            author = get_object_or_404(Author.objects.all(), id=pk)
             serializer = AuthorSerializer(author)
         else:
             post = self.queryset.get(author__id=author_pk, guid=pk)
