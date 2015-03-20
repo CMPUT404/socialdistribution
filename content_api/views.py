@@ -4,16 +4,17 @@ from author_api.models import Author, FriendRelationship
 from models import Post, Comment
 from serializers import (
     PostSerializer,
-    CommentSerializer )
+    CommentSerializer
+)
 
 # TODO: IsFriend imported but never used
-from permissions import IsFriend, IsAuthor, Custom
-from rest_framework import generics, mixins, viewsets
+from permissions import IsAuthor, Custom
+from rest_framework import generics, viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.decorators import list_route
-from django.conf import settings
+from rest_framework.exceptions import APIException
 
 from renderers import PostsJSONRenderer
 
@@ -26,13 +27,6 @@ class BaseDeleteView(generics.DestroyAPIView):
     permission_classes = (IsAuthenticated, IsAuthor,)
     pass
 
-class DeletePost(BaseDeleteView):
-    lookup_url_kwarg = "postid"
-
-    def get_queryset(self):
-        return Post.objects.filter(guid = self.kwargs.get(
-            self.lookup_url_kwarg))
-
 class DeleteComment(BaseDeleteView):
     lookup_url_kwarg = "commentid"
 
@@ -43,12 +37,6 @@ class DeleteComment(BaseDeleteView):
 #
 # Create Post and Comments
 #
-
-class CreatePost(generics.CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    serializer_class = PostSerializer
-
 class CreateComment(generics.CreateAPIView):
     """
     Create a comment in the given post using postid.
@@ -107,37 +95,19 @@ class GetPostsByAuthor(BasePostListRetrieval):
     lookup_url_kwarg = "id"
 
     def get_queryset(self):
-        _id = self.kwargs.get(self.lookup_url_kwarg)
-        posts = Post.objects.filter(author_id = _id)
-
-        # TODO This should go in get_object(self), but its not being called
-        # for some reason I can't figure out.
-        # See test_get_private_post_again
+        id = self.kwargs.get(self.lookup_url_kwarg)
+        posts = Post.objects.filter(author__id=id)
         for post in posts:
-            self.check_object_permissions(self.request, post)
+            # We still want to return posts, but only those that we have permissions
+            # for
+            try:
+                self.check_object_permissions(self.request, post)
+            except APIException:
+                posts.remove(post)
+
 
         return posts
 
-# TODO, The below two endpoints may be redundant. Can we get rid of one?
-# class GetSinglePost(PostMixin, PostPermissionsMixin, generics.RetrieveAPIView):
-class GetSinglePost(PostMixin, generics.RetrieveAPIView):
-    """
-    Returns a single post given only the postid
-
-    Takes:
-        postid: The uuid of a post model.
-    """
-    lookup_url_kwarg = 'postid'
-
-    def get_queryset(self):
-
-        _postid = self.kwargs.get(self.lookup_url_kwarg)
-        try:
-            post = Post.objects.get(guid = _postid)
-        except:
-            return None
-
-        return post
 
 class GetSinglePostByAuthor(PostMixin, PostPermissionsMixin, generics.RetrieveAPIView):
     """
@@ -150,23 +120,37 @@ class GetSinglePostByAuthor(PostMixin, PostPermissionsMixin, generics.RetrieveAP
     lookup_url_kwargs = ('id', 'postid')
 
     def get_queryset(self):
-        _id = self.kwargs.get(self.lookup_url_kwargs[0])
-        _postid = self.kwargs.get(self.lookup_url_kwargs[1])
+        id = self.kwargs.get(self.lookup_url_kwargs[0])
+        postid = self.kwargs.get(self.lookup_url_kwargs[1])
+        return Post.objects.get(author__id=id, guid=postid)
 
-        post = Post.objects.get(author_id = _id, guid = _postid)
-
-        return post
-
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+class PostBaseView():
     serializer_class = PostSerializer
+    renderer_classes = (PostsJSONRenderer,)
+
+class PublicPostViewSet(
+    PostBaseView,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = Post.objects.filter(visibility="PUBLIC")
+
+# Does everything except /post which has different permissions
+class PostViewSet(
+  PostBaseView,
+  mixins.CreateModelMixin,
+  mixins.DestroyModelMixin,
+  mixins.RetrieveModelMixin,
+  mixins.UpdateModelMixin,
+  viewsets.GenericViewSet,
+  PostPermissionsMixin
+):
     authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated, Custom]
+    queryset = Post.objects.all()
 
-    """
-    Retrieves a list of all publically visiblie posts from the server.
-    """
-    def list(self, request):
-        queryset = Post.objects.all()#.get(visibility="PUBLIC")
-        serializer = PostSerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data)
+    # For querysets that only return a single object
+    def get_object(self):
+        post = self.get_queryset()
+        self.check_object_permissions(self.request, post)
+        return post

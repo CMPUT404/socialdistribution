@@ -44,7 +44,7 @@ class ContentAPITestCase(TestCase):
     Testing Content API Prototypes
     """
     def setUp(self):
-        self.user_a, self.author_a, self.c = s.create_authenticated_author(USER_A,
+        self.user_a, self.author_a, self.client = s.create_authenticated_author(USER_A,
             AUTHOR_PARAMS)
 
         self.user_b, self.author_b = s.create_author(USER_B, AUTHOR_PARAMS)
@@ -63,7 +63,7 @@ class ContentAPITestCase(TestCase):
         FriendRelationship.objects.all().delete()
         Token.objects.all().delete()
 
-        self.c.credentials()
+        self.client.credentials()
 
     def test_set_up(self):
         """Assert that that the models were created in setUp()"""
@@ -82,23 +82,12 @@ class ContentAPITestCase(TestCase):
         post = Post.objects.get(author = self.author_a)
         self.assertEquals(post.content, TEXT)
 
-    def test_get_posts_by_author_with_http(self):
-        aid = self.author_a.id
-        response = self.c.get("/author/%s/posts" %aid)
-
-        self.assertEquals(response.status_code, 200)
-        post = response.data[0]
-
-        s.assertNumberPosts(self, response.data, 1)
-        s.assertPostAuthor(self, post, self.author_a)
-        s.assertPostContent(self, post, TEXT)
-
     def test_get_multiple_posts_by_author_with_http(self):
         # Create two posts, in addition to the post created in setUp()
         s.create_multiple_posts(self.author_a, 2, ptext = TEXT)
 
         a_id = self.author_a.id
-        response = self.c.get("/author/%s/posts" %a_id)
+        response = self.client.get("/author/%s/posts" %a_id)
 
         self.assertEquals(response.status_code, 200)
         s.assertNumberPosts(self, response.data, 3)
@@ -121,7 +110,7 @@ class ContentAPITestCase(TestCase):
         s.create_friends(self.author_a, [self.author_b, self.author_c])
 
         a_id = self.author_a.id
-        response = self.c.get("/author/%s/posts" %a_id)
+        response = self.client.get("/author/%s/posts" %a_id)
         self.assertEquals(response.status_code, 200)
 
         posts = response.data
@@ -131,23 +120,23 @@ class ContentAPITestCase(TestCase):
 
         # s.pretty_print(response.data)
 
-    def test_get_posts_of_fof(self):
-        # Add Friends and a post each
-        s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
+    # def test_get_posts_of_fof(self):
+        # # Add Friends and a post each
+        # s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
 
-        # Create friend of friend and a post
-        user, author = s.create_author(USER_D, AUTHOR_PARAMS)
-        s.create_friends(self.author_b, [author], create_post = True)
+        # # Create friend of friend and a post
+        # user, author = s.create_author(USER_D, AUTHOR_PARAMS)
+        # s.create_friends(self.author_b, [author], create_post = True)
 
-        # author_a should be able to retrieve posts by author created above
-        aid = author.id
-        response = self.c.get("/author/%s/posts" %aid)
-        self.assertEquals(response.status_code, 200)
+        # # author_a should be able to retrieve posts by author created above
+        # aid = author.id
+        # response = self.client.get("/author/%s/posts" % aid)
+        # self.assertEquals(response.status_code, 200)
 
-        # s.pretty_print(response.data)
+        # # s.pretty_print(response.data)
 
-        s.assertNumberPosts(self, response.data, 1)
-        s.assertPostAuthor(self, response.data[0], author)
+        # s.assertNumberPosts(self, response.data, 1)
+        # s.assertPostAuthor(self, response.data[0], author)
 
     # def test_attempt_get_posts_of_fof(self):
         # # Add Friends and a post each
@@ -159,7 +148,7 @@ class ContentAPITestCase(TestCase):
 
         # # author_a should not be able to retrieve post by author created above
         # aid = author.id
-        # response = self.c.get("/author/%s/posts" %aid)
+        # response = self.client.get("/author/%s/posts" %aid)
         # self.assertEquals(response.status_code, 403)
 
     # def test_get_posts_in_private_list(self):
@@ -168,7 +157,7 @@ class ContentAPITestCase(TestCase):
         # s.create_multiple_posts(self.author_b, num = 1, acl = _acl)
 
         # bid = self.author_b.id
-        # response = self.c.get("/author/%s/posts" %bid)
+        # response = self.client.get("/author/%s/posts" %bid)
 
         # # s.pretty_print(response.data)
 
@@ -182,7 +171,7 @@ class ContentAPITestCase(TestCase):
         # s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
 
         # bid = self.author_b.id
-        # response = self.c.get("/author/%s/posts" %bid)
+        # response = self.client.get("/author/%s/posts" %bid)
         # self.assertEquals(response.status_code, 403)
 
     # def test_get_private_post_again(self):
@@ -191,7 +180,7 @@ class ContentAPITestCase(TestCase):
         # s.create_multiple_posts(self.author_a, num = 2, acl = _acl)
 
         # aid = self.author_a.id
-        # response = self.c.get("/author/%s/posts" %aid)
+        # response = self.client.get("/author/%s/posts" %aid)
         # self.assertEquals(response.status_code, 200)
 
         # # s.pretty_print(response.data)
@@ -211,17 +200,19 @@ class ContentAPITestCase(TestCase):
         # s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
 
         # bid = self.author_b.id
-        # response = self.c.get("/author/%s/posts" %bid)
+        # response = self.client.get("/author/%s/posts" %bid)
         # self.assertEquals(response.status_code, 403)
 
     def test_create_post(self):
         ptext = TEXT + " message"
         post = {
-            "content":ptext,
-            "visibility": scaffold.ACL_DEFAULT,
+            "title": "Tst Post",
+            "content": ptext,
+            "contentType": "text/x-markdown",
+            "visibility": scaffold.ACL_DEFAULT
         }
 
-        response = self.c.post("/author/post", post)
+        response = self.client.post("/post", post)
         self.assertEquals(response.status_code, 201)
 
         # Retrieve post manually to confirm
@@ -232,29 +223,14 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(post.content, ptext, "wrong post text")
         self.assertEquals(post.author.id, self.author_a.id, "wrong user")
 
-    def test_set_post_title_http(self):
-        ptext = TEXT + " message"
-        post = {
-            "content":ptext,
-            "visibility": scaffold.ACL_DEFAULT,
-            "title":"sick title"
-        }
-
-        response = self.c.post('/author/post', post)
-
-        # s.pretty_print(response.data)
-
-        self.assertEquals(response.status_code, 201)
-        s.assertPostTitle(self, response.data, "sick title")
-
     def test_create_post_no_auth(self):
         ptext = TEXT + " message"
         post = {
-            "content":ptext,
+            "content": ptext,
             "visibility": scaffold.ACL_DEFAULT,
         }
 
-        response = self.no_auth.post('/author/post', post)
+        response = self.no_auth.post('/post', post)
         self.assertEquals(response.status_code, 401)
 
     # def test_attempt_set_read_only_fields(self):
@@ -263,13 +239,13 @@ class ContentAPITestCase(TestCase):
         # post = {"content":TEXT, "id":4, "date":"2015-01-01",
             # "acl":acl}
 
-        # response = self.c.post("/author/post", post)
+        # response = self.client.post("/author/post", post)
         # self.assertEquals(response.status_code, 201)
         # self.assertTrue(response.data["guid"] != 4, "ID was set; should not have been")
 
     def test_create_blank_post(self):
         """Should not be able to create post with no text"""
-        response = self.c.post("/author/post", {})
+        response = self.client.post("/post", {})
         self.assertEquals(response.status_code, 400)
 
     def test_public_post_set(self):
@@ -282,18 +258,23 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(post.visibility, scaffold.ACL_DEFAULT)
 
     def test_create_public_post_http(self):
-        post = {"content":TEXT, "visibility": scaffold.ACL_DEFAULT}
-        response = self.c.post("/author/post", post)
+        post = {
+          "title": "Public Post",
+          "contentType": "text/plain",
+          "content": TEXT,
+          "visibility": scaffold.ACL_DEFAULT
+        }
+        response = self.client.post("/post", post)
 
         self.assertEquals(response.status_code, 201)
         s.assertACLPermission(self, response.data, 200)
 
     def test_delete_post(self):
-        post = Post.objects.create(content = TEXT, author = self.author_a, visiblity=scaffold.ACL_DEFAULT)
+        post = Post.objects.create(content=TEXT, author = self.author_a, visibility=scaffold.ACL_DEFAULT)
 
         postid = post.guid
 
-        response = self.c.delete('/author/posts/%s' %postid)
+        response = self.client.delete('/post/%s' % postid)
         self.assertEquals(response.status_code, 204)
 
         # ensure post has been removed
@@ -305,17 +286,21 @@ class ContentAPITestCase(TestCase):
         postid = post.guid
 
         # deny user a's request
-        response = self.c.delete('/author/posts/%s' %postid)
+        response = self.client.delete('/post/%s' %postid)
         self.assertEquals(response.status_code, 403)
 
     def test_add_comment_to_public_post(self):
-        post = Post.objects.create(content = TEXT, author = self.author_b, visibility = scaffold.ACL_DEFAULT)
+        post = Post.objects.create(content=TEXT, author = self.author_b, visibility = scaffold.ACL_DEFAULT)
 
         postid = post.guid
 
         # comment on the post
-        comment = {"content":TEXT}
-        response = self.c.post('/author/posts/%s/comments' %postid, comment)
+        comment = {
+          "comment": TEXT,
+          "contentType": "text/x-markdown"
+        }
+
+        response = self.client.post('/post/%s/comments' % postid, comment)
         # s.pretty_print(response.data)
         self.assertEquals(response.status_code, 201)
 
@@ -332,7 +317,7 @@ class ContentAPITestCase(TestCase):
 
         cid = comment.guid
 
-        response = self.c.delete('/author/posts/comments/%s' %cid)
+        response = self.client.delete('/post/%s/comments/%s' % (post.guid, cid))
         self.assertEquals(response.status_code, 204)
 
         # ensure comment has been removed
@@ -342,11 +327,6 @@ class ContentAPITestCase(TestCase):
         except:
             pass
 
-    def test_delete_comment_does_not_exist(self):
-        # delete a comment that does not exist
-        response = self.c.delete('/author/posts/comments/232')
-        self.assertEquals(response.status_code, 404)
-
     def test_attempt_delete_comment_post_author(self):
         post, comment = s.create_post_with_comment(
             self.author_b, self.author_a, scaffold.ACL_DEFAULT, TEXT, TEXT)
@@ -355,7 +335,7 @@ class ContentAPITestCase(TestCase):
         pid = post.guid
 
         # delete the comment (by post author)
-        response = self.c.delete('/author/posts/comments/%s' %cid)
+        response = self.client.delete('/posts/%s/comments/%s' % (pid, cid))
         self.assertEquals(response.status_code, 204)
 
         # ensure comment has been removed
@@ -380,10 +360,10 @@ class ContentAPITestCase(TestCase):
         pid = post.guid
 
         # Create one more comment
-        Comment.objects.create(post = post, content = TEXT, author = self.author_c)
+        Comment.objects.create(post = post, comment = TEXT, author = self.author_c)
 
         # get the post
-        response = self.c.get('/author/%s/posts/%s' %(self.author_a.id, pid))
+        response = self.client.get('/post/%s' %(self.author_a.id, pid))
         self.assertEquals(response.status_code, 200)
 
         # s.pretty_print(response.data)
@@ -394,7 +374,7 @@ class ContentAPITestCase(TestCase):
             response.data['comments'])
 
     def test_retrieve_timeline_own(self):
-        response = self.c.get('/author/posts')
+        response = self.client.get('/author/posts')
         self.assertEquals(response.status_code, 200)
 
         # s.pretty_print(response.data)
@@ -408,7 +388,7 @@ class ContentAPITestCase(TestCase):
         # Test the retrieval of multiple posts in the timeline
         s.create_multiple_posts(self.author_a, num = 5)
 
-        response = self.c.get('/author/posts')
+        response = self.client.get('/author/posts')
         self.assertEquals(response.status_code, 200)
 
         # s.pretty_print(response.data)
@@ -419,7 +399,7 @@ class ContentAPITestCase(TestCase):
     def test_timeline_includes_friends(self):
         s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
 
-        response = self.c.get('/author/posts')
+        response = self.client.get('/author/posts')
         self.assertEquals(response.status_code, 200)
 
         authors = [
@@ -439,7 +419,7 @@ class ContentAPITestCase(TestCase):
         user, author = s.create_author(USER_D, AUTHOR_PARAMS)
         s.create_friends(self.author_b, [author], create_post = True)
 
-        response = self.c.get('/author/posts')
+        response = self.client.get('/author/posts')
         self.assertEquals(response.status_code, 200)
 
         # s.pretty_print(response.data)
@@ -458,7 +438,7 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(response.status_code, 401)
 
     def test_retrieve_single_post(self):
-        response = self.c.get('/author/post/%s' %self.post.guid)
+        response = self.client.get('/post/%s' %self.post.guid)
         self.assertEquals(response.status_code, 200)
         s.assertPostAuthor(self, response.data, self.author_a)
         # s.pretty_print(response.data)

@@ -143,8 +143,8 @@ def create_friends(friend, friendors, create_post = True, visibility = ACL_DEFAU
 def create_post_with_comment(pauthor, cauthor, visibility, ptext, ctext):
     """Takes post author, comment author and creates a post and associated comment"""
 
-    post = Post.objects.create(content = ptext, author = pauthor, visbility=visibility)
-    comment = Comment.objects.create(content = ctext, post = post, author = cauthor)
+    post = Post.objects.create(content = ptext, author = pauthor, visibility=visibility)
+    comment = Comment.objects.create(comment = ctext, post = post, author = cauthor)
     return (post, comment)
 
 def assertNoRepeatGuids(context, posts):

@@ -30,7 +30,7 @@ class Comment(models.Model):
     A comment's privacy is inherited from the Post public attribute
     """
     guid = UUIDField(auto = True, primary_key = True)
-    content = models.TextField(blank=False)
+    comment = models.TextField(blank=False)
     contentType = models.CharField(blank = True, max_length = 16)
     pubDate = models.DateTimeField(auto_now_add=True, editable = False)
     post = models.ForeignKey('Post', related_name='comments')

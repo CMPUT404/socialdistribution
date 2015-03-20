@@ -185,6 +185,9 @@ class AuthorViewSet(viewsets.GenericViewSet):
     @list_route(methods=['get'])
     def posts(self, request):
         user = self.request.user
-        queryset = Post.objects.get(author__id=user.id)
+        # TODO: filter by author id and following ids as well
+        # author = Author.objects.get(user__id=user.id)
+        # followers = author.followers
+        queryset = Post.objects.all().filter(author__user__id=user.id)
         serializer = PostSerializer(queryset, many=True)
         return Response(serializer.data)
