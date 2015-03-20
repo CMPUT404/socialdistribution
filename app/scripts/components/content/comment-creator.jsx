@@ -7,8 +7,6 @@ import { markdown as Markdown } from 'markdown';
 
 import AuthorActions from '../../actions/author';
 
-// NOT YET WORKING!!!!!
-
 // Responsible for creating comments and notifying the Post store when
 // this happens.
 export default React.createClass({
@@ -27,13 +25,11 @@ export default React.createClass({
     // capture the current content in our inputs
     var content = _.clone(this.state);
 
-    content['post'] = this.props.post;
-
     // reset content state now that we have it stored
     this.setState(this.getInitialState());
 
     // populate content with appropriate metadata
-    // AuthorActions.createComment(content);
+    AuthorActions.createComment(this.props.post, content);
   },
 
   render: function() {

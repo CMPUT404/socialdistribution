@@ -18,7 +18,7 @@ import PostCreator from './content/post-creator';
 // It should only display a list of posts created by the author
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), Reflux.connect(PostStore), State],
+  mixins: [Reflux.connect(AuthorStore), State],
 
   // statics: {
   //
@@ -36,12 +36,14 @@ export default React.createClass({
   getInitialState: function() {
     return {
       displayAuthor: null,
-      gitHubStream: null
+      gitHubStream: null,
+      displayPosts: [],
     };
   },
 
   componentDidMount: function () {
     AuthorActions.fetchDetails(this.getParams().id);
+    // AuthorActions. fetch author posts
   },
 
   render: function() {
@@ -104,7 +106,7 @@ export default React.createClass({
           {postCreator}
           <ContentViewer
             currentAuthor={this.props.currentAuthor}
-            posts={this.state.displayAuthor.sortedPosts()} />
+            posts={this.state.displayPosts} />
         </Col>
         <Col md={4}>
           {ghStream}

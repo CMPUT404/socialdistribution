@@ -4,6 +4,8 @@ import React from 'react';
 import CommentCreator from './comment-creator';
 import Content from './content';
 
+import Spinner from '../spinner';
+
 // This is used to bundle up user content we wish to display. Namely posts and
 // comments. It listens to and updates based on changes in the Post Store.
 export default React.createClass({
@@ -11,8 +13,8 @@ export default React.createClass({
   render: function() {
     var posts = [];
 
-    if (_.isUndefined(this.props.posts)) {
-      return (<i className="fa fa-refresh fa-spin fa-5x"></i>);
+    if (_.isNull(this.props.posts)) {
+      return (<Spinner />);
     }
 
     // orders posts if any are passed in as props
