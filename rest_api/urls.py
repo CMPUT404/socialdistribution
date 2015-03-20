@@ -1,11 +1,12 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
-from content_api.views import PostViewSet, AuthorPostViewSet
+from content_api.views import PostViewSet, AuthorPostViewSet, PublicPostsViewSet
 from rest_framework_nested import routers
 
 router = routers.SimpleRouter(trailing_slash=False)
 router.register(r'author', AuthorPostViewSet)
 router.register(r'post', PostViewSet)
+router.register(r'posts', PublicPostsViewSet)
 
 author_router = routers.NestedSimpleRouter(router, r'author', lookup='author',trailing_slash=False)
 author_router.register(r'posts', AuthorPostViewSet)
