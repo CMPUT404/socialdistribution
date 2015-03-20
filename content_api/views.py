@@ -10,6 +10,7 @@ from serializers import PostSerializer, CommentSerializer
 from permissions import IsAuthor, Custom
 from author_api.models import Author
 from author_api.serializers import AuthorSerializer
+from renderers import PostsJSONRenderer
 
 #
 # Delete Posts and Comments
@@ -91,8 +92,8 @@ class AuthorPostViewSet(
         id: The uuid of an author model.
     """
 
-    def list(self, request, author_id=None):
-        posts = self.queryset.filter(author__id=author_id)
+    def list(self, request, author_pk=None):
+        posts = self.queryset.filter(author__id=author_pk)
         for post in posts:
             # We still want to return posts, but only those that we have permissions
             # for
@@ -104,14 +105,14 @@ class AuthorPostViewSet(
         serializer = PostSerializer(posts, many=True)
         return Response({"posts": serializer.data})
 
-    def retrieve(self, request, pk=None, post_pk=None):
+    def retrieve(self, request, author_pk=None, pk=None):
 
         # If no post id, serve author, if present, serve author's post
-        if post_pk is None:
-            author = Author.objects.get(id=pk)
+        if pk is None:
+            author = Author.objects.get(id=author_pk)
             serializer = AuthorSerializer(author)
         else:
-            post = self.queryset.get(author__id=pk, guid=post_pk)
+            post = self.queryset.get(author__id=author_pk, guid=pk)
             serializer = PostSerializer(post)
 
         return Response(serializer.data)
@@ -136,12 +137,14 @@ class PostViewSet(
 ):
     authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, Custom]
+    renderer_classes = (PostsJSONRenderer,)
 
     # For querysets that only return a single object
-    def get_object(self):
-        post = get_object_or_404(self.get_queryset())
+    def retrieve(self, request, pk=None):
+        post = self.queryset.get(guid=pk)
         self.check_object_permissions(self.request, post)
-        return post
+        serializer = PostSerializer(post)
+        return Response(serializer.data)
 
     def get_queryset(self):
         return Post.objects.filter(visibility="PUBLIC")
