@@ -1,13 +1,32 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-
+from mimetypes import guess_extension, guess_type
+from django.core.files.base import ContentFile
 from rest_framework import serializers
+import uuid
+import base64
 
 from models import (
     Author,
     FollowerRelationship,
     FriendRelationship,
     FriendRequest )
+
+class ImageSerializer(serializers.BaseSerializer):
+    def to_representation(self, data):
+        return data.name
+
+    def to_internal_value(self, data):
+        try:
+            extension =  guess_extension(guess_type(data[0:23])[0])
+
+            if extension:
+                filename = str(uuid.uuid4()) + extension
+
+                return ContentFile(base64.b64decode(data[23:]), name=filename)
+        except:
+            return None
+
 
 class AuthorUpdateSerializer(serializers.Serializer):
     """
@@ -21,6 +40,7 @@ class AuthorUpdateSerializer(serializers.Serializer):
     first_name = serializers.CharField(required = False)
     last_name = serializers.CharField(required = False)
     github_username = serializers.CharField(required = False)
+    image = ImageSerializer(required = False)
 
     def update(self, instance, validated_data):
         """
@@ -79,6 +99,7 @@ class RegistrationSerializer(serializers.Serializer):
         _author = {}
         _author['github_username'] = validated_data.pop('github_username', '')
         _author['bio'] = validated_data.pop('bio', '')
+        _author['image'] = validated_data.pop('image','')
 
         #TODO: set host
 
@@ -102,6 +123,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     email       = serializers.EmailField(source='user.email')
     first_name  = serializers.CharField(source='user.first_name')
     last_name   = serializers.CharField(source='user.last_name')
+    image       = ImageSerializer(required = False)
 
     class Meta:
         model = Author
