@@ -1,12 +1,10 @@
 from rest_framework import permissions
 from author_api.models import Author, FriendRelationship
+from django.conf import settings
 
 def isAuthor(request, obj):
-    author = Author.objects.get(user = request.user)
-    if hasattr(obj, 'author'):
-      return obj.author.id == author.id
-    else:
-      return False
+    author = Author.objects.get(user__id=request.user.id)
+    return obj.author.id == author.id
 
 def isOwner(request, obj):
     # owned by author or author of parent object
@@ -36,9 +34,10 @@ def isFriend(request, obj):
             return True
     return False
 
+# Checks first to see if the authenticated Author is friends with the entity's
+# author and if the specified author host is the same as ours
 def isFriendOnSameHost(request, obj):
-    # TODO Add the actual check
-    return True
+    return isFriend(request, obj) and obj.author.host == settings.HOST
 
 def isFoF(request, obj):
     # if obj.acl["permissions"] == 302:
@@ -59,9 +58,7 @@ def isPrivateList(request, obj):
 
     if str(author.id) in obj.acl.shared_users:
         return True
-
     return False
-
 
 class IsAuthor(permissions.BasePermission):
     """
@@ -95,16 +92,28 @@ class Custom(permissions.BasePermission):
             "PUBLIC"  : isPublic,
             "FRIENDS" : isFriend,
             "FOAF"    : isFoF,
+            "FOH"     : isFriendOnSameHost,
             "PRIVATE" : isPrivateList,
             "SERVERONLY" : isOnSameHost
         }
 
-        # Author always has permissions
-        if isAuthor(request, obj):
-            return True
+        # perform relationship checks only if logged in, also cool if statement bro
+        if hasattr(obj, 'author') and request.auth is not None:
 
-        if request.method == "DELETE":
-            return isOwner(request, obj) #Obviously not author at this point
+            # Author always has permissions
+            if isAuthor(request, obj) is True:
+                return True
 
-        # finally check against visibility
-        return switch[obj.first().visibility](request, obj)
+            if request.method == "DELETE":
+                return isOwner(request, obj) #Obviously not author at this point
+
+            # finally check against visibility
+            return switch[obj.visibility](request, obj)
+
+        # Otherwise check public permissions
+        elif obj.visibility in ["PUBLIC", "SERVERONLY"]:
+            return isPublic(obj, request) or isOnSameHost(request, obj)
+
+        # Default to no
+        else:
+            return False

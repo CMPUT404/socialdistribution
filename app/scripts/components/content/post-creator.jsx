@@ -54,6 +54,7 @@ export default React.createClass({
             <option value="PUBLIC">Public</option>
             <option value="FRIENDS">Friends Only</option>
             <option value="FOAF">Friends of Friends</option>
+            <option value="FOH">Friends on My Host</option>
             <option value="SERVERONLY">Same Server</option>
           </Input>
           <Input label='Format' type="select" valueLink={this.linkState('contentType')}>

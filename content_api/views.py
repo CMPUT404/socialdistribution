@@ -3,13 +3,13 @@ from rest_framework import generics, viewsets, mixins
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
-from rest_framework.exceptions import APIException
 from models import Post, Comment
 from serializers import PostSerializer, CommentSerializer
 from permissions import IsAuthor, Custom
 from author_api.models import Author
 from author_api.serializers import AuthorSerializer
 from renderers import PostsJSONRenderer
+from django.shortcuts import get_object_or_404
 
 #
 # Delete Posts and Comments
@@ -71,9 +71,12 @@ class PostPermissionsMixin(object):
 
     # For querysets that only return a single object
     def get_object(self):
-        post = self.get_queryset()
-        self.check_object_permissions(self.request, post)
-        return post
+        post = self.get_queryset().first()
+        if post is None:
+            return None
+        else:
+            self.check_object_permissions(self.request, post)
+            return post
 
 
 class AuthorPostViewSet(
@@ -81,8 +84,8 @@ class AuthorPostViewSet(
     viewsets.ViewSet,
     PostPermissionsMixin
 ):
-    authentication_classes = [BasicAuthentication, TokenAuthentication]
-    permission_classes = (Custom,)
+    # authentication_classes = [BasicAuthentication, TokenAuthentication]
+    permission_classes = [Custom]
 
     """
     Returns a listing of posts for the given author ID
@@ -90,34 +93,35 @@ class AuthorPostViewSet(
     Takes:
         id: The uuid of an author model.
     """
-
     def list(self, request, author_pk=None):
         posts = self.queryset.filter(author__id=author_pk)
+        guids = []
         for post in posts:
             # We still want to return posts, but only those that we have permissions
             # for
             try:
                 self.check_object_permissions(self.request, post)
-            except APIException:
-                posts.remove(post)
+            except Exception:
+                guids.append(post.guid)
 
-        serializer = PostSerializer(posts, many=True)
+        serializer = PostSerializer(posts.exclude(guid__in=guids), many=True)
         return Response({"posts": serializer.data})
 
     def retrieve(self, request, author_pk=None, pk=None):
-
-        # If no post id, serve author, if present, serve author's post
-        if pk is None:
-            author = Author.objects.get(id=author_pk)
+        # Careful, gotchya here, if author_pk is none, it means we are dealing with
+        # /author/:id and that the author id is going to be in pk
+        if author_pk is None:
+            author = get_object_or_404(Author.objects.all(), id=pk)
             serializer = AuthorSerializer(author)
         else:
             post = self.queryset.get(author__id=author_pk, guid=pk)
+            self.check_object_permissions(self.request, post)
             serializer = PostSerializer(post)
 
         return Response(serializer.data)
 
     # TIMELINE call
-    @list_route(methods=['get'], permission_classes=[IsAuthenticated])
+    @list_route(methods=['get'], permission_classes=[IsAuthenticated, IsAuthor])
     def posts(self, request):
         user = self.request.user
         # TODO: filter by author id and following ids as well
