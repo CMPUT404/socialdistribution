@@ -70,4 +70,6 @@ docs/_build/
 # PyBuilder
 target/
 
+# image folder
+images/
 .DS_Store

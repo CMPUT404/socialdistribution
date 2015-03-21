@@ -3,6 +3,7 @@ from models import Post, Comment
 from author_api.models import Author
 from author_api.serializers import CompactAuthorSerializer
 from django.conf import settings
+from author_api.serializers import ImageSerializer
 import time
 
 # TODO
@@ -65,6 +66,7 @@ class PostSerializer(serializers.ModelSerializer):
     source = SourceSerializer(read_only = True)
     origin = OriginSerializer(read_only = True)
     visibility = serializers.CharField()
+    image = ImageSerializer(required=False)
 
     class Meta:
         model = Post

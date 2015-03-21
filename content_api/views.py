@@ -10,7 +10,7 @@ from author_api.models import Author
 from author_api.serializers import AuthorSerializer
 from renderers import PostsJSONRenderer
 from django.shortcuts import get_object_or_404
-
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 #
 # Delete Posts and Comments
 #
@@ -144,6 +144,7 @@ class PostViewSet(
 ):
     authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, Custom]
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     # For querysets that only return a single object
     def retrieve(self, request, pk=None):
