@@ -14,7 +14,7 @@ from models import (
 
 class ImageSerializer(serializers.BaseSerializer):
     def to_representation(self, data):
-        return data.name
+        return '/author/images/' + data.name.split('/')[-1]
 
     def to_internal_value(self, data):
         try:
