@@ -14,16 +14,16 @@ from models import (
 
 class ImageSerializer(serializers.BaseSerializer):
     def to_representation(self, data):
-        return data.name
+        if data:
+            return '/author/images/' + data.name.split('/')[-1]
+        else:
+            return ''
 
     def to_internal_value(self, data):
         try:
             extension =  guess_extension(guess_type(data[0:23])[0])
-
-            if extension:
-                filename = str(uuid.uuid4()) + extension
-
-                return ContentFile(base64.b64decode(data[23:]), name=filename)
+            filename = str(uuid.uuid4()) + extension
+            return ContentFile(base64.b64decode(data[23:]), name=filename)
         except:
             return None
 

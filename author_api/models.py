@@ -20,7 +20,7 @@ class Author(models.Model):
     host = models.URLField(blank = False, null=False, default=settings.HOST)
     bio = models.TextField(blank=False, null=False)
     github_username = models.CharField(max_length=40, blank=True, null=True)
-    image = models.ImageField(upload_to='images/author', blank=True, null=True)
+    image = models.ImageField(upload_to='images', blank=True, null=True)
 
     @property
     def host(self):

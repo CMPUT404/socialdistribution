@@ -1,3 +1,4 @@
+from rest_framework import renderers
 from rest_api.utils import UserNotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
@@ -6,7 +7,9 @@ from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
+from mimetypes import guess_extension, guess_type
 import json
+import os
 
 from models import (
     Author,
@@ -43,6 +46,32 @@ class GetAuthorDetails(generics.RetrieveAPIView):
     def get_queryset(self):
         return Author.objects.filter(id =
             self.kwargs.get(self.lookup_url_kwarg))
+
+class ImageRenderer(renderers.BaseRenderer):
+    media_type = 'image/**'
+    charset = None
+    render_style = 'binary'
+
+    def render(self, data, media_type=None, renderer_context=None):
+        return data.read()
+
+# GET /author/images/:imageid
+class Images(ListAPIView):
+    """
+    Returns an image.
+    """
+    renderer_classes = (ImageRenderer, )
+
+    # TODO: Add permissions and static IP when on server.
+    def get(self, request, *args, **kwargs):
+        img_id = kwargs.get('id', None)
+        mimetype = guess_type(img_id)[0]
+        path = os.path.dirname(__file__) + '/../images/' + img_id
+        try:
+            f = open(path, 'rb')
+            return Response(f, content_type=mimetype)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 # GET /author/friends/:id
 class GetAuthorFriends(ListAPIView):

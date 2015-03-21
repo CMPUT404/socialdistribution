@@ -233,6 +233,15 @@ class ContentAPITestCase(TestCase):
         response = self.client.post("/post", post, format='multipart')
         self.assertEquals(response.status_code, 201)
 
+        # Get the image.
+        url = response.data.get('image')
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+
+        # Ensure 404 on no image
+        response = self.client.get('doesnt_exist.jpg')
+        self.assertEquals(response.status_code, 404)
+
     def test_create_post_no_auth(self):
         ptext = TEXT + " message"
         post = {

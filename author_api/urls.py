@@ -27,4 +27,8 @@ urlpatterns = [
     # POST /author/registration/
     url(r'^registration/?$', viewsauth.AuthorRegistration.as_view(),
         name = 'registration'),
+
+    # GET /author/images/
+    url(r'^images/(?P<id>.*)', views.Images.as_view(),
+        name = 'images'),
 ]
