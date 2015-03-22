@@ -14,8 +14,9 @@ author_router.register(r'posts', AuthorPostViewSet)
 urlpatterns = patterns('',
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^author/', include('author_api.urls')),
+    # url(r'^author/', include('author_api.urls')),
     url(r'^post', include('content_api.urls')),
+    url(r'^', include('author_api.urls')),
     url(r'^', include(router.urls)),
     url(r'^', include(author_router.urls))
 )

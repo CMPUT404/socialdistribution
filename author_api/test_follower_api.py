@@ -2,14 +2,16 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from models import (
     Author,
+    CachedAuthor,
     FriendRelationship,
     FriendRequest,
     FollowerRelationship)
 
 import uuid
-import json
 
 from rest_framework.authtoken.models import Token
+
+from rest_api import scaffold as s
 
 c = Client()
 
@@ -18,32 +20,19 @@ GITHUB_USERNAME = "gituser"
 BIO = "This is my witty biography!"
 HOST = "http://example.com/"
 
-# Values to be inserted and checked in the User model
 # required User model attributes
-USERNAME = "nameuser"
+USERNAME = "ausername"
 PASSWORD = uuid.uuid4()
 
-# optional User model attributes
-FIRST_NAME = "firstname"
-LAST_NAME = "lastname"
-EMAIL = "person@example.org"
-
-# Main user in the tests
-USER = {
-    'username':USERNAME,
-    'first_name':FIRST_NAME,
-    'last_name':LAST_NAME,
-    'email':EMAIL,
-    'password':PASSWORD }
-
-# For friend, follower, and request model testing
+USER = {'username':USERNAME, 'password':PASSWORD }
 USER_A = {'username':"User_A", 'password':uuid.uuid4()}
 USER_B = {'username':"User_B", 'password':uuid.uuid4()}
 
-# Utility function to get around funky DRF responses that use nesting
-def get_dict_response(response):
-    """Returns a dictionary of the http response containing a list of ordered dictionaries"""
-    return json.loads(json.dumps(response.data))
+AUTHOR_PARAMS = {
+    'github_username':GITHUB_USERNAME,
+    'bio':BIO,
+    'host':HOST
+}
 
 class AuthorModelAPITests(TestCase):
     """
@@ -58,24 +47,12 @@ class AuthorModelAPITests(TestCase):
 
         Relationships are created in their respective tests
         """
-        self.user = User.objects.create_user(**USER)
-        self.user_a = User.objects.create_user(**USER_A)
-        self.user_b = User.objects.create_user(**USER_B)
-        self.author = Author.objects.create(
-            user = self.user,
-            github_username = GITHUB_USERNAME,
-            bio = BIO,
-            host = HOST)
-        self.author_a = Author.objects.create(
-            user = self.user_a,
-            github_username = GITHUB_USERNAME,
-            bio = BIO,
-            host = HOST)
-        self.author_b = Author.objects.create(
-            user = self.user_b,
-            github_username = GITHUB_USERNAME,
-            bio = BIO,
-            host = HOST)
+        self.user, self.author, self.client = s.create_authenticated_author(USER,
+            AUTHOR_PARAMS)
+        self.user_a, self.author_a, self.client_a = s.create_authenticated_author(USER_A,
+            AUTHOR_PARAMS)
+        self.user_b, self.author_b, self.client_b = s.create_authenticated_author(USER_B,
+            AUTHOR_PARAMS)
 
         token, created = Token.objects.get_or_create(user=self.user_a)
         self.auth_headers_user_a = {
@@ -87,173 +64,246 @@ class AuthorModelAPITests(TestCase):
 
     def tearDown(self):
         """Remove all created objects from mock database"""
+        CachedAuthor.objects.all().delete()
         Author.objects.all().delete()
         User.objects.all().delete()
         FriendRelationship.objects.all().delete()
         FriendRequest.objects.all().delete()
         FollowerRelationship.objects.all().delete()
 
-    def test_set_up(self):
-        """ Assert that that the user model was created in setUp()"""
-        try:
-            user = User.objects.get(username = USERNAME)
-        except:
-            self.assertFalse(True, 'Error retrieving %s from database' %USERNAME)
+    def test_follow_author(self):
+        follow = {
+            'id':uuid.uuid4(),
+            'host':HOST,
+            'displayname':USERNAME}
 
-        self.assertEquals(user.first_name, FIRST_NAME)
-        self.assertEquals(user.last_name, LAST_NAME)
-        self.assertEquals(user.email, EMAIL)
+        response = self.client.post('/followers/%s' %self.author.id, follow)
+        self.assertEquals(response.status_code, 201, "follower not created")
 
-    def test_new_follower(self):
-        """
-        Follow a user
-        """
-        post = {'follower':self.author_b.id}
-        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 201)
+        # Confirm in database
+        followers = self.author.followers.all()
+        s.assertFollower(self, followers[0], follow['id'])
 
-    def test_new_follower_added(self):
-        """
-        Ensure the follower relationship was created
-        """
-        post = {'follower':self.author_b.id}
-        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.users_in_response(response.data['followers'], [self.author_b.id])
+        # Foreign node CachedAuthor should be saved in local database
+        s.assertCachedAuthorExists(self, follow['id'])
 
-    def test_not_friends_yet(self):
-        """
-        Ensure the newly followed user is not yet a friend of the follower
-        """
-        post = {'follower':self.author_b.id}
-        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.users_in_response(response.data['followers'], [self.author_b.id])
-        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertTrue(unicode(self.author_b.id) not in response.data['friendors'])
+        # TODO
+        # If you attempt to add the same follower to the author twice
+        # the endpoint doesn't return a good error message
 
-    def test_follow_back(self):
-        """
-        Follow back the new follower and ensure a new friend relationship
-        is created
-        """
-        post = {'follower':self.author_b.id}
-        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_a)
-        self.users_in_response(response.data['followers'], [self.author_b.id])
-        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_a)
-        self.assertTrue(self.author_b.id not in response.data['friendors'])
-        post = {'follower':self.author_a.id}
+    def test_get_followers(self):
+        authors = s.create_multiple_cached_authors(2, HOST, USERNAME)
+        s.create_cached_author_followers(self.author, authors)
 
-        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 201)
+        response = self.client.get('/followers/%s' %self.author.id)
+        self.assertEquals(response.status_code, 200, "Failed to get followers")
+
+        # s.pretty_print(response.data[0])
+        s.assertNumberFollowers(self, response.data[0], 2)
+
+        # TODO should check follower guids...Have manually checked for now.
+
+    def test_delete_follow(self):
+        authors = s.create_multiple_cached_authors(2, HOST, USERNAME)
+        s.create_cached_author_followers(self.author, authors)
+
+        to_delete = {
+            'id':authors[0].id
+        }
+
+        response = self.client.delete('/followers/%s' %self.author.id,
+            to_delete)
+        self.assertEquals(response.status_code, 204, "Follower deleted")
+
+        # Confirm by database query
+        followers = self.author.followers.all()
+        self.assertEquals(len(followers), 1, "follower wasn't removed")
+        self.assertEqual(followers[0].id, authors[1].id)
+
+        # Follower should still exist in CachedAuthors
+        s.assertCachedAuthorExists(self, authors[0].id)
+
+    def test_delete_friend_through_model(self):
+        self.author_a.add_follower(self.author_b)
+        self.author_b.add_follower(self.author_a)
+
+        # Confirm that A/B follow each other and thus are friends
+        self.assertEquals(1, len(self.author_a.friends.all()))
+        self.assertEquals(1, len(self.author_b.friends.all()))
+
+        # This will remove the friendship. Follower/Friendship are dependents
+        # Other author should no longer be a friend either
+        self.author_a.remove_follower(self.author_b)
+        self.assertEquals(0, len(self.author_a.friends.all()))
+        self.assertEquals(0, len(self.author_b.friends.all()))
+
+        # Other author should still have follow relationship
+        self.assertEquals(1, len(self.author_b.followers.all()))
+
+        # Author a should have no followers or friends
+        self.assertEquals(0, len(self.author_a.followers.all()))
 
     def test_user_a_now_friend(self):
         """
         Ensure the users who have now both followed each other are friends
         """
-        post = {'follower':self.author_b.id}
-        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
+        # author_a follows author_b and then author_b follows author_a
+        self.author_a.add_follower(self.author_b)
+        self.author_b.add_follower(self.author_a)
+
+        # Confirm that A/B follow each other
+        self.assertEquals(1, len(self.author_a.followers.all()))
+        self.assertEquals(1, len(self.author_b.followers.all()))
+
+        # A/B should be friends
+        if not Author.objects.get(id = self.author_a.id, friends__id = self.author_b.id):
+            self.assertTrue(True, "Author b should be in author a friends list")
+
+        if not Author.objects.get(id = self.author_b.id, friends__id = self.author_a.id):
+            self.assertTrue(True, "Author a should be in author b friends list")
+
+    # This now also covers the test_follow_back from prior commit
+    def test_create_friendship_through_http(self):
+        """Friendship should be created when both authors follow each other"""
+        self.author_a.add_follower(self.author)
+        self.assertEquals(1, len(self.author_a.followers.all()))
+
+        follow = {
+            'id':self.author_a.id,
+            'host':HOST,
+            'displayname':USERNAME}
+
+        response = self.client.post('/followers/%s' %self.author.id, follow)
+        self.assertEquals(response.status_code, 201, "follower not created")
+
+        # Both should be friends
+        self.assertEquals(1, len(self.author_a.friends.all()))
+        self.assertEquals(1, len(self.author.friends.all()))
+
+    def test_http_unfollow_after_friendship(self):
+        # author_a follows author_b and then author_b follows author_a
+        self.author.add_follower(self.author_b)
+        self.author_b.add_follower(self.author)
+
+        # Confirm that A/B follow each other
+        self.assertEquals(1, len(self.author.followers.all()))
+        self.assertEquals(1, len(self.author_b.followers.all()))
+
+        unfollow = {
+            "id":self.author_b.id
+        }
+        response = self.client.delete('/followers/%s' %self.author.id, unfollow)
+        self.assertEquals(response.status_code, 204, "deleted friendship/followship")
+
+        # author should have no friends and not be following
+        self.assertEquals(0, len(self.author.followers.all()))
+        self.assertEquals(0, len(self.author.friends.all()))
+
+        # b should still follow a, but not be friends
+        self.assertEquals(1, len(self.author_b.followers.all()))
+        self.assertEquals(0, len(self.author_b.friends.all()))
+
+    def test_api_friend_request_only_follow(self):
+        fuuid = str(uuid.uuid4())
+        request = {
+            "query":"friendrequest",
+            "author":{
+                "id":self.author.id,
+                "host":HOST,
+                "displayname":self.author.user.username
+            },
+            "friend":{
+                "id":fuuid,
+                "host":"http://example.org/",
+                "displayname":"foreignuser",
+                "url":"http://example.org/author/" + str(fuuid),
+            }
+        }
+        response = self.client.post('/friendrequest', request)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.users_in_response(response.data['followers'], [self.author_b.id])
-        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
-        post = {'follower':self.author_a.id}
-        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
+
+        # This should have created only a follower relationship
+        self.assertEquals(1, len(self.author.followers.all()))
+        self.assertEquals(0, len(self.author.friends.all()))
+
+    def test_api_friend_request(self):
+        self.author_a.add_follower(self.author)
+        request = {
+            "query":"friendrequest",
+            "author":{
+                "id":self.author.id,
+                "host":HOST,
+                "displayname":self.author.user.username
+            },
+            "friend":{
+                "id":self.author_a.id,
+                "host":"http://example.org/",
+                "displayname":"foreignuser",
+                "url":"http://example.org/author/" + str(self.author_a.id),
+            }
+        }
+        response = self.client.post('/friendrequest', request)
         self.assertEquals(response.status_code, 201)
-        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_a.id) in response.data['friendors'])
 
+        # This should have created the friendship as author already follows author_a
+        self.assertEquals(1, len(self.author.followers.all()))
+        self.assertEquals(1, len(self.author.friends.all()))
+        self.assertEquals(1, len(self.author_a.friends.all()))
+        self.assertEquals(1, len(self.author_a.followers.all()))
 
-    def test_users_now_friends_not_followers(self):
-        """
-        Ensure the users who have now both followed each other are friends
-        """
-        post = {'follower':self.author_b.id}
-        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.users_in_response(response.data['followers'], [self.author_b.id])
-        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
-        post = {'follower':self.author_a.id}
-        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 201)
-        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_a.id) in response.data['friendors'])
-        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_b.id) in response.data['friendors'])
-        # ensure neither friend is still following the other
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertTrue(self.author_b.id not in response.data['followers'])
-        response = c.get('/author/followers/%s' %self.author_b.id, **self.auth_headers_user_a)
-        self.assertTrue(self.author_a.id not in response.data['followers'])
+    def test_query_manager(self):
+        """If two authors are friends, the query manager should return the author"""
+        # author_a follows author_b and then author_b follows author_a
+        self.author.add_follower(self.author_b)
+        self.author_b.add_follower(self.author)
 
+        # Confirm that A/B follow each other
+        self.assertEquals(1, len(self.author.followers.all()))
+        self.assertEquals(1, len(self.author_b.followers.all()))
 
-    def test_unfollow_after_friendship(self):
-        post = {'follower':self.author_b.id}
-        response = c.post('/author/followers/%s' %self.author_a.id, post, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 201)
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.users_in_response(response.data['followers'], [self.author_b.id])
-        response = c.get('/author/friends/%s' %self.author_a.id)
-        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
-        post = {'follower':self.author_a.id}
-        response = c.post('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 201)
-        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_a.id) in response.data['friendors'])
-        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_b.id) in response.data['friendors'])
-        # ensure neither friend is still following the other
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertTrue(str(self.author_b.id) not in response.data['followers'])
-        response = c.get('/author/followers/%s' %self.author_b.id, **self.auth_headers_user_a)
-        self.assertTrue(str(self.author_a.id) not in response.data['followers'])
-        # user_a unfollow user_b
-        # ensure friendship is now gone and following relationship
-        # exists as user_b show now follow user_a again
-        post = {"follower":str(self.author_a.id)}
-        response = c.delete('/author/followers/%s' %self.author_b.id, post, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 200)
-        response = c.get('/author/friends/%s' %self.author_b.id, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_a.id) not in response.data['friendors'])
-        response = c.get('/author/friends/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_b.id) not in response.data['friendors'])
-        # but user_b should now follow user_a again
-        response = c.get('/author/followers/%s' %self.author_a.id, **self.auth_headers_user_b)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_b.id) in response.data['followers'])
-        # but user_a should not be following user_b
-        response = c.get('/author/followers/%s' %self.author_b.id, **self.auth_headers_user_a)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(str(self.author_a.id) not in response.data['followers'])
+        try:
+            # Testing the query manager here. Returns an author if two guids are friends
+            author = Author.objects.all().areFriends(self.author.id, self.author_b.id)
+        except:
+            # exception is thrown if author does not exist in database
+            self.assertFalse(True, "friendship is not valid")
 
-    def users_in_response(self, data, users=None):
-        """
-        Test to ensure that all usernames added to relationship are in the returned data
+    def test_api_get_friends(self):
+        self.author.add_follower(self.author_a)
+        self.author_a.add_follower(self.author)
 
-        Called after a retrieve relationship test has passed
+        # These friends should not show up in response
+        self.author.add_follower(self.author_b)
+        self.author_b.add_follower(self.author)
 
-        usernames: a list of usernames
-        data: list of usernames to be checked against
-        """
+        response = self.client.get('/friends/%s/%s' %(self.author.id, self.author_a.id))
+        self.assertEquals(response.status_code, 200)
+        # s.pretty_print(response.data)
 
-        if users == None:
-            users = [self.author_a.id, self.author_b.id]
+        # Author's other friends should not be included in the query
+        self.assertEquals(len(response.data['authors']), 2)
 
-        users = map( lambda x: str(x).replace('-', ''), users)
+        # Both authors should be in the authors list
+        authors = response.data['authors']
+        self.assertTrue(str(self.author.id) in authors)
+        self.assertTrue(str(self.author_a.id) in authors)
 
-        for name in users:
-            self.assertTrue(unicode(name) in data)
+    def test_api_query_no_friends(self):
+        self.author.add_follower(self.author_a)
+
+        response = self.client.get('/friends/%s/%s' %(self.author.id, self.author_a.id))
+        self.assertEquals(response.status_code, 200)
+        # s.pretty_print(response.data)
+        self.assertEquals(response.data['friends'], "NO")
+
+    # TODO would prefer if this returned in the api format instead of a simple 404
+    def test_api_query_bad_author(self):
+        response = self.client.get('/friends/5f31330b5fc04e0ba2c2aa1628cd6a8c/%s'
+            %self.author_a.id)
+        self.assertEquals(response.status_code, 404)
+
+    def test_api_query_bad_friend(self):
+        response = self.client.get('/friends/%s/5f31330b5fc04e0ba2c2aa1628cd6a8c'
+            %self.author_a.id)
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.data['friends'], "NO")

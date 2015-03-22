@@ -1,51 +1,34 @@
 from rest_framework import renderers
-from rest_api.utils import UserNotFound
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
-from rest_framework.views import APIView
+from rest_framework import exceptions
+
 from mimetypes import guess_extension, guess_type
 import json
 import os
 
+from rest_api.utils import AuthorNotFound
+
 from models import (
     Author,
+    CachedAuthor,
     FollowerRelationship,
     FriendRelationship,
     FriendRequest
 )
 
-# TODO: FriendRequestSerializer is never used
-from serializers import AuthorSerializer
-
-def create_relationship_list(queryset, lookup):
-    """
-    Return a list of relationships, given a queryset and lookup value
-    """
-    relationships = []
-
-    for relation in queryset:
-        relationships.append(relation[lookup])
-
-    return relationships
-
-# Keeping it DRY
-def get_author(id):
-    try:
-        return Author.objects.get(id = id)
-    except:
-        return None
-
-class GetAuthorDetails(generics.RetrieveAPIView):
-    serializer_class = AuthorSerializer
-    lookup_url_kwarg = "id"
-
-    def get_queryset(self):
-        return Author.objects.filter(id =
-            self.kwargs.get(self.lookup_url_kwarg))
+from serializers import (
+    AuthorSerializer,
+    CachedAuthorSerializer,
+    RetrieveFollowersSerializer,
+    RetrieveFriendsSerializer,
+    BaseRetrieveFollowersSerializer,
+    BaseRetrieveFriendsSerializer,
+    FriendRequestSerializer )
 
 class ImageRenderer(renderers.BaseRenderer):
     media_type = 'image/**'
@@ -73,130 +56,152 @@ class Images(ListAPIView):
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-# GET /author/friends/:id
-class GetAuthorFriends(ListAPIView):
-    """
-    Returns a JSON object containing a friend and a list of friendors
-
-    Expected Return JSON:
-        {
-            friend:"username"
-            friendors: [
-                "friendor_username",
-                ...
-            ]
-        }
-    """
-
-    def list(self, request, *args, **kwargs):
-
-        author = get_author(kwargs['id'])
-
-        if author:
-            # Retrieve only the usernames of the friendors for a given friend
-            friendors = FriendRelationship.objects.filter(friend = author)\
-                .values('friendor__id')
-
-            relations = create_relationship_list(friendors, 'friendor__id')
-            return Response({'friend':author.id, 'friendors':relations})
-        else:
-            raise UserNotFound()
-
-# GET /author/followers/:id
-class GetAuthorFollowers(APIView):
-    """
-    Returns a JSON object containing a followee and a list of followers
-
-    Expected Return JSON:
-        {
-            followee:"username"
-            followers: [
-                "follower_username",
-                ...
-            ]
-        }
-    """
+class BaseRelationsMixin(object):
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = Author.objects.all()
+    lookup_url_kwarg = "id"
 
-    def get(self, request, *args, **kwargs):
-        author = get_author(kwargs['id'])
-        if author:
-            # Retrieve only the usernames of the followers for a given user
-            followers = FollowerRelationship.objects.filter(followee = author)\
-                .values('follower__id')
+class BaseRetrievRelationsView(BaseRelationsMixin, generics.ListAPIView):
+    """Allows read only access for followers/friends"""
 
-            relations = create_relationship_list(followers, 'follower__id')
-            return Response({'followee':author.id, 'followers':relations})
+    def get_queryset(self):
+        return self.queryset.filter(id = self.kwargs.get(self.lookup_url_kwarg))
+
+class BaseCreateRelationsView(BaseRelationsMixin, generics.CreateAPIView):
+    """Extends CreateAPIView to return a serializer instance upon saving"""
+
+    def perform_create(self, serializer):
+        return serializer.save()
+
+class BaseDeleteRelationsView(BaseRelationsMixin, generics.DestroyAPIView):
+    """Delete followers/friends"""
+
+    def get_cached_author(self, guid):
+        """Returns a CachedAuthor who will be removed from a relation"""
+        try:
+            return CachedAuthor.objects.get(id = guid)
+        except:
+            # TODO this can be placed in a custom exception
+            raise exceptions.NotFound(detail = "Relation Not found")
+
+    def remove_follower(self, author, follower):
+        """
+        Remove the follower and the associated friend for the given author
+        Takes:
+            author: Author model
+            follower: CachedAuthor model
+        """
+        # This will remove the friendship. Follower/Friendship are dependents
+        author.remove_follower(follower)
+
+# Can potentially be moved to a viewset and router
+class CRDFollowers(
+        BaseRetrievRelationsView,
+        BaseCreateRelationsView,
+        BaseDeleteRelationsView ):
+    """Authenticated Authors can create, retrieve and delete followers"""
+
+    def get_serializer_class(self):
+        """Uses CachedAuthorSerializer when creating and deleting a relation"""
+        if self.request.method == "GET":
+            return BaseRetrieveFollowersSerializer
         else:
-            raise UserNotFound()
+            return CachedAuthorSerializer
 
-    def post(self, request, id, format=None):
-        followee = get_author(id)
-        new_follower = Author.objects.get(id=request.POST.get('follower', ""))
-        if followee == None:
-            return Response("Followee not found", status=status.HTTP_404_NOT_FOUND)
-        if new_follower == None:
-            return Response("Follower not found", status=status.HTTP_404_NOT_FOUND)
-        # check if the followee also follows the new follower
-        # if so create a new friend relationship and remove both foller
-        # relationships
-        if FollowerRelationship.objects.filter(follower=followee, followee=new_follower).count():
-            FriendRelationship.objects.create(friendor=new_follower, friend=followee)
-            FriendRelationship.objects.create(friendor=followee, friend=new_follower)
-            FollowerRelationship.objects.get(follower=followee, followee=new_follower).delete()
-            return Response({"friendor":new_follower.id, "friend":followee.id}, status=status.HTTP_201_CREATED)
+    def create(self, request, *args, **kwargs):
+        """
+        Create a CachedAuthor and append it to the AuthorModel followers field
+        """
+        author = self.get_object()
 
-        # otherwise create new follower relationship
-        FollowerRelationship.objects.create(follower=new_follower, followee=followee)
-        return Response({"follower":new_follower.id, "followee":followee.id}, status=status.HTTP_201_CREATED)
+        serializer = self.get_serializer(data = request.data)
 
-    def delete(self, request, id, format=None):
-        # unfollow
-        followee = get_author(id)
-        formatted_request = str(request.body).strip("'<>()[]\"` ").replace('\'', '\"')
-        # TODO: we're getting parsed json by default, not sure if that changes
-        # things for above and below
-        new_unfollower = json.loads(formatted_request)['follower']
-        new_unfollower = Author.objects.get(id=new_unfollower)
+        # CachedAuthor exists if following home node Author. Don't serialize
+        queryset = CachedAuthor.objects.filter(id = request.data['id'])
 
-        # check whether the users are friends
-        if FriendRelationship.objects.filter(friendor=followee, friend=new_unfollower).count():
-            # remove the friend relationship and restore the following
-            # relationship.
-            FriendRelationship.objects.get(friendor=followee, friend=new_unfollower).delete()
-            FriendRelationship.objects.get(friendor=new_unfollower, friend=followee).delete()
-            FollowerRelationship.objects.create(follower=followee, followee=new_unfollower)
-            return Response(status=status.HTTP_200_OK)
+        if not queryset:
+            serializer.is_valid(raise_exception = True)
+            cached_author = self.perform_create(serializer)
 
-        # if the users aren't friends just remove the follower relationship
-        FollowerRelationship.objects.get(follower=new_unfollower, followee=followee).delete()
-        return Response(status=status.HTTP_200_OK)
+            author.add_follower(cached_author)
+            author.save()
 
-# GET /author/friendrequests/:id
-class GetAuthorFriendRequests(ListAPIView):
-    """
-    Returns a JSON object containing a requestee and a list of requestor
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status = status.HTTP_201_CREATED, headers=headers)
 
-    Expected Return JSON:
-        {
-            requestee:"username"
-            requestors: [
-                "requestor_username",
-                ...
-            ]
-        }
-    """
-
-    def list(self, request, *args, **kwargs):
-        author = get_author(kwargs['id'])
-
-        if author:
-            # Retrieve only the usernames of the requestor for a given user
-            requestors = FriendRequest.objects.filter(requestee = author)\
-                .values('requestor__id')
-
-            relations = create_relationship_list(requestors, 'requestor__id')
-            return Response({'requestee':author.id, 'requestors':relations})
         else:
-            raise UserNotFound()
+            author.add_follower(queryset[0])
+            author.save()
+
+            # TODO send back another message ????
+            return Response(status = status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        """Deletes the follower as well as the friend"""
+        follower = self.get_cached_author(request.data['id'])
+        author = self.get_object()
+        self.remove_follower(author, follower)
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
+
+class CreateFriendRequest(generics.CreateAPIView):
+    """
+    Given a json request parameter body, create the approriate
+    friend/follower relationship.
+    """
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = Author.objects.all()
+    serializer_class = FriendRequestSerializer
+
+    # TODO Lock this down. People can spoof identity and create friend requests
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        # TODO. The action was successful
+        # We can optionally return the author's friends list in responses
+        # currently, a 201 Created and the given data are returned
+        # TODO. Working, but response could be more descriptive.
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
+    """
+    Queries the database with an author id and a friend id.
+
+    Possible Exceptions:
+        404: Author id does not exist
+    """
+    serializer_class = RetrieveFriendsSerializer
+    queryset = Author.objects.all()
+    lookup_url_kwarg = "aid"
+
+    def get_queryset(self):
+        return self.queryset.filter(id = self.kwargs.get(self.lookup_url_kwarg))
+
+    # Alter the response to fit request before returning
+    def retrieve(self, request, *arg, **kwargs):
+        """Gets list response from super class and then alter to fit query"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        # Alter the data to match API specifications
+        _ret = serializer.data
+        _ret['query'] = 'friends'
+
+        # Return only friends that were queried for. Probably can do this with the ORM
+        _ret['authors'] = [a for a in _ret['friends'] if a == self.kwargs.get('fid')]
+        # Insert the originating author to the friends list (friends with self)
+        _ret['authors'].insert(0, self.kwargs.get(self.lookup_url_kwarg))
+
+        if len(_ret['authors']) > 1:
+            _ret['friends'] = 'YES'
+        else:
+            _ret['friends'] = "NO"
+
+        return Response(_ret)
