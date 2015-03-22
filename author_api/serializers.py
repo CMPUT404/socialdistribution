@@ -160,38 +160,12 @@ class DirtyCachedAuthorSerializer(serializers.Serializer):
         cached.save()
         return cached
 
-    # def update(self, instance, validated_data):
-    #
-    #     instance.id = validated_data.get('id', instance.id)
-    #     instance.host = validated_data.get('host', instance.host)
-    #     instance.displayname = validated_data.get('displayname', instance.displayname)
-    #     instance.url = validated_data.get('url', instance.url)
-    #     instance.save()
-    #     return instance
-
 class BaseRetrieveFollowersSerializer(serializers.ModelSerializer):
     followers = CachedAuthorSerializer(many = True)
 
     class Meta:
         model = Author
         fields = ('followers',)
-
-    # And........it still inserts into a list. TODO
-    def to_representation(self, instance):
-        """
-        Calls the parent to_representation and then removes the OrderedDict that is
-        wrapping the result.
-
-        This allows easier parsing on the frontend
-        """
-        old = super(serializers.ModelSerializer, self).to_representation(instance)
-
-        ret = {}
-        for k,v in old.iteritems():
-            ret[k] = v
-
-        # TODO not returned as a list at this point, but still get one in response
-        return ret
 
 class BaseRetrieveFriendsSerializer(serializers.ModelSerializer):
     friends = CachedAuthorSerializer(many = True)
@@ -205,7 +179,7 @@ class RetrieveFollowersSerializer(BaseRetrieveFollowersSerializer):
     followers = serializers.StringRelatedField(many=True)
 
 class RetrieveFriendsSerializer(BaseRetrieveFriendsSerializer):
-    """Provideds only a list of the friend guids in the return object"""
+    """Provides only a list of the friend guids in the return object"""
     friends = serializers.StringRelatedField(many=True)
 
 class AuthorRelationSerializer(serializers.ModelSerializer):

@@ -62,7 +62,7 @@ class BaseRelationsMixin(object):
     queryset = Author.objects.all()
     lookup_url_kwarg = "id"
 
-class BaseRetrievRelationsView(BaseRelationsMixin, generics.ListAPIView):
+class BaseRetrievRelationsView(BaseRelationsMixin, generics.RetrieveAPIView):
     """Allows read only access for followers/friends"""
 
     def get_queryset(self):
@@ -82,8 +82,8 @@ class BaseDeleteRelationsView(BaseRelationsMixin, generics.DestroyAPIView):
         try:
             return CachedAuthor.objects.get(id = guid)
         except:
-            # TODO this can be placed in a custom exception
-            raise exceptions.NotFound(detail = "Relation Not found")
+            # Cached author does not exist on this server
+            raise AuthorNotFound
 
     def remove_follower(self, author, follower):
         """

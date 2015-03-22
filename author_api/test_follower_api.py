@@ -98,8 +98,8 @@ class AuthorModelAPITests(TestCase):
         response = self.client.get('/followers/%s' %self.author.id)
         self.assertEquals(response.status_code, 200, "Failed to get followers")
 
-        # s.pretty_print(response.data[0])
-        s.assertNumberFollowers(self, response.data[0], 2)
+        # s.pretty_print(response.data)
+        s.assertNumberFollowers(self, response.data, 2)
 
         # TODO should check follower guids...Have manually checked for now.
 
