@@ -106,35 +106,6 @@ class AuthorModelAPITests(APITestCase):
         response = c.get('/author/no_user_here')
         self.assertEquals(response.status_code, 404)
 
-    def test_relation_user_dne(self):
-        response = c.get('/author/friends/%s' %'bogus_user')
-        self.assertEquals(response.status_code, 404)
-
-    def test_retrieve_friends(self):
-        friendors = [self.author_a, self.author_b]
-        scaffold.create_friends(self.author, friendors, create_post = False)
-
-        response = c.get('/author/friends/%s' %self.author.id)
-        self.assertEquals(response.status_code, 200)
-        scaffold.authors_in_relation(self, response.data['friendors'], friendors)
-
-    def test_retrieve_requests(self):
-        requestors = [self.author_a, self.author_b]
-        scaffold.create_requestors(self.author, requestors)
-
-        response = c.get('/author/friendrequests/%s' %self.author.id)
-
-        self.assertEquals(response.status_code, 200)
-        scaffold.authors_in_relation(self, response.data['requestors'], requestors)
-
-    def test_retrieve_followers(self):
-        followers = [self.author_a, self.author_b]
-        scaffold.create_followers(self.author, followers)
-
-        response = c.get('/author/followers/%s' %self.author.id)
-        self.assertEquals(response.status_code, 200)
-        scaffold.authors_in_relation(self, response.data['followers'], followers)
-
     def test_get_posts_by_author_with_http(self):
         aid = self.author.id
         scaffold.create_post_with_comment(self.author, self.author, "PRIVATE","POST","TEXT")

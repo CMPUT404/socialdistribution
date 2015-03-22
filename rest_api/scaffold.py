@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 
 from author_api.models import (
     Author,
+    CachedAuthor,
     FriendRelationship,
     FriendRequest,
     FollowerRelationship )
@@ -78,6 +79,10 @@ def create_author(user_dict, author_dict):
     author_dict['user'] = user
     author = Author.objects.create(**author_dict)
     author.save()
+
+    # Denormalized CachedAuthor gets created
+    cached = CachedAuthor(id = author.id, displayname = user.username)
+    cached.save()
 
     return (user, author)
 
@@ -215,3 +220,29 @@ def assertUserExists(context, name):
         user = User.objects.get(username = name)
     except:
         context.assertFalse(True, "User should exist")
+
+def assertCachedAuthorExists(context, guid):
+    try:
+        author = CachedAuthor.objects.get(id = guid)
+    except:
+        context.assertFalse(True, "CachedAuthor should exist")
+
+def assertFollower(context, follower, guid):
+    context.assertEquals(follower.id, guid)
+
+def assertNumberFollowers(context, followers, expected):
+    context.assertEquals(len(followers['followers']), expected,
+        "expected %s, got %s comments" %(expected, len(followers['followers'])))
+
+def create_cached_author_followers(author, followers):
+    """Takes a list of cachedauthors and adds them to the author follower list"""
+    for f in followers:
+        author.followers.add(f)
+
+def create_multiple_cached_authors(amount, host, username):
+    authors = []
+    for i in range(amount):
+        cached = CachedAuthor(id = uuid.uuid4(), host = host, displayname = username)
+        cached.save()
+        authors.append(cached)
+    return authors

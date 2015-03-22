@@ -6,11 +6,13 @@ from rest_framework import serializers
 import uuid
 import base64
 
+from rest_api.utils import AuthorNotFound
+
 from models import (
     Author,
-    FollowerRelationship,
-    FriendRelationship,
-    FriendRequest )
+    CachedAuthor)
+
+from collections import OrderedDict
 
 class ImageSerializer(serializers.BaseSerializer):
     def to_representation(self, data):
@@ -109,6 +111,11 @@ class RegistrationSerializer(serializers.Serializer):
         author = Author(user = user, **_author)
         author.save()
 
+        # Upon registration we also create a CachedAuthor for relationships
+        # TODO host currently defaults
+        cached = CachedAuthor(id = author.id, displayname = user.username)
+        cached.save()
+
         return author
 
 class CompactAuthorSerializer(serializers.ModelSerializer):
@@ -117,6 +124,73 @@ class CompactAuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         fields = ('id', 'displayname', 'host', 'url')
+
+# This will throw an error if duplicate id's
+class CachedAuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CachedAuthor
+        fields = ('id', 'host', 'displayname', 'url',)
+
+# This will not throw an error if duplicate id's and istead return existing model
+class DirtyCachedAuthorSerializer(serializers.Serializer):
+    id = serializers.UUIDField(required = True)
+    host = serializers.URLField(required = True)
+    displayname = serializers.CharField(required = True)
+    url = serializers.URLField(required = False)
+
+    def to_internal_value(self, data):
+        """Use the superclass to clean the data and then manually save it"""
+        ret = serializers.Serializer.to_internal_value(self, data)
+        self.save(ret)
+        return ret
+
+    def save(self, validated_data):
+        """
+        Only save the model if it does not exist already
+        This is done, as foreign node CachedAuthors may not already exist.
+        """
+        try:
+            existing = CachedAuthor.objects.get(id = validated_data['id'])
+            return self.update(existing, validated_data)
+        except:
+            return self.create(validated_data)
+
+    def create(self, validated_data):
+        cached = CachedAuthor(**validated_data)
+        cached.save()
+        return cached
+
+class BaseRetrieveFollowersSerializer(serializers.ModelSerializer):
+    followers = CachedAuthorSerializer(many = True)
+
+    class Meta:
+        model = Author
+        fields = ('followers',)
+
+class BaseRetrieveFriendsSerializer(serializers.ModelSerializer):
+    friends = CachedAuthorSerializer(many = True)
+
+    class Meta:
+        model = Author
+        fields = ('friends',)
+
+class RetrieveFollowersSerializer(BaseRetrieveFollowersSerializer):
+    """Provideds only a list of the follower guids in the return object"""
+    followers = serializers.StringRelatedField(many=True)
+
+class RetrieveFriendsSerializer(BaseRetrieveFriendsSerializer):
+    """Provides only a list of the friend guids in the return object"""
+    friends = serializers.StringRelatedField(many=True)
+
+class AuthorRelationSerializer(serializers.ModelSerializer):
+    """writable serializer for followers and friends only"""
+    followers = CachedAuthorSerializer(many = True)
+
+    class Meta:
+        model = Author
+        fields = ('followers', 'friends')
+        read_only_fields = ('user', 'id', 'host', 'bio', 'github_username', \
+            'image',)
 
 class AuthorSerializer(serializers.ModelSerializer):
     displayname = serializers.CharField(source='user.username')
@@ -127,27 +201,38 @@ class AuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('id', 'displayname', 'email', 'first_name', \
-                  'last_name', 'github_username', 'bio', 'host', 'url', 'image')
+        fields = ('id', 'displayname', 'email', 'first_name', 'last_name', \
+            'github_username', 'bio', 'host', 'url', 'image')
 
-class FollowerRelationshipSerializer(serializers.ModelSerializer):
-    follower = CompactAuthorSerializer(many=False, read_only=True)
+# Serializer for given API specs
+# https://github.com/abramhindle/CMPUT404-project-socialdistribution/blob/master/example-article.json
+class FriendRequestSerializer(serializers.Serializer):
+    query = serializers.RegexField('(friendrequest?)', allow_blank=False)
+    author = DirtyCachedAuthorSerializer()
+    friend = DirtyCachedAuthorSerializer()
 
-    class Meta:
-        model = FollowerRelationship
-        fields = ('follower',)
+    def save(self):
+        """
+        Do not save serializer data, as it is done with the field serializers
+        Do create the friendship/follower relationships if valid.
+        """
+        self.create(self.validated_data)
+        pass
 
-class FriendRelationshipSerializer(serializers.ModelSerializer):
-    friendor = CompactAuthorSerializer(many=False, read_only=True)
+    def create(self, validated_data):
+        """
+        Creates the friendship if dependencies satisfied, else just follow.
 
-    class Meta:
-        model = FriendRelationship
-        fields = ('friendor',)
+        If a request is given for an author that does not exist, an exception
+        message is returned along with a 404 error response.
+        """
+        try:
+            author = Author.objects.get(id = validated_data['author']['id'])
+            cached = CachedAuthor.objects.get(id = str(validated_data['friend']['id']))
 
-class FriendRequestSerializer(serializers.ModelSerializer):
-    # requestor = CompactAuthorSerializer(many=False, read_only=True)
-    requestor = serializers.StringRelatedField(many = True)
-
-    class Meta:
-        model = FriendRequest
-        fields = ('requestor', )
+            # Adding the follower, will automatically determine if friend
+            # request is valid and promote the relationship.
+            author.add_follower(cached)
+            return None
+        except:
+            raise AuthorNotFound
