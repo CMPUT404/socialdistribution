@@ -21,7 +21,7 @@ urlpatterns = [
         name = 'user_friends'),
 
     # GET/POST/DELETE /followers/:username
-    url(r'^followers/(?P<id>[0-9a-zA-Z_]+)/?$', views.CRDFollowers.as_view(),
+    url(r'^followers/(?P<id>[0-9a-zA-Z_]+)/?$', views.FollowersView.as_view(),
         name = 'user_followers'),
 
     # GET /friendrequests

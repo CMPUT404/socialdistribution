@@ -95,11 +95,12 @@ class BaseDeleteRelationsView(BaseRelationsMixin, generics.DestroyAPIView):
         # This will remove the friendship. Follower/Friendship are dependents
         author.remove_follower(follower)
 
+
 # Can potentially be moved to a viewset and router
-class CRDFollowers(
+class FollowersView(
         BaseRetrievRelationsView,
         BaseCreateRelationsView,
-        BaseDeleteRelationsView ):
+        BaseDeleteRelationsView):
     """Authenticated Authors can create, retrieve and delete followers"""
 
     def get_serializer_class(self):

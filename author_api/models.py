@@ -52,12 +52,14 @@ class Author(models.Model):
 
     @property
     def host(self):
-      return settings.HOST
+        return settings.HOST
 
     @property
     def url(self):
-      return self.host + 'author/' + str(self.id)
+        return self.host + 'author/' + str(self.id)
 
+    # Overwrites the query manager to allow custom queries from AuthorManager
+    # and AuthorQueryset.
     objects = AuthorManager()
 
     # mixing controller logic with model logic unfortunately
@@ -66,15 +68,15 @@ class Author(models.Model):
         _cached = CachedAuthor.objects.get(id = follower.id)
 
         # Prevent duplicate entries
-        if not self.followers.filter(id = follower.id):
+        if not self.followers.filter(id=follower.id):
             self.followers.add(_cached)
 
         # Bidirectional follow relationships become friendships
         try:
-            newfriend = Author.objects.get(id = follower.id)
+            newfriend = Author.objects.get(id=follower.id)
 
             # Only create a friendship if self is being followed back
-            if newfriend.followers.filter(id = self.id):
+            if newfriend.followers.filter(id=self.id):
                 newfriend.add_friend(self)
                 self.add_friend(newfriend)
         except:
@@ -88,33 +90,40 @@ class Author(models.Model):
     # Call add_follower instead
     def add_friend(self, follower):
         """Create a friend from an author model"""
-        _cached = CachedAuthor.objects.get(id = follower.id)
+        try:
+            _cached = CachedAuthor.objects.get(id=follower.id)
 
-        # Prevent duplicate entries
-        if not self.friends.filter(id = follower.id):
-            self.friends.add(_cached)
+            # Prevent duplicate entries
+            # Cannot use a get
+            if not self.friends.filter(id=follower.id):
+                self.friends.add(_cached)
+        except:
+            pass
 
     def remove_follower(self, follower):
-        _cached = CachedAuthor.objects.get(id = follower.id)
-        self.followers.remove(_cached)
-        self.remove_friend(_cached)
-
-        # Remove from friends lists for users who friended self
         try:
-            oldfriend = Author.objects.get(id = follower.id)
-            oldfriend.remove_friend(self)
+            _cached = CachedAuthor.objects.get(id=follower.id)
+            self.followers.remove(_cached)
+            self.remove_friend(_cached)
+
+            # Remove from friends lists for users who friended self
+            try:
+                oldfriend = Author.objects.get(id=follower.id)
+                oldfriend.remove_friend(self)
+            except:
+                # This will fail if:
+                #   1. The friend is actually foreign hosted
+                pass
         except:
-            # This will fail if:
-            #   1. The friend is actually foreign hosted
             pass
 
     # Call remove_follower instead (if you remove a friend, your remove a follower)
-    def remove_friend(self, follower):
-        _cached = CachedAuthor.objects.get(id = follower.id)
+    def remove_friend(self, friend):
+        _cached = CachedAuthor.objects.get(id=friend.id)
         self.friends.remove(_cached)
 
     def __unicode__(self):
-        return u'%s' %self.user.username
+        return u'%s' % self.user.username
 
 # Allows the integration of foreign and home authors into friend/follower relations
 # A denormalization of sorts.
