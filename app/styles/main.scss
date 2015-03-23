@@ -1,10 +1,11 @@
 @import '../bootstrap/dist/css/bootstrap.min.css';
 @import '../alertifyjs/dist/css/alertify-bootstrap-3.css';
 @import './components/github/events.scss';
-@import './components/contentviewer';
-@import './components/contentcreator';
-@import './components/post';
-@import './components/comment';
+@import './components/content/content-viewer';
+@import './components/content/comment-creator';
+@import './components/content/post-creator';
+@import './components/content/comment';
+@import './components/content/post';
 @import './components/typeahead';
 @import './components/author';
 
@@ -23,8 +24,10 @@ body {
   height: 64px;
 }
 
-.timeline {
-  width: 700px;
+.nav-img {
+  width: 20px;
+  height: 20px;
+  margin: 0 10px;
 }
 
 .alertify-logs {

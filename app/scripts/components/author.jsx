@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
-import { State } from 'react-router';
+import { State, Navigation } from 'react-router';
 import { Col, Row } from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
@@ -13,11 +13,13 @@ import Stream from './github/stream';
 import ContentViewer from './content/content-viewer';
 import PostCreator from './content/post-creator';
 
+import ActionListener from '../mixins/action-listener';
+
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), State],
+  mixins: [Reflux.connect(AuthorStore), ActionListener, State, Navigation],
 
   // statics: {
   //
@@ -35,16 +37,28 @@ export default React.createClass({
   getInitialState: function() {
     return {
       displayAuthor: null,
-      gitHubStream: null,
-      displayPosts: [],
+      gitHubStream: null
     };
   },
 
-  componentDidMount: function () {
+  refresh: function() {
     AuthorActions.fetchDetails(this.getParams().id);
-    // AuthorActions. fetch author posts
+    AuthorActions.fetchPosts(this.getParams().id);
   },
 
+  componentDidMount: function () {
+    this.listen(AuthorActions.logout, () => this.transitionTo('login'));
+    this.refresh();
+  },
+
+  shouldComponentUpdate: function(nextProps, nextState) {
+    if (!_.isNull(nextState.displayAuthor) &&
+        nextState.displayAuthor.id !== this.getParams().id) {
+      this.refresh();
+    }
+
+    return true;
+  },
   render: function() {
     // if we haven't gotten our initial data yet, put a spinner in place
     if (_.isNull(this.state.displayAuthor)) {
@@ -65,7 +79,7 @@ export default React.createClass({
       if (this.props.currentAuthor.isAuthor(authorViewId)) {
         postCreator = <div className="jumbotron"><PostCreator currentAuthor={this.props.currentAuthor} /></div>;
       } else {
-        follow = <Follow currentAuthor={this.props.currentAuthor} author={this.state.displayAuthor} />;
+        // follow = <Follow currentAuthor={this.props.currentAuthor} author={this.state.displayAuthor} />;
       }
     }
 
@@ -105,7 +119,7 @@ export default React.createClass({
           {postCreator}
           <ContentViewer
             currentAuthor={this.props.currentAuthor}
-            posts={this.state.displayPosts} />
+            posts={this.state.displayAuthor.sortedPosts()} />
         </Col>
         <Col md={4}>
           {ghStream}

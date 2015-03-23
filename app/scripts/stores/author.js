@@ -8,38 +8,39 @@ import Author from '../objects/author';
 import Comment from '../objects/comment';
 import AuthorActions from '../actions/author';
 
+import { responseToPosts } from './post';
+
+// TODO:
+// * In prod, remove host API prefixes in AJAX calls
+var __API__ = 'http://localhost:8000';
+
 // Deals with store Author information. Both for the logged in user and other
 // author's we need to load with their content.
 export default Reflux.createStore({
 
   init: function() {
-    // isEmpty calls on ES6 or prototype classes will return true
-    // Hence, this must be null when no user is active
     this.currentAuthor = null;
-    this.authorList = [];
-
-    this.getAuthors();
+    this.displayAuthor = null;
 
     this.listenTo(AuthorActions.login, 'onLogin');
     this.listenTo(AuthorActions.logout, 'logOut');
     this.listenTo(AuthorActions.register, 'onRegister');
     this.listenTo(AuthorActions.checkAuth, 'onCheckAuth');
+    this.listenTo(AuthorActions.addFriend, 'onAddFriend');
     this.listenTo(AuthorActions.createPost, 'onCreatePost');
+    this.listenTo(AuthorActions.fetchPosts, 'onFetchPosts');
+    this.listenTo(AuthorActions.followFriend,'onFollowFriend');
     this.listenTo(AuthorActions.fetchDetails, 'onFetchDetails');
     this.listenTo(AuthorActions.createComment, 'onCreateComment');
-
-    this.listenTo(AuthorActions.getAuthorNameList, this.getAuthorNameList);
-    this.listenTo(AuthorActions.getAuthorAndListen, this.getAuthorViewData);
-    this.listenTo(AuthorActions.subscribeTo, this.subscribeTo);
-    this.listenTo(AuthorActions.unsubscribeFrom, this.unsubscribeFrom);
 
     // Ajax fail listeners
     this.listenTo(AuthorActions.login.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.register.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.createPost.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.fetchPosts.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.fetchDetails.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.followFriend.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.createComment.fail, this.ajaxFailed);
-
   },
 
   // if in a static method and need acces to store state
@@ -62,57 +63,10 @@ export default Reflux.createStore({
     return token;
   },
 
-  // TODO: ajax this
-  getAuthors: function () {
-
-  },
-
-  // call this to cache an author in the author list. Also handles updating
-  // updating the subscriptionStore
-  addAuthorToList: function (authorData) {
-    this.authorList.push(new Author(authorData));
-  },
-
-  // gets a list of all authors from the server for search purposes
-  // TODO: ajax this
-  getAuthorNameList: function () {
-    var authors = this.authorList.map(function(author) {
-      return author.name;
-    });
-    this.trigger({authorNameList: authors});
-  },
-
-  getAuthorIdByName: function (name) {
-    for (let author of this.authorList) {
-      if (author.name == name) {
-        return author.id;
-      }
-    }
-    return null;
-  },
-
-  getAuthorById: function (id) {
-    for (let author of this.authorList) {
-      if (author.isAuthor(id)) {
-        return author;
-      }
-    }
-    return undefined;
-  },
-
-  getAuthorViewData: function (authorId) {
-    for (let author of this.authorList) {
-      if (author.id == authorId) {
-        this.trigger({displayAuthor: author});
-        return;
-      }
-    }
-  },
-
   // Fires authentication AJAX
   onLogin: function(username, password) {
     Request
-      .get('http://localhost:8000/author/login/') //TODO: remove host
+      .get(__API__ + '/author/login/') //TODO: remove host
       .auth(username, password)
       .promise(this.loginComplete, AuthorActions.login.fail);
   },
@@ -130,7 +84,7 @@ export default Reflux.createStore({
   // Fires registration AJAX
   onRegister: function(payload) {
     Request
-      .post('http://localhost:8000/author/registration/') //TODO: remove host
+      .post(__API__ + '/author/registration/') //TODO: remove host
       .send(payload)
       .promise(this.registrationComplete, AuthorActions.register.fail);
   },
@@ -156,22 +110,28 @@ export default Reflux.createStore({
     // If logged-in user wants to see their own profile
     // no need to AJAX, we already have that info from login/register
     if (this.isLoggedIn() && id === this.currentAuthor.id) {
-      this.fetchComplete(this.currentAuthor);
+      this.displayAuthor = this.currentAuthor;
+      this.trigger({displayAuthor: this.displayAuthor});
+      AuthorActions.fetchDetails.complete(this.displayAuthorhor);
+      this.fetchGHStream();
     } else {
       Request
-        .get('http://localhost:8000/author/' + id + '/') //TODO: remove host
-        .promise(this.fetchComplete, AuthorActions.fetchDetails.fail);
+        .get(__API__ + '/author/' + id) //TODO: remove host
+        .promise(this.fetchDetailsComplete, AuthorActions.fetchDetails.fail);
     }
   },
 
-  fetchComplete: function(author) {
-    var displayAuthor = new Author(author, null);
-    this.trigger({displayAuthor: displayAuthor});
-    AuthorActions.fetchDetails.complete(author);
+  fetchDetailsComplete: function(authorData) {
+    this.displayAuthor = new Author(authorData, null);
+    this.trigger({displayAuthor: this.displayAuthor});
+    AuthorActions.fetchDetails.complete(this.displayAuthor);
+    this.fetchGHStream();
+  },
 
-    if (author.github_username) {
+  fetchGHStream: function() {
+    if (this.displayAuthor.github_username) {
       Request
-        .get('https://api.github.com/users/' + author.github_username + '/events')
+        .get('https://api.github.com/users/' + this.displayAuthor.github_username + '/events')
         .promise((result) => {
           this.trigger({gitHubStream: result});
         }, (error) => {
@@ -181,9 +141,36 @@ export default Reflux.createStore({
     }
   },
 
+  // Fetches author's posts
+  onFetchPosts: function(id) {
+    Request
+      .get(__API__ + '/author/' + id + '/posts') //TODO: remove host
+      .token(this.getToken())
+      .promise(this.fetchPostsComplete.bind(this, id), AuthorActions.fetchPosts.fail);
+  },
+
+  fetchPostsComplete: function(id, postsData) {
+    var posts = responseToPosts(postsData);
+
+    posts.forEach((post) => {
+      post.author = this.displayAuthor;
+
+      post.comments.forEach((comment) => {
+        if (comment.author.id == this.displayAuthor.id) {
+          comment.author = this.displayAuthor;
+        } else {
+          comment.author = new Author(comment.author);
+        }
+      });
+    });
+
+    this.displayAuthor.posts = posts;
+    this.trigger({displayAuthor: this.displayAuthor});
+  },
+
   onCreatePost: function(post) {
     Request
-      .post('http://localhost:8000/post')
+      .post(__API__ + '/post')
       .token(this.getToken())
       .send(post)
       .promise(this.createPostComplete, AuthorActions.createPost.fail);
@@ -197,14 +184,14 @@ export default Reflux.createStore({
     // add new post
     this.currentAuthor.posts.push(post);
     // trigger update
-    this.trigger({displayPosts: this.currentAuthor.sortedPosts()});
+    this.trigger({displayAuthor: this.displayAuthor});
     // this is meant for other stores that are listening
     AuthorActions.createPost.complete(post);
   },
 
   onCreateComment: function(post, comment) {
     Request
-      .post('http://localhost:8000/post/' + post.guid +'/comments')
+      .post(__API__ + '/post/' + post.guid +'/comments')
       .token(this.getToken())
       .send(comment)
       .promise(this.createCommentComplete.bind(this, post),
@@ -217,7 +204,7 @@ export default Reflux.createStore({
     comment.author = this.currentAuthor;
     post.addComment(comment);
 
-    this.trigger({displayPosts: this.currentAuthor.sortedPosts()});
+    this.trigger({displayAuthor: this.displayAuthor});
     AuthorActions.createComment.complete(comment);
   },
 

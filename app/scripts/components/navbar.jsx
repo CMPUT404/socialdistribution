@@ -7,7 +7,6 @@ import UserSearch from './usersearch';
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
 
-//TODO: Display the logged in author name with author_image in the navbar.
 export default React.createClass({
   logout: function(evt) {
     AuthorActions.logout();
@@ -18,8 +17,11 @@ export default React.createClass({
 
     if (!_.isNull(this.props.currentAuthor)) {
       navList.unshift(
-        <NavItemLink key="timeline" to="timeline">Timeline</NavItemLink>,
-        <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>Profile</NavItemLink>
+        <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>
+          <img className="nav-img" src={this.props.currentAuthor.getImage()} />
+          <span>{this.props.currentAuthor.displayname}</span>
+        </NavItemLink>,
+        <NavItemLink key="timeline" to="timeline">Timeline</NavItemLink>
       );
       navList.push(
         <NavItem key="logout" onSelect={this.logout}>Logout</NavItem>);
