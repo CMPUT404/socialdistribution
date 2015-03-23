@@ -70,6 +70,11 @@ docs/_build/
 # PyBuilder
 target/
 
-# image folder
+# Images folder
 images/
 .DS_Store
+
+# Sublime projects
+*.sublime-project
+*.sublime-workspace
+

@@ -31,11 +31,9 @@ class AuthorProfile(APIView):
 
     def post(self, request):
         serializer = AuthorUpdateSerializer(data = request.DATA)
-
         if serializer.is_valid(raise_exception = True):
             user_details = Author.objects.get(user = request.user)
-            instance = serializer.update(user_details, serializer.data)
-
+            instance = serializer.update(user_details, serializer.validated_data)
             details = AuthorSerializer(instance)
 
             return Response(details.data, status=status.HTTP_200_OK)
@@ -49,16 +47,16 @@ class AuthorRegistration(APIView):
     parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     def post(self, request):
-      serializer = RegistrationSerializer(data = request.DATA)
+        serializer = RegistrationSerializer(data = request.DATA)
 
-      if serializer.is_valid(raise_exception = True):
-          author = serializer.create(serializer.validated_data)
-          token, created = Token.objects.get_or_create(user=author.user)
-          serializer = AuthorSerializer(author)
+        if serializer.is_valid(raise_exception = True):
+            author = serializer.create(serializer.validated_data)
+            token, created = Token.objects.get_or_create(user=author.user)
+            serializer = AuthorSerializer(author)
 
-          return Response({'token': token.key, 'author': serializer.data}, status=status.HTTP_201_CREATED)
-      else:
-          return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'token': token.key, 'author': serializer.data}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Token based
