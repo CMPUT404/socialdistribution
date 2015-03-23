@@ -24,12 +24,10 @@ def isOnSameHost(request, obj):
     return True
 
 def isFriend(request, obj):
-    author = Author.objects.get(user = request.user)
-    relationships = FriendRelationship.objects.filter(friendor__id = obj.author.id)
-
-    for relationship in relationships:
-        if (author.id == relationship.friend.id):
-            return True
+    # user = Author.objects.get(user = request.user)
+    author = Author.objects.all().areFriends(obj.author.id, request.user.id)
+    if author.exists():
+        return True
     return False
 
 # Checks first to see if the authenticated Author is friends with the entity's
@@ -38,25 +36,22 @@ def isFriendOnSameHost(request, obj):
     return isFriend(request, obj) and obj.author.host == settings.HOST
 
 def isFoF(request, obj):
-    # if obj.acl["permissions"] == 302:
-    author = Author.objects.get(user = request.user)
-    f_relationships = FriendRelationship.objects.filter(friendor__id = obj.author.id)
-    for relationship in f_relationships:
-        if (author.id == relationship.friend.id):
-            return True
-        fof_relationships = FriendRelationship.objects.filter(friendor__id = relationship.friend.id)
-        for relationship in fof_relationships:
-            if (author.id == relationship.friend.id):
+    # user = Author.objects.get(user = request.user)
+    if isFriend(request, obj):
+        return True
+    for friend in obj.author.friends.all():
+        for fof in friend.friends.all():
+            if fof.id == request.user.id:
                 return True
     return False
 
 def isPrivateList(request, obj):
-    # if obj.acl["permissions"] == 302:
-    author = Author.objects.get(user = request.user)
-
-    if str(author.id) in obj.acl.shared_users:
-        return True
-    return False
+    # author = Author.objects.get(user = request.user)
+    #
+    # if str(author.id) in obj.acl.shared_users:
+    #     return True
+    # return False
+    return isAuthor(request, obj)
 
 class IsAuthor(permissions.BasePermission):
     """
@@ -74,10 +69,6 @@ class IsFriend(permissions.BasePermission):
     Custom permission to only allow friends. View Posts
     """
     def has_object_permission(self, request, view, obj):
-        if isAuthor(request, obj):
-            return True
-        # we'll always allow GET, HEAD or OPTIONS requests.
-        # if request.method in (permissions.SAFE_METHODS) :
         return isFriend(request, obj)
 
 

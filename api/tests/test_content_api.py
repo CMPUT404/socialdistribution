@@ -101,19 +101,18 @@ class ContentAPITestCase(TestCase):
     def test_get_posts_of_friends(self):
         # This test should only return posts by author_a and not his friends
         # This creates friends and their posts (two posts in total)
-        scaffold.create_friends(self.author_a, [self.author_b, self.author_c])
+        scaffold.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True, visibility="FRIENDS")
 
         a_id = self.author_a.id
         response = self.client.get("/author/%s/posts" % a_id)
         self.assertEquals(response.status_code, 200)
 
         posts = response.data
+        s.pretty_print(response.data)
         scaffold.assertNumberPosts(self, posts, 1)
         scaffold.assertPostAuthor(self, posts["posts"][0], self.author_a)
 
-        # s.pretty_print(response.data)
 
-        #tests to be updated
     def test_get_posts_of_fof(self):
         # Add Friends and a post each
         s.create_friends(self.author_a, [self.author_b], create_post = True, visibility="FOAF")
@@ -127,7 +126,7 @@ class ContentAPITestCase(TestCase):
         response = self.client.get("/author/%s/posts" % aid)
         self.assertEquals(response.status_code, 200)
 
-        # s.pretty_print(response.data)
+        s.pretty_print(response.data)
 
         s.assertNumberPosts(self, response.data, 1)
         s.assertPostAuthor(self, response.data["posts"][0], author)
