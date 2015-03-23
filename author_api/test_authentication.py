@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from models import Author
 from rest_api import scaffold
 
+import os
 import uuid
 import json
 
@@ -39,6 +40,20 @@ class AuthorAuthentication(APITestCase):
             'github_username':GITHUB_USERNAME,
             'bio':BIO,
             'host': HOST }
+
+        base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../test_fixtures/images/s.jpg')
+
+        self.user_dict_with_img = {
+            'username':USERNAME,
+            'displayname':USERNAME,
+            'first_name':FIRST_NAME,
+            'last_name':LAST_NAME,
+            'password':PASSWORD,
+            'email':EMAIL,
+            'github_username':GITHUB_USERNAME,
+            'bio':BIO,
+            'host': HOST,
+            'image': "data:image/jpeg;base64," + base64image }
 
         self.login_dict = {
             'username':USERNAME,
@@ -100,6 +115,17 @@ class AuthorAuthentication(APITestCase):
         details = Author.objects.get(user = user)
         self.assertEquals(details.bio, BIO, "Bio doesn't match")
         self.assertEquals(details.github_username, GITHUB_USERNAME, "Username doesn't match")
+
+    def test_registration_with_image(self):
+        response = self.c.post('/author/registration', self.user_dict_with_img, format='multipart')
+        import pdb; pdb.set_trace()
+        self.assertEquals(response.status_code, 201)
+
+        # Get image.
+        url = response.data.get('author').get('image')
+        response = self.c.get(url)
+        self.assertEquals(response.status_code, 200)
+
 
     def test_registration_same_user(self):
         """

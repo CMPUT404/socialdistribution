@@ -77,10 +77,6 @@ class ContentAPITestCase(TestCase):
         except:
             self.assertFalse(True, "Error retrieving post %s from database" %self.post.guid)
 
-    def getImageBase64(self, path):
-        """Returns a base64 encoded image for json body"""
-        with open(path, 'r') as img:
-            return base64.b64encode(img.read())
 
     def test_get_post_by_author_from_db(self):
         """Post created in setUp() can be retrieved using Author id from setUp()"""
@@ -223,7 +219,7 @@ class ContentAPITestCase(TestCase):
 
     def test_create_public_post_with_image(self):
         user, author, client = s.create_authenticated_author(USER_E, AUTHOR_PARAMS)
-        base64image = self.getImageBase64(os.path.dirname(__file__) + '/../test_fixtures/images/s.jpg')
+        base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../test_fixtures/images/s.jpg')
         post = {"image": "data:image/jpeg;base64," + base64image,
             "title": "Tst Post",
             "content": TEXT,

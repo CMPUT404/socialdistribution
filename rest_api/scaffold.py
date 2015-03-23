@@ -60,6 +60,13 @@ class SocialAPIClient(APIClient):
         else:
             return self.credentials(HTTP_AUTHORIZATION=("Basic %s" % bad_creds))
 
+def get_image_base64(path):
+    """
+    Returns a base64 encoded image
+    """
+    with open(path, 'r') as img:
+        return base64.b64encode(img.read())
+
 def pretty_print(data):
     """Pretty prints a dictionary object"""
     print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
