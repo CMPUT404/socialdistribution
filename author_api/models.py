@@ -10,8 +10,10 @@ from uuidfield import UUIDField
 
 import os
 
+
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
+
 
 class AuthorQuerySet(models.query.QuerySet):
     def areFriends(self, authorid, friendid):
@@ -22,11 +24,13 @@ class AuthorQuerySet(models.query.QuerySet):
 
         This will throw an exception if either guid is not valid
         """
-        return self.get(id = authorid, friends__id = friendid)
+        return self.get(id=authorid, friends__id=friendid)
+
 
 class AuthorManager(models.Manager):
     def get_queryset(self):
         return AuthorQuerySet(self.model, using=self._db)
+
 
 class Author(models.Model):
     """
@@ -35,20 +39,20 @@ class Author(models.Model):
     """
     user = models.OneToOneField(User)
 
-    id = UUIDField(auto = True, primary_key = True)
-    host = models.URLField(blank = False, null=False, default=settings.HOST)
+    id = UUIDField(auto=True, primary_key=True)
+    host = models.URLField(blank=False, null=False, default=settings.HOST)
 
-    bio = models.TextField(blank=False, null=False)
+    bio = models.TextField(blank=True, null=True)
     github_username = models.CharField(max_length=40, blank=True, null=True)
     image = models.ImageField(upload_to='images/profile', blank=True, null=True)
 
     # Who is following the Author
     followers = models.ManyToManyField('CachedAuthor', blank=True, null=True,
-        related_name = 'followers')
+                                       related_name='followers')
 
     # All interaction with friends should be conducted through followers
     friends = models.ManyToManyField('CachedAuthor', blank=True, null=True,
-        related_name = 'friends')
+                                     related_name='friends')
 
     @property
     def host(self):
@@ -65,7 +69,7 @@ class Author(models.Model):
     # mixing controller logic with model logic unfortunately
     def add_follower(self, follower):
         """Create a follower from an Author/CachedAuthor model"""
-        _cached = CachedAuthor.objects.get(id = follower.id)
+        _cached = CachedAuthor.objects.get(id=follower.id)
 
         # Prevent duplicate entries
         if not self.followers.filter(id=follower.id):
@@ -125,22 +129,23 @@ class Author(models.Model):
     def __unicode__(self):
         return u'%s' % self.user.username
 
+
 # Allows the integration of foreign and home authors into friend/follower relations
 # A denormalization of sorts.
 class CachedAuthor(models.Model):
-    id = UUIDField(primary_key = True)
-    host = models.URLField(blank = False, null = False, default = settings.HOST)
-    displayname = models.CharField(max_length=40, blank = False, null = False)
-    url = models.URLField(blank = False, null = False, default = settings.HOST)
+    id = UUIDField(primary_key=True)
+    host = models.URLField(blank=False, null=False, default=settings.HOST)
+    displayname = models.CharField(max_length=40, blank=False, null=False)
+    url = models.URLField(blank=False, null=False, default=settings.HOST)
 
     # This is used for the related string field serializer
     def __unicode__(self):
-        return u'%s' %self.id
+        return u'%s' % self.id
+
 
 #
 # These are being refactored out
 #
-
 class FollowerRelationship(models.Model):
     """
     Follower
@@ -149,6 +154,7 @@ class FollowerRelationship(models.Model):
     follower = models.ForeignKey(Author, null=True, related_name='follower')
     followee = models.ForeignKey(Author, null=True, related_name='followee')
 
+
 class FriendRelationship(models.Model):
     """
     Friend
@@ -156,6 +162,7 @@ class FriendRelationship(models.Model):
     created_on = models.DateField(auto_now_add=True)
     friendor = models.ForeignKey(Author, null=True, related_name='friendor')
     friend = models.ForeignKey(Author, null=True, related_name='friend')
+
 
 class FriendRequest(models.Model):
     """
