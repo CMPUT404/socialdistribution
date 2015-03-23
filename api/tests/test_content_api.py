@@ -113,88 +113,90 @@ class ContentAPITestCase(TestCase):
 
         # s.pretty_print(response.data)
 
-    # def test_get_posts_of_fof(self):
-        # # Add Friends and a post each
-        # s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
+        #tests to be updated
+    def test_get_posts_of_fof(self):
+        # Add Friends and a post each
+        s.create_friends(self.author_a, [self.author_b], create_post = True, visibility="FOAF")
 
-        # # Create friend of friend and a post
-        # user, author = s.create_author(USER_D, AUTHOR_PARAMS)
-        # s.create_friends(self.author_b, [author], create_post = True)
+        # Create friend of friend and a post
+        user, author = s.create_author(USER_D, AUTHOR_PARAMS)
+        s.create_friends(self.author_b, [author], create_post = True, visibility="FOAF")
 
-        # # author_a should be able to retrieve posts by author created above
-        # aid = author.id
-        # response = self.client.get("/author/%s/posts" % aid)
-        # self.assertEquals(response.status_code, 200)
+        # author_a should be able to retrieve posts by author created above
+        aid = author.id
+        response = self.client.get("/author/%s/posts" % aid)
+        self.assertEquals(response.status_code, 200)
 
-        # # s.pretty_print(response.data)
+        # s.pretty_print(response.data)
 
-        # s.assertNumberPosts(self, response.data, 1)
-        # s.assertPostAuthor(self, response.data[0], author)
+        s.assertNumberPosts(self, response.data, 1)
+        s.assertPostAuthor(self, response.data["posts"][0], author)
 
-    # def test_attempt_get_posts_of_fof(self):
-        # # Add Friends and a post each
-        # s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
+    def test_attempt_get_posts_of_fof(self):
+        # Add Friends and a post each
+        s.create_friends(self.author_a, [self.author_b], create_post = True, visibility="FOAF")
 
-        # # Create friend of friend and a post with private permissions
-        # user, author = s.create_author(USER_D, AUTHOR_PARAMS)
-        # s.create_friends(self.author_b, [author], create_post = True, aclist=ACL_PRIVATE)
+        # Create friend of friend and a post with Friends-only permissions
+        user, author = s.create_author(USER_D, AUTHOR_PARAMS)
+        s.create_multiple_posts(author, num = 1, visibility="FOAF")
 
-        # # author_a should not be able to retrieve post by author created above
-        # aid = author.id
-        # response = self.client.get("/author/%s/posts" %aid)
-        # self.assertEquals(response.status_code, 403)
+        # author_a should not be able to retrieve post by author created above
+        aid = author.id
+        response = self.client.get("/author/%s/posts" %aid)
+        # s.pretty_print(response.data)
+        self.assertEquals(response.status_code, 200)
+        s.assertNumberPosts(self, response.data, 0)
 
     # def test_get_posts_in_private_list(self):
-        # # Add Posts
-        # _acl = {"permissions":500, "shared_users":[str(self.author_a.id)]}
-        # s.create_multiple_posts(self.author_b, num = 1, acl = _acl)
-
-        # bid = self.author_b.id
-        # response = self.client.get("/author/%s/posts" %bid)
-
-        # # s.pretty_print(response.data)
-
-        # self.assertEquals(response.status_code, 200)
-        # s.assertPostAuthor(self, response.data[0], self.author_b)
-        # s.assertSharedUser(self, response.data[0], self.author_a)
-
+    #     # Add Posts
+    #     _acl = {"permissions":500, "shared_users":[str(self.author_a.id)]}
+    #     s.create_multiple_posts(self.author_b, num = 1, acl = _acl)
+    #
+    #     bid = self.author_b.id
+    #     response = self.client.get("/author/%s/posts" %bid)
+    #
+    #     # s.pretty_print(response.data)
+    #
+    #     self.assertEquals(response.status_code, 200)
+    #     s.assertPostAuthor(self, response.data[0], self.author_b)
+    #     s.assertSharedUser(self, response.data[0], self.author_a)
+    #
     # def test_attempt_get_posts_in_private_list(self):
-        # # Add Posts
-        # _acl = {"permissions":500, "shared_users":[str(self.author_c.id)]}
-        # s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
+    #     # Add Posts
+    #     _acl = {"permissions":500, "shared_users":[str(self.author_c.id)]}
+    #     s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
+    #
+    #     bid = self.author_b.id
+    #     response = self.client.get("/author/%s/posts" %bid)
+    #     self.assertEquals(response.status_code, 403)
 
-        # bid = self.author_b.id
-        # response = self.client.get("/author/%s/posts" %bid)
-        # self.assertEquals(response.status_code, 403)
+    def test_get_private_post_again(self):
+        # Add Posts
+        s.create_multiple_posts(self.author_a, num = 2, visibility = "PRIVATE")
 
-    # def test_get_private_post_again(self):
-        # # Add Posts
-        # _acl = {"permissions":100, "shared_users":[]}
-        # s.create_multiple_posts(self.author_a, num = 2, acl = _acl)
+        aid = self.author_a.id
+        response = self.client.get("/author/%s/posts" %aid)
+        self.assertEquals(response.status_code, 200)
 
-        # aid = self.author_a.id
-        # response = self.client.get("/author/%s/posts" %aid)
-        # self.assertEquals(response.status_code, 200)
+        # s.pretty_print(response.data)
+        s.assertNumberPosts(self, response.data, 3)
+        #
+        # # TODO this is a bug. At least one post should be returned
+        # # Create user to attempt to retrieve private posts
+        # user, author, client = s.create_authenticated_author(USER_D, AUTHOR_PARAMS)
+        # response = client.get("/author/%s/posts" %aid)
+        #
+        # s.assertNumberPosts(self, response.data, 1)
+        #
 
-        # # s.pretty_print(response.data)
-        # s.assertNumberPosts(self, response.data, 3)
-        # #
-        # # # TODO this is a bug. At least one post should be returned
-        # # # Create user to attempt to retrieve private posts
-        # # user, author, client = s.create_authenticated_author(USER_D, AUTHOR_PARAMS)
-        # # response = client.get("/author/%s/posts" %aid)
-        # #
-        # # s.assertNumberPosts(self, response.data, 1)
-        # #
+    def test_attempt_get_private_post(self):
+        # Add Posts
+        s.create_multiple_posts(self.author_b, num = 2, visibility = "PRIVATE")
 
-    # def test_attempt_get_private_post(self):
-        # # Add Posts
-        # _acl = {"permissions":100, "shared_users":[]}
-        # s.create_multiple_posts(self.author_b, num = 2, acl = _acl)
-
-        # bid = self.author_b.id
-        # response = self.client.get("/author/%s/posts" %bid)
-        # self.assertEquals(response.status_code, 403)
+        bid = self.author_b.id
+        response = self.client.get("/author/%s/posts" %bid)
+        self.assertEquals(response.status_code, 200)
+        s.assertNumberPosts(self, response.data, 0)
 
     def test_create_post(self):
         ptext = TEXT + " message"
@@ -388,65 +390,64 @@ class ContentAPITestCase(TestCase):
         scaffold.assertAuthorsInComments(self, [self.author_b, self.author_c],
             response.data['comments'])
 
-    # def test_retrieve_timeline_own(self):
-        # response = self.client.get('/author/posts')
-        # self.assertEquals(response.status_code, 200)
+    def test_retrieve_timeline_own(self):
+        response = self.client.get('/author/posts')
+        self.assertEquals(response.status_code, 200)
 
-        # # s.pretty_print(response.data)
-        # post = response.data[0]
+        # s.pretty_print(response.data)
+        post = response.data[0]
 
-        # s.assertNumberPosts(self, response.data, 1)
-        # s.assertPostContent(self, post, unicode(TEXT))
-        # s.assertPostAuthor(self, post, self.author_a)
+        self.assertEquals(len(response.data), 1)
+        s.assertPostContent(self, post, unicode(TEXT))
+        s.assertPostAuthor(self, post, self.author_a)
 
-    # def test_retrieve_multiple_posts_timeline(self):
-        # # Test the retrieval of multiple posts in the timeline
-        # s.create_multiple_posts(self.author_a, num = 5)
+    def test_retrieve_multiple_posts_timeline(self):
+        # Test the retrieval of multiple posts in the timeline
+        s.create_multiple_posts(self.author_a, num = 5)
 
-        # response = self.client.get('/author/posts')
-        # self.assertEquals(response.status_code, 200)
+        response = self.client.get('/author/posts')
+        self.assertEquals(response.status_code, 200)
 
-        # # s.pretty_print(response.data)
+        # s.pretty_print(response.data)
 
-        # s.assertNumberPosts(self, response.data, 6)
-        # s.assertNoRepeatGuids(self, response.data)
+        self.assertEquals(len(response.data), 6)
+        s.assertNoRepeatGuids(self, response.data)
 
     # def test_timeline_includes_friends(self):
-        # s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
-
-        # response = self.client.get('/author/posts')
-        # self.assertEquals(response.status_code, 200)
-
-        # authors = [
-            # self.author_a,
-            # self.author_b,
-            # self.author_c ]
-
-        # s.assertNumberPosts(self, response.data, 3)
-        # s.assertAuthorsInPosts(self, authors, response.data)
-
-        # # s.pretty_print(response.data)
-
+    #     s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
+    #
+    #     response = self.client.get('/author/posts')
+    #     self.assertEquals(response.status_code, 200)
+    #
+    #     authors = [
+    #         self.author_a,
+    #         self.author_b,
+    #         self.author_c ]
+    #
+    #     self.assertEquals(len(response.data), 3)
+    #     s.pretty_print(response.data)
+    #     s.assertAuthorsInPosts(self, authors, response.data)
+    #
     # def test_timeline_include_fof(self):
-        # s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
-
-        # # Create a friend of friend for author b
-        # user, author = s.create_author(USER_D, AUTHOR_PARAMS)
-        # s.create_friends(self.author_b, [author], create_post = True)
-
-        # response = self.client.get('/author/posts')
-        # self.assertEquals(response.status_code, 200)
-
-        # # s.pretty_print(response.data)
-        # s.assertNumberPosts(self, response.data, 4 )
-
-        # authors = [
-            # self.author_a,
-            # self.author_b,
-            # self.author_c,
-            # author ]
-
-        # s.assertAuthorsInPosts(self, authors, response.data)
+    #     s.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
+    #
+    #     # Create a friend of friend for author b
+    #     user, author = s.create_author(USER_D, AUTHOR_PARAMS)
+    #     s.create_friends(self.author_b, [author], create_post = True)
+    #
+    #     response = self.client.get('/author/posts')
+    #     self.assertEquals(response.status_code, 200)
+    #
+    #     s.pretty_print(response.data)
+    #     self.assertEquals(len(response.data), 4)
+    #
+    #     authors = [
+    #         self.author_a,
+    #         self.author_b,
+    #         self.author_c,
+    #         author ]
+    #
+    #     s.assertAuthorsInPosts(self, authors, response.data)
 
     def test_retrieve_timeline_bogus_user(self):
         response = self.no_auth.get('/author/posts')

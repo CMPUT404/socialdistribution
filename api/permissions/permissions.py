@@ -17,7 +17,6 @@ def isOwner(request, obj):
         return False
 
 def isPublic(request, obj):
-    # if obj.acl["permissions"] == 200:
     return True
 
 def isOnSameHost(request, obj):
@@ -25,7 +24,6 @@ def isOnSameHost(request, obj):
     return True
 
 def isFriend(request, obj):
-    # if obj.acl["permissions"] == 300:
     author = Author.objects.get(user = request.user)
     relationships = FriendRelationship.objects.filter(friendor__id = obj.author.id)
 
