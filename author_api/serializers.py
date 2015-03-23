@@ -15,12 +15,9 @@ from models import (
 from collections import OrderedDict
 
 class ImageSerializer(serializers.BaseSerializer):
-    def to_representation(self, data):
-        if data:
-            return '/author/images/' + data.name.split('/')[-1]
-        else:
-            return ''
-
+    """
+    Converts base64 encoded image to binary
+    """
     def to_internal_value(self, data):
         try:
             extension =  guess_extension(guess_type(data[0:23])[0])
@@ -29,6 +26,19 @@ class ImageSerializer(serializers.BaseSerializer):
         except:
             return None
 
+class PostImageSerializer(ImageSerializer):
+    def to_representation(self, data):
+        if data:
+            return '/author/posts/images/' + data.name.split('/')[-1]
+        else:
+            return ''
+
+class AuthorImageSerializer(ImageSerializer):
+    def to_representation(self, data):
+        if data:
+            return '/author/profile/images/' + data.name.split('/')[-1]
+        else:
+            return ''
 
 class AuthorUpdateSerializer(serializers.Serializer):
     """
@@ -42,7 +52,7 @@ class AuthorUpdateSerializer(serializers.Serializer):
     first_name = serializers.CharField(required = False)
     last_name = serializers.CharField(required = False)
     github_username = serializers.CharField(required = False)
-    image = ImageSerializer(required = False)
+    image = AuthorImageSerializer(required = False)
 
     def update(self, instance, validated_data):
         """
@@ -83,6 +93,7 @@ class RegistrationSerializer(serializers.Serializer):
     first_name = serializers.CharField(required = False)
     last_name = serializers.CharField(required = False)
     github_username = serializers.CharField(required = False)
+    image = AuthorImageSerializer(required = False)
 
     # Follow the same pattern to validate other fields if you desire.
     def validate_username(self, value):
@@ -197,7 +208,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     email       = serializers.EmailField(source='user.email')
     first_name  = serializers.CharField(source='user.first_name')
     last_name   = serializers.CharField(source='user.last_name')
-    image       = ImageSerializer(required = False)
+    image       = AuthorImageSerializer(required = False)
 
     class Meta:
         model = Author

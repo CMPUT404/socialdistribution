@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from rest_framework import status
 
@@ -26,6 +27,7 @@ class AuthorProfile(APIView):
 
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     def post(self, request):
         serializer = AuthorUpdateSerializer(data = request.DATA)
@@ -44,6 +46,7 @@ class AuthorRegistration(APIView):
     """
     Takes incoming JSON, validates it and builds a Author/User Model
     """
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     def post(self, request):
       serializer = RegistrationSerializer(data = request.DATA)

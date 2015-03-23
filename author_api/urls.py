@@ -32,7 +32,7 @@ urlpatterns = [
     url(r'^author/registration/?$', viewsauth.AuthorRegistration.as_view(),
         name = 'registration'),
 
-    # GET /author/images/
-    url(r'^images/(?P<id>.*)', views.Images.as_view(),
+    # GET /author/:path_prefix/images/:imageid
+    url(r'^author/(?P<path_prefix>[a-zA-Z]+)/images/(?P<id>.*)', views.Images.as_view(),
         name = 'images'),
 ]
