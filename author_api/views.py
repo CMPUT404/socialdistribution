@@ -5,13 +5,11 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
-from rest_framework import exceptions
 
-from mimetypes import guess_extension, guess_type
-import json
+from mimetypes import guess_type
 import os
 
-from rest_api.utils import AuthorNotFound
+from api.utils.utils import AuthorNotFound
 
 from models import (
     Author,

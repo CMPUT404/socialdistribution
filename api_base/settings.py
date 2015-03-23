@@ -42,8 +42,8 @@ INSTALLED_APPS = (
     'rest_framework.authtoken',
     'author_api',
     'sysadmin',
-    'content_api',
     'corsheaders',
+    'api',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -59,9 +59,9 @@ MIDDLEWARE_CLASSES = (
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-ROOT_URLCONF = 'rest_api.urls'
+ROOT_URLCONF = 'api.urls'
 
-WSGI_APPLICATION = 'rest_api.wsgi.application'
+WSGI_APPLICATION = 'api_base.wsgi.application'
 
 
 # Database
@@ -107,7 +107,7 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': (
     #     'rest_framework.permissions.IsAuthenticated',
     # ),
-    'EXCEPTION_HANDLER': 'rest_api.utils.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'api.utils.utils.custom_exception_handler',
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',

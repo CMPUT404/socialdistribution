@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from models import Post, Comment
+from ..models.content import Post, Comment
 from author_api.models import Author
 from author_api.serializers import CompactAuthorSerializer
 from django.conf import settings

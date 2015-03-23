@@ -13,7 +13,7 @@ from author_api.models import (
     FriendRequest,
     FollowerRelationship )
 
-from content_api.models import Post, Comment
+from ..models.content import Post, Comment
 
 from rest_framework.authtoken.models import Token
 from rest_framework.test import (

@@ -11,7 +11,7 @@ import uuid
 
 from rest_framework.authtoken.models import Token
 
-from rest_api import scaffold as s
+from api.utils import scaffold as s
 
 c = Client()
 

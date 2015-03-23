@@ -3,12 +3,12 @@ from rest_framework import generics, viewsets, mixins, exceptions
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
-from models import Post, Comment
-from serializers import PostSerializer, CommentSerializer
-from permissions import IsAuthor, Custom
+from ..models.content import Post, Comment
+from ..serializers.content import PostSerializer, CommentSerializer
+from ..permissions.permissions import IsAuthor, Custom
 from author_api.models import Author
 from author_api.serializers import AuthorSerializer
-from renderers import PostsJSONRenderer
+from ..renderers.content import PostsJSONRenderer
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 #
@@ -57,6 +57,17 @@ class CreateComment(generics.CreateAPIView):
 class PostBaseView(object):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+
+
+# Handles permissions pertaining to posts and their various methods
+class PostPermissionsMixin(object):
+    """
+    Authentication may take one of two values:
+        BasicAuthentication: An external node is accessing posts.
+        TokenAuthentication: A 'home' node user is accessing posts.
+    """
+    authentication_classes = (BasicAuthentication, TokenAuthentication, )
+    permission_classes = (IsAuthenticated, Custom,)
 
 
 class AuthorPostViewSet(
