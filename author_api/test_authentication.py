@@ -24,6 +24,7 @@ PASSWORD = str(uuid.uuid4())
 FIRST_NAME = "Jerry"
 LAST_NAME = "Maguire"
 EMAIL = "jmaguire@smi.com"
+base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../test_fixtures/images/s.jpg')
 
 class AuthorAuthentication(APITestCase):
     """
@@ -40,8 +41,6 @@ class AuthorAuthentication(APITestCase):
             'github_username':GITHUB_USERNAME,
             'bio':BIO,
             'host': HOST }
-
-        base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../test_fixtures/images/s.jpg')
 
         self.user_dict_with_img = {
             'username':USERNAME,
@@ -118,7 +117,6 @@ class AuthorAuthentication(APITestCase):
 
     def test_registration_with_image(self):
         response = self.c.post('/author/registration', self.user_dict_with_img, format='multipart')
-        import pdb; pdb.set_trace()
         self.assertEquals(response.status_code, 201)
 
         # Get image.
@@ -126,6 +124,7 @@ class AuthorAuthentication(APITestCase):
         response = self.c.get(url)
         self.assertEquals(response.status_code, 200)
 
+        scaffold.clean_up_imgs('profile', url)
 
     def test_registration_same_user(self):
         """
@@ -206,11 +205,16 @@ class AuthorAuthentication(APITestCase):
             'last_name':LAST_NAME + "u",
             'email':EMAIL + "u",
             'github_username':GITHUB_USERNAME + "u",
-            'bio':BIO + "u" }
+            'bio':BIO + "u",
+            'image': "data:image/jpeg;base64," + base64image }
 
-        response = self.token_client.post('/author/profile', update_author_dict)
+        response = self.token_client.post('/author/profile', update_author_dict, format='multipart')
         self.assertEquals(response.status_code, 200)
 
+        # Get image.
+        url = response.data.get('image')
+        response = self.c.get(url)
+        self.assertEquals(response.status_code, 200)
         # scaffold.pretty_print(response.data)
 
         # Compare the response content to that content in the database
@@ -223,6 +227,9 @@ class AuthorAuthentication(APITestCase):
 
         self.assertEquals(details.bio, update_author_dict['bio'])
         self.assertEquals(details.github_username, update_author_dict['github_username'])
+
+        # Clean up
+        scaffold.clean_up_imgs('profile', url)
 
     def test_author_update_bad_authorization(self):
         old = User.objects.get(username = RUSERNAME)

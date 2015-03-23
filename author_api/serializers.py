@@ -65,7 +65,7 @@ class AuthorUpdateSerializer(serializers.Serializer):
         instance.bio = validated_data.get('bio', instance.bio)
         instance.github_username = validated_data.get('github_username', \
         instance.github_username)
-
+        instance.image = validated_data.get('image', instance.image)
         instance.save()
 
         instance.user.email = validated_data.get('email', instance.user.email)
