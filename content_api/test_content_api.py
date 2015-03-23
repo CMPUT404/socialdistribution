@@ -232,7 +232,6 @@ class ContentAPITestCase(TestCase):
         }
         response = self.client.post("/post", post, format='multipart')
         self.assertEquals(response.status_code, 201)
-
         # Get the image.
         url = response.data.get('image')
         response = self.client.get(url)

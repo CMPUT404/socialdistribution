@@ -40,7 +40,7 @@ class Author(models.Model):
 
     bio = models.TextField(blank=False, null=False)
     github_username = models.CharField(max_length=40, blank=True, null=True)
-    image = models.ImageField(upload_to='images', blank=True, null=True)
+    image = models.ImageField(upload_to='images/profile', blank=True, null=True)
 
     # Who is following the Author
     followers = models.ManyToManyField('CachedAuthor', blank=True, null=True,
