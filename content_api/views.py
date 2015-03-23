@@ -59,30 +59,9 @@ class PostBaseView(object):
     serializer_class = PostSerializer
 
 
-# Handles permissions pertaining to posts and their various methods
-class PostPermissionsMixin(object):
-    """
-    Authentication may take one of two values:
-        BasicAuthentication: An external node is accessing posts.
-        TokenAuthentication: A 'home' node user is accessing posts.
-    """
-    authentication_classes = (BasicAuthentication, TokenAuthentication, )
-    permission_classes = (IsAuthenticated, Custom,)
-
-    # For querysets that only return a single object
-    def get_object(self):
-        post = self.get_queryset().first()
-        if post is None:
-            return None
-        else:
-            self.check_object_permissions(self.request, post)
-            return post
-
-
 class AuthorPostViewSet(
     PostBaseView,
-    viewsets.ViewSet,
-    PostPermissionsMixin
+    viewsets.ViewSet
 ):
     # authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [Custom]
@@ -135,7 +114,6 @@ class AuthorPostViewSet(
 # Handles all interactions with post objects
 class PostViewSet(
   PostBaseView,
-  PostPermissionsMixin,
   mixins.CreateModelMixin,
   mixins.RetrieveModelMixin,
   mixins.UpdateModelMixin,
@@ -145,13 +123,6 @@ class PostViewSet(
     authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, Custom]
     parser_classes = (MultiPartParser, FormParser, JSONParser)
-
-    # For querysets that only return a single object
-    def retrieve(self, request, pk=None):
-        post = self.queryset.get(guid=pk)
-        self.check_object_permissions(self.request, post)
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
 
 
 class PublicPostsViewSet(

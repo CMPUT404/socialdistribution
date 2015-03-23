@@ -450,5 +450,3 @@ class ContentAPITestCase(TestCase):
     def test_retrieve_timeline_bogus_user(self):
         response = self.no_auth.get('/author/posts')
         self.assertEquals(response.status_code, 401)
-
-
