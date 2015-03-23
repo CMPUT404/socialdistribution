@@ -218,7 +218,7 @@ class ContentAPITestCase(TestCase):
 
     def test_create_public_post_with_image(self):
         user, author, client = scaffold.create_authenticated_author(USER_E, AUTHOR_PARAMS)
-        base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../../test_fixtures/images/s.jpg')
+        base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/fixtures/images/s.jpg')
         post = {"image": "data:image/jpeg;base64," + base64image,
             "title": "Tst Post",
             "content": TEXT,
