@@ -70,13 +70,13 @@ class PostPermissionsMixin(object):
     permission_classes = (IsAuthenticated, Custom,)
 
     # For querysets that only return a single object
-    def get_object(self):
-        post = self.get_queryset().first()
-        if post is None:
-            return None
-        else:
-            self.check_object_permissions(self.request, post)
-            return post
+    # def get_object(self):
+        # post = self.get_queryset().first()
+        # if post is None:
+            # return None
+        # else:
+            # self.check_object_permissions(self.request, post)
+            # return post
 
 
 class AuthorPostViewSet(
