@@ -87,10 +87,6 @@ def create_author(user_dict, author_dict):
     author = Author.objects.create(**author_dict)
     author.save()
 
-    # Denormalized CachedAuthor gets created
-    cached = CachedAuthor(id = author.id, displayname = user.username)
-    cached.save()
-
     return (user, author)
 
 def create_authenticated_author(user_dict, author_dict):

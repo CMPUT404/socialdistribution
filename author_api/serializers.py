@@ -122,11 +122,6 @@ class RegistrationSerializer(serializers.Serializer):
         author = Author(user = user, **_author)
         author.save()
 
-        # Upon registration we also create a CachedAuthor for relationships
-        # TODO host currently defaults
-        cached = CachedAuthor(id = author.id, displayname = user.username)
-        cached.save()
-
         return author
 
 class CompactAuthorSerializer(serializers.ModelSerializer):
