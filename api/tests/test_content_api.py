@@ -1,12 +1,11 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from author_api.models import Author, FriendRelationship
-from models import Post, Comment
 from rest_framework.authtoken.models import Token
-from rest_api import scaffold
+from author_api.models import Author, FriendRelationship
+from ..models.content import Post, Comment
+from ..utils import scaffold
 import uuid
-import os, base64
-from rest_api import scaffold as s
+import os
 
 # Values to be inserted and checked in the Author model
 USERNAME = "programmer"
@@ -44,16 +43,16 @@ class ContentAPITestCase(TestCase):
     Testing Content API Prototypes
     """
     def setUp(self):
-        self.user_a, self.author_a, self.client = s.create_authenticated_author(USER_A,
+        self.user_a, self.author_a, self.client = scaffold.create_authenticated_author(USER_A,
             AUTHOR_PARAMS)
 
-        self.user_b, self.author_b = s.create_author(USER_B, AUTHOR_PARAMS)
-        self.user_c, self.author_c = s.create_author(USER_C, AUTHOR_PARAMS)
+        self.user_b, self.author_b = scaffold.create_author(USER_B, AUTHOR_PARAMS)
+        self.user_c, self.author_c = scaffold.create_author(USER_C, AUTHOR_PARAMS)
 
         self.post = Post.objects.create(content = TEXT,
             author = self.author_a, visibility="PUBLIC")
 
-        self.no_auth = s.SocialAPIClient()
+        self.no_auth = scaffold.SocialAPIClient()
 
     def tearDown(self):
         """Remove all created objects from mock database"""
@@ -68,12 +67,12 @@ class ContentAPITestCase(TestCase):
     def test_set_up(self):
         """Assert that that the models were created in setUp()"""
         try:
-            user = User.objects.get(username = USER_A["username"])
-            user = User.objects.get(id = self.user_a.id)
+            user = User.objects.get(username=USER_A["username"])
+            User.objects.get(id=self.user_a.id)
         except:
             self.assertFalse(True, "Error retrieving %s from database" %USER_A["username"])
         try:
-            post = Post.objects.get(guid=self.post.guid)
+            Post.objects.get(guid=self.post.guid)
         except:
             self.assertFalse(True, "Error retrieving post %s from database" %self.post.guid)
 
@@ -86,31 +85,31 @@ class ContentAPITestCase(TestCase):
     def test_get_post(self):
         response = self.client.get('/post/%s' % self.post.guid)
         self.assertEquals(response.status_code, 200)
-        s.assertPostAuthor(self, response.data, self.author_a)
+        scaffold.assertPostAuthor(self, response.data, self.author_a)
         # s.pretty_print(response.data)
 
     def test_get_multiple_posts_by_author_with_http(self):
         # Create two posts, in addition to the post created in setUp()
-        s.create_multiple_posts(self.author_a, 2, ptext = TEXT)
+        scaffold.create_multiple_posts(self.author_a, 2, ptext = TEXT)
 
         a_id = self.author_a.id
         response = self.client.get("/author/%s/posts" %a_id)
 
         self.assertEquals(response.status_code, 200)
-        s.assertNumberPosts(self, response.data, 3)
+        scaffold.assertNumberPosts(self, response.data, 3)
 
     def test_get_posts_of_friends(self):
         # This test should only return posts by author_a and not his friends
         # This creates friends and their posts (two posts in total)
-        s.create_friends(self.author_a, [self.author_b, self.author_c])
+        scaffold.create_friends(self.author_a, [self.author_b, self.author_c])
 
         a_id = self.author_a.id
         response = self.client.get("/author/%s/posts" % a_id)
         self.assertEquals(response.status_code, 200)
 
         posts = response.data
-        s.assertNumberPosts(self, posts, 1)
-        s.assertPostAuthor(self, posts["posts"][0], self.author_a)
+        scaffold.assertNumberPosts(self, posts, 1)
+        scaffold.assertPostAuthor(self, posts["posts"][0], self.author_a)
 
         # s.pretty_print(response.data)
 
@@ -218,8 +217,8 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(post.author.id, self.author_a.id, "wrong user")
 
     def test_create_public_post_with_image(self):
-        user, author, client = s.create_authenticated_author(USER_E, AUTHOR_PARAMS)
-        base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../test_fixtures/images/s.jpg')
+        user, author, client = scaffold.create_authenticated_author(USER_E, AUTHOR_PARAMS)
+        base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../../test_fixtures/images/s.jpg')
         post = {"image": "data:image/jpeg;base64," + base64image,
             "title": "Tst Post",
             "content": TEXT,
@@ -326,7 +325,7 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(comment.author.user.username, self.author_a.user.username)
 
     def test_delete_comment_by_comment_author(self):
-        post, comment = s.create_post_with_comment(
+        post, comment = scaffold.create_post_with_comment(
             self.author_b, self.author_a, scaffold.ACL_DEFAULT, TEXT, TEXT)
 
         cid = comment.guid
@@ -342,7 +341,7 @@ class ContentAPITestCase(TestCase):
             pass
 
     def test_attempt_delete_comment_post_author(self):
-        post, comment = s.create_post_with_comment(
+        post, comment = scaffold.create_post_with_comment(
             self.author_b, self.author_a, scaffold.ACL_DEFAULT, TEXT, TEXT)
 
         cid = comment.guid
@@ -368,7 +367,7 @@ class ContentAPITestCase(TestCase):
             pass
 
     def test_get_post_with_comments(self):
-        post, comment = s.create_post_with_comment(
+        post, comment = scaffold.create_post_with_comment(
             self.author_a, self.author_b, scaffold.ACL_DEFAULT, TEXT, TEXT)
 
         pid = post.guid
@@ -382,9 +381,9 @@ class ContentAPITestCase(TestCase):
 
         # s.pretty_print(response.data)
 
-        s.assertPostAuthor(self, response.data, self.author_a)
-        s.assertNumberComments(self, response.data, 2)
-        s.assertAuthorsInComments(self, [self.author_b, self.author_c],
+        scaffold.assertPostAuthor(self, response.data, self.author_a)
+        scaffold.assertNumberComments(self, response.data, 2)
+        scaffold.assertAuthorsInComments(self, [self.author_b, self.author_c],
             response.data['comments'])
 
     # def test_retrieve_timeline_own(self):
@@ -450,5 +449,3 @@ class ContentAPITestCase(TestCase):
     def test_retrieve_timeline_bogus_user(self):
         response = self.no_auth.get('/author/posts')
         self.assertEquals(response.status_code, 401)
-
-

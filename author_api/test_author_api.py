@@ -1,5 +1,4 @@
 from rest_framework.test import APITestCase
-
 from django.contrib.auth.models import User
 from models import (
     Author,
@@ -9,7 +8,7 @@ from models import (
 
 import uuid
 
-from rest_api import scaffold
+from api.utils import scaffold
 
 c = scaffold.SocialAPIClient()
 

@@ -1,9 +1,7 @@
 from django.db import models
 from author_api.models import Author
 from uuidfield import UUIDField
-from rest_api.utils import ListField
-from django.conf import settings
-import ast
+from ..utils.utils import ListField
 
 class Post(models.Model):
     """

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db import IntegrityError
 from models import Author
-from rest_api import scaffold
+from api.utils import scaffold
 
 import os
 import uuid

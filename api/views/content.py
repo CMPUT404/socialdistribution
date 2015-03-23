@@ -3,12 +3,12 @@ from rest_framework import generics, viewsets, mixins
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
-from models import Post, Comment
-from serializers import PostSerializer, CommentSerializer
-from permissions import IsAuthor, Custom
+from ..models.content import Post, Comment
+from ..serializers.content import PostSerializer, CommentSerializer
+from ..permissions.permissions import IsAuthor, Custom
 from author_api.models import Author
 from author_api.serializers import AuthorSerializer
-from renderers import PostsJSONRenderer
+from ..renderers.content import PostsJSONRenderer
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 #

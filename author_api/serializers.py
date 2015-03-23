@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from mimetypes import guess_extension, guess_type
 from django.core.files.base import ContentFile
@@ -6,13 +5,11 @@ from rest_framework import serializers
 import uuid
 import base64
 
-from rest_api.utils import AuthorNotFound
+from api.utils.utils import AuthorNotFound
 
 from models import (
     Author,
     CachedAuthor)
-
-from collections import OrderedDict
 
 class ImageSerializer(serializers.BaseSerializer):
     """
