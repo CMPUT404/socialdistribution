@@ -118,7 +118,6 @@ class AuthorAuthentication(APITestCase):
 
     def test_registration_with_image(self):
         response = self.c.post('/author/registration', self.user_dict_with_img, format='multipart')
-        import pdb; pdb.set_trace()
         self.assertEquals(response.status_code, 201)
 
         # Get image.

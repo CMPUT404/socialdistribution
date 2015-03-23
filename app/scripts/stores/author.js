@@ -28,6 +28,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.checkAuth, 'onCheckAuth');
     this.listenTo(AuthorActions.addFriend, 'onAddFriend');
     this.listenTo(AuthorActions.createPost, 'onCreatePost');
+    this.listenTo(AuthorActions.deletePost, 'onDeletePost');
     this.listenTo(AuthorActions.fetchPosts, 'onFetchPosts');
     this.listenTo(AuthorActions.followFriend,'onFollowFriend');
     this.listenTo(AuthorActions.fetchDetails, 'onFetchDetails');
@@ -37,6 +38,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.login.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.register.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.createPost.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.deletePost.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.fetchPosts.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.fetchDetails.fail, this.ajaxFailed);
     this.listenTo(AuthorActions.followFriend.fail, this.ajaxFailed);
@@ -187,6 +189,23 @@ export default Reflux.createStore({
     this.trigger({displayAuthor: this.displayAuthor});
     // this is meant for other stores that are listening
     AuthorActions.createPost.complete(post);
+  },
+
+  onDeletePost: function(post) {
+    Request
+      .del(__API__ + '/post/' + post.guid)
+      .token(this.getToken())
+      .promise(this.deletePostComplete.bind(this, post),
+                AuthorActions.deletePost.fail);
+  },
+
+  deletePostComplete: function(post) {
+    _.pull(this.currentAuthor.posts, post);
+
+    // trigger update
+    this.trigger({displayAuthor: this.displayAuthor});
+    // this is meant for other stores that are listening
+    AuthorActions.deletePost.complete(post);
   },
 
   onCreateComment: function(post, comment) {

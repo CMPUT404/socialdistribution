@@ -25,7 +25,9 @@ export default Reflux.createStore({
     // since creation of comments and posts is handling in the author store
     // we need to update posts/!app/ componenets when a state change occurs
     this.listenTo(AuthorActions.createPost.complete, 'onPostCreated');
+    this.listenTo(AuthorActions.deletePost.complete, 'onPostDeleted');
     this.listenTo(AuthorActions.createComment.complete, 'onCommentCreated');
+
   },
 
   // fetches timelines posts
@@ -63,9 +65,20 @@ export default Reflux.createStore({
   },
 
   onCommentCreated: function(comment) {
+    this.triggerAll();
+  },
+
+  onPostDeleted: function(post) {
+    _.pull(this.pubPosts, post);
+    _.pull(this.timeline, post);
+
+    this.triggerAll();
+  },
+
+  triggerAll: function() {
     this.trigger({timeline: this.timeline});
     this.trigger({publicPosts: this.pubPosts});
-  },
+  }
 });
 
 export function responseToPosts(postsData) {
