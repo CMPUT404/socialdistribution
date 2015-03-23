@@ -6,13 +6,12 @@ export default Reflux.createActions({
   'register'             : Async,
   'logout'               : {},
   'login'                : Async,
-  'getAuthorNameList'    : {},
   'checkAuth'            : Async,
   'fetchDetails'         : Async,
+  'fetchPosts'           : Async,
   'createPost'           : Async,
   'createComment'        : Async,
-  'getAuthorAndListen'   : {},
-  'unbindAuthorListener' : {},
-  'subscribeTo'          : {},
-  'unsubscribeFrom'      : {}
+  'addFriend'            : {},
+  'followFriend'         : Async
+  // unfollow, unfriend?
 });

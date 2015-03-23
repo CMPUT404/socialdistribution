@@ -12,11 +12,6 @@ import Spinner from '../spinner';
 var Content = React.createClass({
 
   statics: {
-    imgStyle: {
-      width: '64px',
-      height: '64px'
-    },
-
     convertMarkdown: function(markdown) {
       return Markdown.toHTML(markdown);
     }
@@ -55,13 +50,13 @@ var Content = React.createClass({
     }
 
     // creates those nice "25 minutes ago" timestamps
-    var timeSince = Moment.unix(this.props.data.pubDate).fromNow();
+    var timeSince = Moment(this.props.data.pubDate).fromNow();
 
     return (
       <div className="media">
         <div className="media-left">
           <Link to="author" params={{id: this.props.data.author.id}}>
-            <img className="media-object" src={this.props.data.author.getImage()} style={Content.imgStyle} />
+            <img className="media-object content-auth-img" src={this.props.data.author.getImage()} />
           </Link>
         </div>
         <div className="media-body">

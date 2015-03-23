@@ -4,68 +4,72 @@ import Reflux from 'reflux';
 import Request from '../utils/request';
 
 import PostActions from '../actions/post';
-// import AuthorActions from '../actions/author';
-// import PostStore from '../objects/poststore';
+import AuthorActions from '../actions/author';
+
 import Post from '../objects/post';
 
+var __API__ = 'http://localhost:8000';
 
 // Deals with App State Machine state
 export default Reflux.createStore({
 
   init: function() {
-    // fetches the list of most recent posts
-    // this.postStore = new PostStore();
 
-    // this helps us keep track of what author the user is currently viewing so
-    // that we can push specific post updates when they are on that page
-    this.authorViewId = undefined;
-
+    this.pubPosts = [];
+    this.timeline = [];
 
     // Listeners
     this.listenTo(PostActions.getTimeline, 'onGetTimeline');
     this.listenTo(PostActions.getPublicPosts, 'onGetPubPosts');
 
-    // this.listenTo(PostActions.getAuthorPosts, this.getAuthorPosts);
-    // this.listenTo(AuthorActions.getAuthorAndListen, this.listenForAuthorPosts);
-    // this.listenTo(AuthorActions.unbindAuthorListener, this.unbindAuthorListener);
+    // since creation of comments and posts is handling in the author store
+    // we need to update posts/!app/ componenets when a state change occurs
+    this.listenTo(AuthorActions.createPost.complete, 'onPostCreated');
+    this.listenTo(AuthorActions.createComment.complete, 'onCommentCreated');
   },
 
   // fetches timelines posts
-  onGetTimeline: function () {
-    // TODO: AJAX
+  onGetTimeline: function(token) {
+    Request
+      .get(__API__ + '/author/posts')
+      .token(token)
+      .promise(this.timelineComplete, PostActions.getTimeline.fail)
+  },
+
+  timelineComplete: function(postsData) {
+    this.timeline = responseToPosts(postsData);
+
+    this.trigger({timeline: this.timeline});
+    PostActions.getTimeline.complete(this.timeline);
   },
 
   // fetches public posts
   onGetPubPosts: function () {
     Request
-      .get('http://localhost:8000/posts')
+      .get(__API__ + '/posts')
       .promise(this.pubPostsComplete, PostActions.getPublicPosts.fail)
   },
 
   pubPostsComplete: function(postsData) {
-    var posts = this._responseToData(postsData);
+    this.pubPosts = responseToPosts(postsData);
 
-    this.trigger({publicPosts: posts});
-    PostActions.getPublicPosts.complete(posts);
+    this.trigger({publicPosts: this.pubPosts});
+    PostActions.getPublicPosts.complete(this.pubPosts);
   },
 
-
-  _responseToData: function(postsData) {
-    return postsData.posts.map((post) => {
-      return new Post(post);
-    });
+  onPostCreated: function(post) {
+    this.timeline.unshift(post);
+    this.trigger({timeline: this.timeline});
   },
 
-  // used to find specific author posts for author views
-  listenForAuthorPosts: function (authorId) {
-    //TODO: retrive w/ ajax and cache
-
-    // listen on author id
-    this.authorViewId = authorId;
-    // this.pushPosts();
+  onCommentCreated: function(comment) {
+    this.trigger({timeline: this.timeline});
+    this.trigger({publicPosts: this.pubPosts});
   },
-
-  unbindAuthorListener: function () {
-    this.authorViewId = undefined;
-  }
 });
+
+export function responseToPosts(postsData) {
+  return _.sortByOrder(postsData.posts.map((post) => {
+    return new Post(post);
+  }), ['pubDate'], [false]);
+}

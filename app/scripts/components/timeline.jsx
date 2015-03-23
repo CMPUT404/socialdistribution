@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
+import Reflux from 'reflux';
 import { Col, Button } from 'react-bootstrap';
 import { Navigation } from 'react-router';
 
@@ -12,13 +13,14 @@ import UserSearch from './usersearch';
 import Spinner from './spinner';
 
 import AuthorStore from '../stores/author';
+import PostStore from '../stores/post';
 
 import ActionListener from '../mixins/action-listener';
 
 // Represents a collection of posts within the logged in user's social network.
 export default React.createClass({
 
-  mixins: [Navigation, ActionListener],
+  mixins: [Reflux.connect(PostStore), Navigation, ActionListener],
 
   statics: {
     willTransitionTo: function (transition, params) {
@@ -30,8 +32,6 @@ export default React.createClass({
 
   getInitialState: function() {
     return {
-      // starts at null and if no reuslt it
-      // return an empty array
       timeline: null
     };
   },
@@ -43,8 +43,8 @@ export default React.createClass({
     this.refresh();
   },
 
-  refresh: function () {
-    // PostActions.getTimeline(this.props.currentAuthor.id);
+  refresh: function() {
+    PostActions.getTimeline(this.props.currentAuthor.token);
   },
 
   render: function() {
@@ -54,7 +54,7 @@ export default React.createClass({
 
     return (
       <Col md={8} mdOffset={2}>
-        <UserSearch key="search" />
+        {/**<UserSearch key="search" />**/}
         <div className="jumbotron">
           <h3>Mood?</h3>
           <PostCreator currentAuthor={this.props.currentAuthor} />

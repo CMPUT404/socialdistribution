@@ -129,7 +129,7 @@ class AuthorPostViewSet(
         # followers = author.followers
         queryset = Post.objects.all().filter(author__user__id=user.id)
         serializer = PostSerializer(queryset, many=True)
-        return Response(serializer.data)
+        return Response({"posts": serializer.data})
 
 
 # Handles all interactions with post objects
