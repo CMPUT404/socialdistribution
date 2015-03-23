@@ -24,7 +24,7 @@ PASSWORD = str(uuid.uuid4())
 FIRST_NAME = "Jerry"
 LAST_NAME = "Maguire"
 EMAIL = "jmaguire@smi.com"
-base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../test_fixtures/images/s.jpg')
+base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../api/test/fixtures/images/s.jpg')
 
 class AuthorAuthentication(APITestCase):
     """

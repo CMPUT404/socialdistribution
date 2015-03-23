@@ -72,7 +72,7 @@ def clean_up_imgs(prefix, url):
     """
     Cleans up images from tests.
     """
-    img_path = os.path.dirname(__file__) + '/../' + 'images/' + prefix + '/' + url.split('/')[-1]
+    img_path = os.path.dirname(__file__) + '/../../' + 'images/' + prefix + '/' + url.split('/')[-1]
     os.remove(img_path)
 
 def pretty_print(data):
