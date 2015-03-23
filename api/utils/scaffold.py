@@ -23,6 +23,7 @@ from rest_framework.test import (
 import uuid
 import json
 import base64
+import os
 
 ACL_DEFAULT = "PUBLIC"
 
@@ -67,6 +68,13 @@ def get_image_base64(path):
     with open(path, 'r') as img:
         return base64.b64encode(img.read())
 
+def clean_up_imgs(prefix, url):
+    """
+    Cleans up images from tests.
+    """
+    img_path = os.path.dirname(__file__) + '/../' + 'images/' + prefix + '/' + url.split('/')[-1]
+    os.remove(img_path)
+
 def pretty_print(data):
     """Pretty prints a dictionary object"""
     print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
@@ -86,10 +94,6 @@ def create_author(user_dict, author_dict):
     author_dict['user'] = user
     author = Author.objects.create(**author_dict)
     author.save()
-
-    # Denormalized CachedAuthor gets created
-    cached = CachedAuthor(id = author.id, displayname = user.username)
-    cached.save()
 
     return (user, author)
 

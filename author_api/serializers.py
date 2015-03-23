@@ -62,7 +62,7 @@ class AuthorUpdateSerializer(serializers.Serializer):
         instance.bio = validated_data.get('bio', instance.bio)
         instance.github_username = validated_data.get('github_username', \
         instance.github_username)
-
+        instance.image = validated_data.get('image', instance.image)
         instance.save()
 
         instance.user.email = validated_data.get('email', instance.user.email)
@@ -93,10 +93,10 @@ class RegistrationSerializer(serializers.Serializer):
     image = AuthorImageSerializer(required = False)
 
     # Follow the same pattern to validate other fields if you desire.
-    def validate_username(self, value):
+    def validate_displayname(self, value):
         """Check if user exists"""
         if User.objects.filter(username = value):
-            raise serializers.ValidationError("Username already exists")
+            raise serializers.ValidationError("Displayname already exists")
         return value
 
     def create(self, validated_data):
@@ -118,11 +118,6 @@ class RegistrationSerializer(serializers.Serializer):
 
         author = Author(user = user, **_author)
         author.save()
-
-        # Upon registration we also create a CachedAuthor for relationships
-        # TODO host currently defaults
-        cached = CachedAuthor(id = author.id, displayname = user.username)
-        cached.save()
 
         return author
 

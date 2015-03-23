@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from rest_framework import generics, viewsets, mixins
+from rest_framework import generics, viewsets, mixins, exceptions
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
@@ -69,20 +69,10 @@ class PostPermissionsMixin(object):
     authentication_classes = (BasicAuthentication, TokenAuthentication, )
     permission_classes = (IsAuthenticated, Custom,)
 
-    # For querysets that only return a single object
-    # def get_object(self):
-        # post = self.get_queryset().first()
-        # if post is None:
-            # return None
-        # else:
-            # self.check_object_permissions(self.request, post)
-            # return post
-
 
 class AuthorPostViewSet(
     PostBaseView,
-    viewsets.ViewSet,
-    PostPermissionsMixin
+    viewsets.ViewSet
 ):
     # authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [Custom]
@@ -94,14 +84,15 @@ class AuthorPostViewSet(
         id: The uuid of an author model.
     """
     def list(self, request, author_pk=None):
-        posts = self.queryset.filter(author__id=author_pk)
+        author = get_object_or_404(Author, id=author_pk)
+        posts = self.queryset.filter(author=author)
         guids = []
         for post in posts:
             # We still want to return posts, but only those that we have permissions
             # for
             try:
                 self.check_object_permissions(self.request, post)
-            except Exception:
+            except exceptions.NotAuthenticated, exceptions.PermissionDenied:
                 guids.append(post.guid)
 
         serializer = PostSerializer(posts.exclude(guid__in=guids), many=True)
@@ -111,7 +102,7 @@ class AuthorPostViewSet(
         # Careful, gotchya here, if author_pk is none, it means we are dealing with
         # /author/:id and that the author id is going to be in pk
         if author_pk is None:
-            author = get_object_or_404(Author.objects.all(), id=pk)
+            author = get_object_or_404(Author, id=pk)
             serializer = AuthorSerializer(author)
         else:
             post = self.queryset.get(author__id=author_pk, guid=pk)
@@ -135,7 +126,6 @@ class AuthorPostViewSet(
 # Handles all interactions with post objects
 class PostViewSet(
   PostBaseView,
-  PostPermissionsMixin,
   mixins.CreateModelMixin,
   mixins.RetrieveModelMixin,
   mixins.UpdateModelMixin,
@@ -145,13 +135,6 @@ class PostViewSet(
     authentication_classes = [BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, Custom]
     parser_classes = (MultiPartParser, FormParser, JSONParser)
-
-    # For querysets that only return a single object
-    def retrieve(self, request, pk=None):
-        post = self.queryset.get(guid=pk)
-        self.check_object_permissions(self.request, post)
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
 
 
 class PublicPostsViewSet(

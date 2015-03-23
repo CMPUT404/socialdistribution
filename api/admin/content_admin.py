@@ -2,10 +2,11 @@ from django.contrib import admin
 from models import Post, Comment
 
 class PostOptions(admin.ModelAdmin):
-    list_display = ['guid', 'author', 'pubDate', 'content', 'acl', 'comments']
+    list_display = ['guid', 'author', 'title', 'pubDate', 'content', \
+                    'contentType', 'visibility', 'categories', 'image']
 
 class CommentOptions(admin.ModelAdmin):
-    list_display = ['guid', 'author', 'pubDate', 'post', 'content']
+    list_display = ['guid', 'author', 'pubDate', 'post', 'comment']
 
-# admin.site.register(Post, PostOptions)
-# admin.site.register(Comment, CommentOptions)
+admin.site.register(Post, PostOptions)
+admin.site.register(Comment, CommentOptions)

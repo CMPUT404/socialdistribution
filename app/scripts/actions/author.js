@@ -10,6 +10,7 @@ export default Reflux.createActions({
   'fetchDetails'         : Async,
   'fetchPosts'           : Async,
   'createPost'           : Async,
+  'deletePost'           : Async,
   'createComment'        : Async,
   'addFriend'            : {},
   'followFriend'         : Async

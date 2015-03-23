@@ -43,7 +43,10 @@ export default class {
   }
 
   getImage () {
-    return (_.isNull(this.image) || _.isUndefined(this.image)) ?
+    return (_.isNull(this.image) ||
+            _.isEmpty(this.image) ||
+            _.isUndefined(this.image))
+             ?
             'images/placeholder.jpg' : this.image;
   }
 
