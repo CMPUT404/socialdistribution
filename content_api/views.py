@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from rest_framework import generics, viewsets, mixins
+from rest_framework import generics, viewsets, mixins, exceptions
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
@@ -73,14 +73,15 @@ class AuthorPostViewSet(
         id: The uuid of an author model.
     """
     def list(self, request, author_pk=None):
-        posts = self.queryset.filter(author__id=author_pk)
+        author = get_object_or_404(Author, id=author_pk)
+        posts = self.queryset.filter(author=author)
         guids = []
         for post in posts:
             # We still want to return posts, but only those that we have permissions
             # for
             try:
                 self.check_object_permissions(self.request, post)
-            except Exception:
+            except exceptions.NotAuthenticated, exceptions.PermissionDenied:
                 guids.append(post.guid)
 
         serializer = PostSerializer(posts.exclude(guid__in=guids), many=True)
@@ -90,7 +91,7 @@ class AuthorPostViewSet(
         # Careful, gotchya here, if author_pk is none, it means we are dealing with
         # /author/:id and that the author id is going to be in pk
         if author_pk is None:
-            author = get_object_or_404(Author.objects.all(), id=pk)
+            author = get_object_or_404(Author, id=pk)
             serializer = AuthorSerializer(author)
         else:
             post = self.queryset.get(author__id=author_pk, guid=pk)
