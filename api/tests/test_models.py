@@ -1,8 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-
-from models import Author
-
+from ..models.author import Author
 import uuid
 
 # Values to be inserted and checked in the Author model

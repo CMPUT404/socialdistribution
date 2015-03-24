@@ -1,5 +1,5 @@
 from django.db import models
-from author_api.models import Author
+from author import Author
 from uuidfield import UUIDField
 from ..utils.utils import ListField
 

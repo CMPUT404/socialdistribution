@@ -3,23 +3,20 @@ Some scaffolding to help with testing
 
 context = the unit text class (self)
 """
-
+from rest_framework.authtoken.models import Token
+from rest_framework.test import (
+    APIClient,
+    ForceAuthClientHandler
+)
 from django.contrib.auth.models import User
-
-from author_api.models import (
+from ..models.author import (
     Author,
     CachedAuthor,
     FriendRelationship,
     FriendRequest,
-    FollowerRelationship )
-
+    FollowerRelationship
+)
 from ..models.content import Post, Comment
-
-from rest_framework.authtoken.models import Token
-from rest_framework.test import (
-    APIClient,
-    ForceAuthClientHandler)
-
 import uuid
 import json
 import base64
@@ -29,6 +26,8 @@ ACL_DEFAULT = "PUBLIC"
 
 # Post attributes
 TEXT = "Some post text"
+
+TEST_FOLDER_RELATIVE = "/../tests"
 
 class SocialAPIClient(APIClient):
     """
@@ -67,6 +66,11 @@ def get_image_base64(path):
     """
     with open(path, 'r') as img:
         return base64.b64encode(img.read())
+
+def get_test_image():
+    return get_image_base64(
+        os.path.dirname(__file__) + TEST_FOLDER_RELATIVE + '/fixtures/images/s.jpg'
+    )
 
 def clean_up_imgs(prefix, url):
     """

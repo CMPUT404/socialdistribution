@@ -1,20 +1,20 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins, exceptions
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from ..models.content import Post, Comment
 from ..serializers.content import PostSerializer, CommentSerializer
 from ..permissions.permissions import IsAuthor, Custom
-from author_api.models import Author
-from author_api.serializers import AuthorSerializer
+from ..models.author import Author
+from ..serializers.author import AuthorSerializer
 from ..renderers.content import PostsJSONRenderer
-from django.shortcuts import get_object_or_404
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+
 #
 # Delete Posts and Comments
 #
-
 class BaseDeleteView(generics.DestroyAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated, IsAuthor,)
