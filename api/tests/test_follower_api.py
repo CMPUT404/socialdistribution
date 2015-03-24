@@ -198,23 +198,6 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(1, len(self.author_a.friends.all()))
         self.assertEquals(1, len(self.author_a.followers.all()))
 
-    def test_query_manager(self):
-        """If two authors are friends, the query manager should return the author"""
-        # author_a follows author_b and then author_b follows author_a
-        self.author.add_follower(self.author_b)
-        self.author_b.add_follower(self.author)
-
-        # Confirm that A/B follow each other
-        self.assertEquals(1, len(self.author.followers.all()))
-        self.assertEquals(1, len(self.author_b.followers.all()))
-
-        try:
-            # Testing the query manager here. Returns an author if two guids are friends
-            author = Author.objects.all().areFriends(self.author.id, self.author_b.id)
-        except:
-            # exception is thrown if author does not exist in database
-            self.assertFalse(True, "friendship is not valid")
-
     def test_api_get_friends(self):
         self.author.add_follower(self.author_a)
         self.author_a.add_follower(self.author)

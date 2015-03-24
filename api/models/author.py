@@ -9,23 +9,6 @@ def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
 
 
-class AuthorQuerySet(models.query.QuerySet):
-    def areFriends(self, authorid, friendid):
-        """
-        Given an author id and the friend id of who you are comparing,
-        returns the author if the friendship is valid, that can be used to
-        confirm a friendship.
-
-        This will throw an exception if either guid is not valid
-        """
-        return self.get(id=authorid, friends__id=friendid)
-
-
-class AuthorManager(models.Manager):
-    def get_queryset(self):
-        return AuthorQuerySet(self.model, using=self._db)
-
-
 class Author(models.Model):
     """
     Extends the existing Django User model as reccomended in the docs.
@@ -57,10 +40,6 @@ class Author(models.Model):
     @property
     def url(self):
         return self.host + 'author/' + str(self.id)
-
-    # Overwrites the query manager to allow custom queries from AuthorManager
-    # and AuthorQueryset.
-    objects = AuthorManager()
 
     def _get_cached_author(self, instance):
         """Returns a CachedAuthor model given either Author or CachedAuthor"""
@@ -104,6 +83,7 @@ class Author(models.Model):
         # Prevent duplicate entries
         if not self.friends.filter(id=follower.id):
             self.friends.add(follower)
+
 
     def remove_follower(self, follower):
         follower = self._get_cached_author(follower)
