@@ -10,7 +10,14 @@ class APIUser(models.Model):
     id = UUIDField(auto=True, primary_key=True)
     host = models.URLField(blank=False, null=False, default=settings.HOST)
     enabled = models.BooleanField(default=True)
+    node = models.BooleanField(default=False)
 
     @property
     def host(self):
         return settings.HOST
+
+    def is_node(self):
+        return self.node
+
+    class Meta:
+        abstract=True

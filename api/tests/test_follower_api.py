@@ -1,5 +1,6 @@
 from rest_framework.authtoken.models import Token
-from django.test import TestCase, Client
+from rest_framework.test import APIClient
+from django.test import TestCase
 from django.contrib.auth.models import User
 from ..models.author import (
     Author,
@@ -11,7 +12,7 @@ from ..models.author import (
 import uuid
 from ..utils import scaffold as s
 
-c = Client()
+c = APIClient()
 
 # Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "gituser"
