@@ -20,4 +20,4 @@ class APIUser(models.Model):
         return self.node
 
     class Meta:
-        abstract=True
+        abstract = True

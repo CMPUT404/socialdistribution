@@ -1,11 +1,6 @@
 from rest_framework.test import APITestCase
 from django.contrib.auth.models import User
-from ..models.author import (
-    Author,
-    FriendRelationship,
-    FriendRequest,
-    FollowerRelationship
-)
+from ..models.author import Author
 import uuid
 from api.utils import scaffold
 
@@ -76,9 +71,6 @@ class AuthorModelAPITests(APITestCase):
         """Remove all created objects from mock database"""
         Author.objects.all().delete()
         User.objects.all().delete()
-        FriendRelationship.objects.all().delete()
-        FriendRequest.objects.all().delete()
-        FollowerRelationship.objects.all().delete()
         c.credentials()
 
     def test_set_up(self):
