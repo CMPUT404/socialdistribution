@@ -17,7 +17,6 @@ def isOwner(request, obj):
         return False
 
 def isPublic(request, obj):
-    # if obj.acl["permissions"] == 200:
     return True
 
 def isOnSameHost(request, obj):
@@ -25,14 +24,19 @@ def isOnSameHost(request, obj):
     return True
 
 def isFriend(request, obj):
-    # if obj.acl["permissions"] == 300:
-    author = Author.objects.get(user = request.user)
-    relationships = FriendRelationship.objects.filter(friendor__id = obj.author.id)
+    # This should never fail as request.user must have Author account to be
+    # authenticated
+    author = Author.objects.get(user=request.user)
 
-    for relationship in relationships:
-        if (author.id == relationship.friend.id):
-            return True
-    return False
+    try:
+        # This will throw an exception if not friends
+        author = Author.objects.get(user=request.user,
+                                    friends__id=obj.author.id)
+        return True
+    except Exception as e:
+        # print e
+        return False
+
 
 # Checks first to see if the authenticated Author is friends with the entity's
 # author and if the specified author host is the same as ours
@@ -40,25 +44,17 @@ def isFriendOnSameHost(request, obj):
     return isFriend(request, obj) and obj.author.host == settings.HOST
 
 def isFoF(request, obj):
-    # if obj.acl["permissions"] == 302:
-    author = Author.objects.get(user = request.user)
-    f_relationships = FriendRelationship.objects.filter(friendor__id = obj.author.id)
-    for relationship in f_relationships:
-        if (author.id == relationship.friend.id):
-            return True
-        fof_relationships = FriendRelationship.objects.filter(friendor__id = relationship.friend.id)
-        for relationship in fof_relationships:
-            if (author.id == relationship.friend.id):
+    author = Author.objects.get(user=request.user)
+    if isFriend(request, obj):
+        return True
+    for friend in obj.author.friends.all():
+        for fof in friend.friends.all():
+            if fof.id == author.id:
                 return True
     return False
 
 def isPrivateList(request, obj):
-    # if obj.acl["permissions"] == 302:
-    author = Author.objects.get(user = request.user)
-
-    if str(author.id) in obj.acl.shared_users:
-        return True
-    return False
+    return isAuthor(request, obj)
 
 class IsAuthor(permissions.BasePermission):
     """
@@ -76,10 +72,6 @@ class IsFriend(permissions.BasePermission):
     Custom permission to only allow friends. View Posts
     """
     def has_object_permission(self, request, view, obj):
-        if isAuthor(request, obj):
-            return True
-        # we'll always allow GET, HEAD or OPTIONS requests.
-        # if request.method in (permissions.SAFE_METHODS) :
         return isFriend(request, obj)
 
 
