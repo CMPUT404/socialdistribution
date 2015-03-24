@@ -11,11 +11,7 @@ from rest_framework.test import (
 from django.contrib.auth.models import User
 from ..models.author import (
     Author,
-    CachedAuthor,
-    FriendRelationship,
-    FriendRequest,
-    FollowerRelationship
-)
+    CachedAuthor)
 from ..models.content import Post, Comment
 import uuid
 import json
@@ -136,14 +132,16 @@ def authors_in_relation(context, data, authors):
 
     for guid in guids:
         context.assertTrue(unicode(guid) in data)
+#
+# Need to be redone TODO
+#
+# def create_requestors(_requestee, requestors):
+#     for r in requestors:
+#         FriendRequest.objects.create(requestor = r, requestee = _requestee)
 
-def create_requestors(_requestee, requestors):
-    for r in requestors:
-        FriendRequest.objects.create(requestor = r, requestee = _requestee)
-
-def create_followers(_followee, followers):
-    for f in followers:
-        FollowerRelationship.objects.create(follower = f, followee = _followee)
+# def create_followers(_followee, followers):
+#     for f in followers:
+#         FollowerRelationship.objects.create(follower = f, followee = _followee)
 
 def create_friends(friend, friendors, create_post = True, visibility = ACL_DEFAULT):
     """
