@@ -41,7 +41,6 @@ INSTALLED_APPS = (
     'django_nose',
     'rest_framework',
     'rest_framework.authtoken',
-    'sysadmin',
     'corsheaders',
     'api',
 )

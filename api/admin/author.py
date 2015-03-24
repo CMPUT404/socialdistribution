@@ -1,5 +1,5 @@
 from django.contrib import admin
-from ..models.Author import Author, CachedAuthor
+from ..models.author import Author, CachedAuthor
 
 
 class AuthorOptions(admin.ModelAdmin):
