@@ -155,8 +155,8 @@ def create_friends(friend, friendors, create_post = True, visibility = ACL_DEFAU
     visibility: acl type for each post created
     """
     for friendor in friendors:
-        friend.add_follower(friendor)
-        friendor.add_follower(friend)
+        friend.add_friend(friendor)
+        friendor.add_friend(friend)
         # FriendRelationship.objects.create(friendor = friendor, friend = friend)
 
         if create_post:

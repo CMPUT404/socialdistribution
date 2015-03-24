@@ -108,7 +108,7 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(response.status_code, 200)
 
         posts = response.data
-        scaffold.pretty_print(response.data)
+        # scaffold.pretty_print(response.data)
         scaffold.assertNumberPosts(self, posts, 1)
         scaffold.assertPostAuthor(self, posts["posts"][0], self.author_a)
 
@@ -126,7 +126,7 @@ class ContentAPITestCase(TestCase):
         response = self.client.get("/author/%s/posts" % aid)
         self.assertEquals(response.status_code, 200)
 
-        scaffold.pretty_print(response.data)
+        # scaffold.pretty_print(response.data)
 
         scaffold.assertNumberPosts(self, response.data, 1)
         scaffold.assertPostAuthor(self, response.data["posts"][0], author)
@@ -194,8 +194,7 @@ class ContentAPITestCase(TestCase):
 
         bid = self.author_b.id
         response = self.client.get("/author/%s/posts" %bid)
-        self.assertEquals(response.status_code, 200)
-        scaffold.assertNumberPosts(self, response.data, 0)
+        self.assertEquals(response.status_code, 403)
 
     def test_create_post(self):
         ptext = TEXT + " message"
@@ -394,7 +393,7 @@ class ContentAPITestCase(TestCase):
         self.assertEquals(response.status_code, 200)
 
         # scaffold.pretty_print(response.data)
-        post = response.data[0]
+        post = response.data["posts"][0]
 
         self.assertEquals(len(response.data), 1)
         scaffold.assertPostContent(self, post, unicode(TEXT))
@@ -409,8 +408,8 @@ class ContentAPITestCase(TestCase):
 
         # scaffold.pretty_print(response.data)
 
-        self.assertEquals(len(response.data), 6)
-        scaffold.assertNoRepeatGuids(self, response.data)
+        scaffold.assertNumberPosts(self, response.data, 6)
+        scaffold.assertNoRepeatGuids(self, response.data['posts'])
 
     # def test_timeline_includes_friends(self):
     #     scaffold.create_friends(self.author_a, [self.author_b, self.author_c], create_post = True)
