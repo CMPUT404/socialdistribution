@@ -4,16 +4,11 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics, viewsets
-from rest_framework.generics import ListAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import detail_route
+from ..utils.utils import AuthorNotFound, AuthenticationFailure
 
-from mimetypes import guess_type
-import os
-
-from api.utils.utils import AuthorNotFound, AuthenticationFailure
-
-from models import (
+from ..models.author import (
     Author,
     CachedAuthor,
     FollowerRelationship,
@@ -21,7 +16,7 @@ from models import (
     FriendRequest
 )
 
-from serializers import (
+from ..serializers.author import (
     AuthorSerializer,
     CachedAuthorSerializer,
     RetrieveFollowersSerializer,
@@ -29,40 +24,8 @@ from serializers import (
     BaseRetrieveFollowersSerializer,
     BaseRetrieveFriendsSerializer,
     BaseRetrieveFollowingSerializer,
-    FriendRequestSerializer)
-
-
-class ImageRenderer(renderers.BaseRenderer):
-    media_type = 'image/**'
-    charset = None
-    render_style = 'binary'
-
-    def render(self, data, media_type=None, renderer_context=None):
-        return data.read()
-
-
-# GET /author/images/:imageid
-class Images(ListAPIView):
-    """
-    Returns an image.
-    """
-    renderer_classes = (ImageRenderer, )
-
-    # TODO: Add permissions and static IP when on server.
-    def get(self, request, *args, **kwargs):
-        img_id = kwargs.get('id', None)
-        path_prefix = kwargs.get('path_prefix', None)
-        if path_prefix not in ('profile', 'posts'):
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        mimetype = guess_type(img_id)[0]
-        cur_dir = os.path.dirname(__file__)
-        path = '{0}/../images/{1}/{2}'.format(cur_dir, path_prefix, img_id)
-        try:
-            f = open(path, 'rb')
-            return Response(f, content_type=mimetype)
-        except:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+    FriendRequestSerializer
+)
 
 class BaseRelationsMixin(object):
     authentication_classes = (TokenAuthentication,)

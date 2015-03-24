@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, post_delete
 
-from models import Author, CachedAuthor
+from ..models.author import Author, CachedAuthor
 
 #
 # Handles signals relating to the Author and CachedAuthor models
@@ -23,10 +23,6 @@ def update_cached_author(sender, instance, *args, **kwargs):
     """
     try:
         cached = CachedAuthor.objects.get(id=instance.id)
-        cached.host = instance.host
-        cached.url = instance.url
-        cached.displayname = instance.user.username
-        cached.save()
     except:
         # CachedAuthor has not been created yet. Create it.
         _cached = CachedAuthor(
@@ -35,14 +31,19 @@ def update_cached_author(sender, instance, *args, **kwargs):
                               url=instance.url,
                               displayname=instance.user.username)
         _cached.save()
+        return
 
+    cached.host = instance.host
+    cached.url = instance.url
+    cached.displayname = instance.user.username
+    cached.save()
 
 def delete_cached_author(sender, instance, *args, **kwargs):
     """
     Delete a CachedAuthor model after deletion of an Author model
     """
     try:
-        cached = CachedAuthor.objects.get(id=instance.id).delete()
+        CachedAuthor.objects.get(id=instance.id).delete()
     except:
         pass
 

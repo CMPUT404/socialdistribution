@@ -5,15 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-
 from rest_framework import status
 
-from serializers import (
+from ..serializers.author import (
     RegistrationSerializer,
     AuthorSerializer,
     AuthorUpdateSerializer )
 
-from models import Author
+from ..models.author import Author
 
 """
 All views related to authentication/registration and update

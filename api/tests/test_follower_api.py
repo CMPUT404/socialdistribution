@@ -1,17 +1,15 @@
+from rest_framework.authtoken.models import Token
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from models import (
+from ..models.author import (
     Author,
     CachedAuthor,
     FriendRelationship,
     FriendRequest,
-    FollowerRelationship)
-
+    FollowerRelationship
+)
 import uuid
-
-from rest_framework.authtoken.models import Token
-
-from api.utils import scaffold as s
+from ..utils import scaffold as s
 
 c = Client()
 

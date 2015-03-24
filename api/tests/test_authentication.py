@@ -2,9 +2,8 @@ from rest_framework.test import APITestCase
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db import IntegrityError
-from models import Author
+from ..models.author import Author
 from api.utils import scaffold
-
 import os
 import uuid
 import json
@@ -24,7 +23,6 @@ PASSWORD = str(uuid.uuid4())
 FIRST_NAME = "Jerry"
 LAST_NAME = "Maguire"
 EMAIL = "jmaguire@smi.com"
-base64image = scaffold.get_image_base64(os.path.dirname(__file__) + '/../api/test/fixtures/images/s.jpg')
 
 class AuthorAuthentication(APITestCase):
     """
@@ -52,7 +50,7 @@ class AuthorAuthentication(APITestCase):
             'github_username':GITHUB_USERNAME,
             'bio':BIO,
             'host': HOST,
-            'image': "data:image/jpeg;base64," + base64image }
+            'image': "data:image/jpeg;base64," + scaffold.get_test_image() }
 
         self.login_dict = {
             'username':USERNAME,
@@ -92,10 +90,6 @@ class AuthorAuthentication(APITestCase):
         self.basic_client.credentials()
         self.token_client.credentials()
         self.bad_auth_client.credentials()
-
-    def pretty_print(self, data):
-        """Pretty prints a dictionary object"""
-        print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
 
     def test_registration(self):
         """
@@ -206,7 +200,7 @@ class AuthorAuthentication(APITestCase):
             'email':EMAIL + "u",
             'github_username':GITHUB_USERNAME + "u",
             'bio':BIO + "u",
-            'image': "data:image/jpeg;base64," + base64image }
+            'image': "data:image/jpeg;base64," + scaffold.get_test_image() }
 
         response = self.token_client.post('/author/profile', update_author_dict, format='multipart')
         self.assertEquals(response.status_code, 200)

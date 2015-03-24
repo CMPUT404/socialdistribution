@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import Post, Comment
+from ..models.content import Post, Comment
 
 class PostOptions(admin.ModelAdmin):
     list_display = ['guid', 'author', 'title', 'pubDate', 'content', \

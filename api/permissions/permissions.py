@@ -1,6 +1,6 @@
 from rest_framework import permissions
-from author_api.models import Author, FriendRelationship
 from django.conf import settings
+from ..models.author import Author, FriendRelationship
 
 def isAuthor(request, obj):
     author = Author.objects.get(user__id=request.user.id)

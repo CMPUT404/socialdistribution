@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from ..models.content import Post, Comment
-from author_api.models import Author
-from author_api.serializers import CompactAuthorSerializer
+from ..models.author import Author
+from author import CompactAuthorSerializer
+from image import ImageSerializer
 from django.conf import settings
-from author_api.serializers import PostImageSerializer
 import time
 
 # TODO
@@ -58,6 +58,12 @@ class CommentSerializer(serializers.ModelSerializer):
 
         return comment
 
+class PostImageSerializer(ImageSerializer):
+    def to_representation(self, data):
+        if data:
+            return '/author/posts/images/' + data.name.split('/')[-1]
+        else:
+            return ''
 
 class PostSerializer(serializers.ModelSerializer):
     author = CompactAuthorSerializer(many = False, read_only = True)

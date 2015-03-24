@@ -1,34 +1,11 @@
 from django.contrib.auth.models import User
-from mimetypes import guess_extension, guess_type
-from django.core.files.base import ContentFile
 from rest_framework import serializers
-import uuid
-import base64
-
-from api.utils.utils import AuthorNotFound
-
-from models import (
+from image import ImageSerializer
+from ..utils.utils import AuthorNotFound
+from ..models.author import (
     Author,
-    CachedAuthor)
-
-class ImageSerializer(serializers.BaseSerializer):
-    """
-    Converts base64 encoded image to binary
-    """
-    def to_internal_value(self, data):
-        try:
-            extension =  guess_extension(guess_type(data[0:23])[0])
-            filename = str(uuid.uuid4()) + extension
-            return ContentFile(base64.b64decode(data[23:]), name=filename)
-        except:
-            return None
-
-class PostImageSerializer(ImageSerializer):
-    def to_representation(self, data):
-        if data:
-            return '/author/posts/images/' + data.name.split('/')[-1]
-        else:
-            return ''
+    CachedAuthor
+)
 
 class AuthorImageSerializer(ImageSerializer):
     def to_representation(self, data):
