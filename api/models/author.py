@@ -9,21 +9,6 @@ def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
 
 
-def FailSilently(func):
-    """
-    If an exception is thrown in a function, it will fail silently.
-    Simply wraps a function in try/except.
-    """
-
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except:
-            pass
-
-    return wrapper
-
-
 class AuthorQuerySet(models.query.QuerySet):
     def areFriends(self, authorid, friendid):
         """
@@ -77,20 +62,17 @@ class Author(models.Model):
     # and AuthorQueryset.
     objects = AuthorManager()
 
-    @FailSilently
     def _get_cached_author(self, instance):
         """Returns a CachedAuthor model given either Author or CachedAuthor"""
         if isinstance(instance, Author):
             return CachedAuthor.objects.get(id=instance.id)
         return instance
 
-    @FailSilently
     def add_following(self, following):
         following = self._get_cached_author(following)
         if not self.following.filter(id=following.id):
             self.following.add(following)
 
-    @FailSilently
     def add_follower(self, follower):
         """Create a follower from an Author/CachedAuthor model"""
         follower = self._get_cached_author(follower)
@@ -116,7 +98,6 @@ class Author(models.Model):
             pass
 
     # Call add_follower instead
-    @FailSilently
     def add_friend(self, follower):
         """Create a friend from an author model"""
         follower = self._get_cached_author(follower)
@@ -124,7 +105,6 @@ class Author(models.Model):
         if not self.friends.filter(id=follower.id):
             self.friends.add(follower)
 
-    @FailSilently
     def remove_follower(self, follower):
         follower = self._get_cached_author(follower)
         self.followers.remove(follower)
@@ -140,12 +120,10 @@ class Author(models.Model):
             pass
 
     # Call remove_follower instead (if you remove a friend, your remove a follower)
-    @FailSilently
     def remove_friend(self, friend):
         friend = self._get_cached_author(friend)
         self.friends.remove(friend)
 
-    @FailSilently
     def remove_following(self, following):
         following = self._get_cached_author(following)
         self.remove_friend(following)
