@@ -60,7 +60,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'api.urls'
 
-WSGI_APPLICATION = 'api_base.wsgi.application'
+WSGI_APPLICATION = 'api_settings.wsgi.application'
 
 
 # Database
