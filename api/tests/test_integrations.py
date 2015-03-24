@@ -1,20 +1,19 @@
-from abc import ABCMeta, abstractproperty
+from ..integrations import Integrator, Accumulator
 from django.test import TestCase
-from .integrations.test_hindlebook import HindlebookIntegration
 
 class IntegrationTests(TestCase):
-    __metaclass__ = ABCMeta
-
-    @abstractproperty
-    def integrator(self):
-        pass
 
     def setUp(self):
-        pass
+        self.integrators = Accumulator.get_integrators()
 
     def test_public_posts(self):
-        print "HERE"
-        posts = self.integrator.public_posts()
-        self.assertEqual(posts is None, True, "No posts returned")
+        print "WTF"
+        count = 0
+        for integrator in self.integrators:
+            posts = integrator.get_public_posts()
+            count += len(posts)
+            self.assertEqual(posts is not None, True, "No posts returned")
 
-IntegrationTests.register(HindlebookTests)
+        posts = Accumulator.get_public_posts()
+        print posts, "POSTS"
+        self.assertEquals(len(posts), count, "Different post counts returned")

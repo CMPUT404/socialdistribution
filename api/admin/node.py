@@ -1,7 +1,4 @@
-from django.contrib import admin
-from ..models.node import Node
+from django.contrib.admin import ModelAdmin
 
-class NodeOptions(admin.ModelAdmin):
-    list_display = ['id', 'user', 'host', 'enabled']
-
-admin.site.register(Node, NodeOptions)
+class NodeOptions(ModelAdmin):
+    list_display = ['user', 'host', 'enabled', 'api_postfix', 'integrated', 'foreign_username']

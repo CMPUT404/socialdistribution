@@ -1,18 +1,13 @@
-from django.contrib import admin
-from ..models.author import Author, CachedAuthor
+from django.contrib.admin import ModelAdmin
 
 
-class AuthorOptions(admin.ModelAdmin):
+class AuthorOptions(ModelAdmin):
     list_display = ['id', 'user', 'github_username', 'host', 'bio']
 
 
-class CachedAuthorOptions(admin.ModelAdmin):
+class CachedAuthorOptions(ModelAdmin):
     list_display = ['id', 'displayname', 'host', 'url']
 
     # Deletion should occur only through Author models and friend/followers
     def has_delete_permission(self, request, obj=None):
         return False
-
-
-admin.site.register(Author, AuthorOptions)
-admin.site.register(CachedAuthor, CachedAuthorOptions)

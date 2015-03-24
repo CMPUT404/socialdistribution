@@ -11,6 +11,7 @@ from ..permissions.permissions import IsAuthor, Custom
 from ..models.author import Author
 from ..serializers.author import AuthorSerializer
 from ..renderers.content import PostsJSONRenderer
+from ..integrations import Aggregator
 
 #
 # Delete Posts and Comments
@@ -144,5 +145,14 @@ class PublicPostsViewSet(
 ):
     renderer_classes = (PostsJSONRenderer,)
 
-    def get_queryset(self):
-        return self.queryset.filter(visibility="PUBLIC")
+    def list(self, request):
+        internal_posts = Post.objects.filter(visibility="PUBLIC")
+        serializer = PostSerializer(internal_posts, many=True)
+        posts = serializer.data
+
+        # dont return public posts of other nodes in node-to-node calls
+        if request.auth is not None and request.user.type is not "Node":
+            foreign_posts = Aggregator.get_public_posts()
+            posts.extend(foreign_posts)
+
+        return Response(posts)
