@@ -10,11 +10,7 @@ from ..utils.utils import AuthorNotFound, AuthenticationFailure
 
 from ..models.author import (
     Author,
-    CachedAuthor,
-    FollowerRelationship,
-    FriendRelationship,
-    FriendRequest
-)
+    CachedAuthor)
 
 from ..serializers.author import (
     AuthorSerializer,

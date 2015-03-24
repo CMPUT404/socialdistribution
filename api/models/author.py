@@ -1,24 +1,17 @@
 from django.db import models
 from django.conf import settings
-from django.contrib.auth.models import User
 from uuidfield import UUIDField
+from user import APIUser
 import os
-
 
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
 
-
-class Author(models.Model):
+class Author(APIUser):
     """
     Extends the existing Django User model as reccomended in the docs.
     https://docs.djangoproject.com/en/1.7/topics/auth/customizing/
     """
-    user = models.OneToOneField(User)
-
-    id = UUIDField(auto=True, primary_key=True)
-    host = models.URLField(blank=False, null=False, default=settings.HOST)
-
     bio = models.TextField(blank=True, null=True)
     github_username = models.CharField(max_length=40, blank=True, null=True)
     image = models.ImageField(upload_to='images/profile', blank=True, null=True)
@@ -32,10 +25,6 @@ class Author(models.Model):
     # All interaction with friends should be conducted through followers
     friends = models.ManyToManyField('CachedAuthor', blank=True, null=True,
                                      related_name='friends')
-
-    @property
-    def host(self):
-        return settings.HOST
 
     @property
     def url(self):
@@ -55,7 +44,6 @@ class Author(models.Model):
     def add_follower(self, follower):
         """Create a follower from an Author/CachedAuthor model"""
         follower = self._get_cached_author(follower)
-
         # Prevent duplicate entries
         if not self.followers.filter(id=follower.id):
             self.followers.add(follower)
@@ -124,33 +112,3 @@ class CachedAuthor(models.Model):
     # This is used for the related string field serializer
     def __unicode__(self):
         return u'%s' % self.id
-
-
-#
-# These are being refactored out
-#
-class FollowerRelationship(models.Model):
-    """
-    Follower
-    """
-    created_on = models.DateField(auto_now_add=True)
-    follower = models.ForeignKey(Author, null=True, related_name='follower')
-    followee = models.ForeignKey(Author, null=True, related_name='followee')
-
-
-class FriendRelationship(models.Model):
-    """
-    Friend
-    """
-    created_on = models.DateField(auto_now_add=True)
-    friendor = models.ForeignKey(Author, null=True, related_name='friendor')
-    friend = models.ForeignKey(Author, null=True, related_name='friend')
-
-
-class FriendRequest(models.Model):
-    """
-    Requests
-    """
-    created_on = models.DateField(auto_now_add=True)
-    requestee = models.ForeignKey(Author, null=True, related_name='requestee')
-    requestor = models.ForeignKey(Author, null=True, related_name='requestor')

@@ -115,3 +115,8 @@ REST_FRAMEWORK = {
 }
 
 GRAPPELLI_ADMIN_TITLE = "Social Distribution"
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.request",
+)

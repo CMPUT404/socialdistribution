@@ -1,17 +1,14 @@
 from rest_framework.authtoken.models import Token
-from django.test import TestCase, Client
+from rest_framework.test import APIClient
+from django.test import TestCase
 from django.contrib.auth.models import User
 from ..models.author import (
     Author,
-    CachedAuthor,
-    FriendRelationship,
-    FriendRequest,
-    FollowerRelationship
-)
+    CachedAuthor)
 import uuid
 from ..utils import scaffold as s
 
-c = Client()
+c = APIClient()
 
 # Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "gituser"
@@ -65,20 +62,17 @@ class AuthorModelAPITests(TestCase):
         CachedAuthor.objects.all().delete()
         Author.objects.all().delete()
         User.objects.all().delete()
-        FriendRelationship.objects.all().delete()
-        FriendRequest.objects.all().delete()
-        FollowerRelationship.objects.all().delete()
 
-    def test_follow_author(self):
-        response = self.client.get('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
-        self.assertEquals(response.status_code, 200)
-
-        # s.pretty_print(response.data)
-
-        self.assertTrue(response.data['following'][0]['id'], self.author_a.id)
-        self.assertEquals(1, len(self.author.following.all()))
-        self.assertEquals(1, len(self.author_a.followers.all()))
-
+    # def test_follow_author(self):
+    #     response = self.client.get('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
+    #     self.assertEquals(response.status_code, 200)
+    #
+    #     # s.pretty_print(response.data)
+    #
+    #     self.assertTrue(response.data['following'][0]['id'], self.author_a.id)
+    #     self.assertEquals(1, len(self.author.following.all()))
+    #     self.assertEquals(1, len(self.author_a.followers.all()))
+    #
     def test_delete_follow(self):
         # Author is now following author_a
         self.author.add_following(self.author_a)

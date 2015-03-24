@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from ..models.author import Author, FriendRelationship, CachedAuthor
+from ..models.author import Author, CachedAuthor
 from ..models.content import Post, Comment
 from ..utils import scaffold
 import uuid
@@ -59,7 +59,6 @@ class ContentAPITestCase(TestCase):
         Author.objects.all().delete()
         User.objects.all().delete()
         Post.objects.all().delete()
-        FriendRelationship.objects.all().delete()
         Token.objects.all().delete()
 
         self.client.credentials()
