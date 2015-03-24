@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from ..models.author import Author, FriendRelationship
+from ..models.author import Author, FriendRelationship, CachedAuthor
 from ..models.content import Post, Comment
 from ..utils import scaffold
 import uuid
@@ -141,10 +141,9 @@ class ContentAPITestCase(TestCase):
 
         # author_a should not be able to retrieve post by author created above
         aid = author.id
+
         response = self.client.get("/author/%s/posts" %aid)
-        # scaffold.pretty_print(response.data)
-        self.assertEquals(response.status_code, 200)
-        scaffold.assertNumberPosts(self, response.data, 0)
+        self.assertEquals(response.status_code, 403)
 
     # def test_get_posts_in_private_list(self):
     #     # Add Posts

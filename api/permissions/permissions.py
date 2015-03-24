@@ -24,11 +24,19 @@ def isOnSameHost(request, obj):
     return True
 
 def isFriend(request, obj):
-    # user = Author.objects.get(user = request.user)
-    author = Author.objects.all().areFriends(obj.author.id, request.user.id)
-    if author.exists():
+    # This should never fail as request.user must have Author account to be
+    # authenticated
+    author = Author.objects.get(user=request.user)
+
+    try:
+        # This will throw an exception if not friends
+        author = Author.objects.get(user=request.user,
+                                    friends__id=obj.author.id)
         return True
-    return False
+    except Exception as e:
+        # print e
+        return False
+
 
 # Checks first to see if the authenticated Author is friends with the entity's
 # author and if the specified author host is the same as ours
@@ -36,21 +44,16 @@ def isFriendOnSameHost(request, obj):
     return isFriend(request, obj) and obj.author.host == settings.HOST
 
 def isFoF(request, obj):
-    # user = Author.objects.get(user = request.user)
+    author = Author.objects.get(user=request.user)
     if isFriend(request, obj):
         return True
     for friend in obj.author.friends.all():
         for fof in friend.friends.all():
-            if fof.id == request.user.id:
+            if fof.id == author.id:
                 return True
     return False
 
 def isPrivateList(request, obj):
-    # author = Author.objects.get(user = request.user)
-    #
-    # if str(author.id) in obj.acl.shared_users:
-    #     return True
-    # return False
     return isAuthor(request, obj)
 
 class IsAuthor(permissions.BasePermission):
