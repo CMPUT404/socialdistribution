@@ -34,7 +34,79 @@ class BaseRelationsMixin(object):
     lookup_url_kwarg = "id"
 
 
-class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
+class ModifyRelationsMixin(object):
+    """
+    Calling conventions for interacting with the Other model to provide
+    more detailed HTTP response messages for relation failures.
+
+    Author must be an Author model.
+    friend/follower/following can be either an Author or CachedAuthor model.
+    """
+
+    #
+    # WIP. A lot of the controller logic within the models will be moved
+    # in here such that the model is only interacting with itself and
+    # preventing duplicate entries.
+    #
+
+    def call_model(self, method, relator):
+        """
+        Wraps the calling of a models method so that HTTP error is returned
+
+        Pass in an Author model method and the relator to add to the method.
+        eg:
+            self.call_model(author.add_follower, follower)
+        """
+        try:
+            method(self.return_cached_author(relator))
+        except:
+            raise RelationFailed
+
+    def get_author(self, guid):
+        try:
+            return Author.objects.get(id=guid)
+        except:
+            raise AuthorNotFound
+
+    def get_cached_author(self, guid):
+        try:
+            return CachedAuthor.objects.get(id=guid)
+        except:
+            raise AuthorNotFound
+
+    def return_cached_author(self, instance):
+        """Returns a CachedAuthor model given either Author or CachedAuthor"""
+        if isinstance(instance, Author):
+            return self.get_cached_author(instance.id)
+        return instance
+
+    def add_friend(self, author, friend):
+        self.call_model(author.add_friend, friend)
+
+    def add_follower(self, author, follower):
+        self.call_model(author.add_follower, follower)
+
+    def add_following(self, author, following):
+        self.call_model(author.add_following, following)
+
+    def remove_friend(self, author, friend):
+        self.call_model(author.remove_friend, friend)
+
+    def remove_follower(self, author, follower):
+        self.call_model(author.remove_follower, follower)
+
+    def remove_following(self, author, following):
+        self.call_model(author.remove_following, following)
+
+    def query_foreign_author(self, author):
+        # TODO after integration
+        pass
+
+
+class FollowerViewSet(
+                      BaseRelationsMixin,
+                      ModifyRelationsMixin,
+                      viewsets.ViewSet):
     serializer_class = BaseRetrieveFollowingSerializer
 
     # GET followers/:pk (Returns a list of who you are following)
@@ -60,11 +132,12 @@ class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
             try:
                 # Who we are following
                 following = Author.objects.get(id=pk)
-                following.add_follower(author)
-                author.add_following(following)
             except:
                 # Person we are following is on foreign node
                 raise AuthorNotFound
+
+            self.add_follower(following, author)
+            self.add_following(author, following)
 
             serializer = self.serializer_class(author)
         else:
@@ -90,11 +163,12 @@ class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
 
         try:
             unfollowing = Author.objects.get(id=pk)
-            unfollowing.remove_follower(author)
-            author.remove_following(unfollowing)
         except:
             # Person we are unfollowing is on foreign node
             raise AuthorNotFound
+
+        self.remove_follower(unfollowing, author)
+        self.remove_following(author, unfollowing)
 
         serializer = self.serializer_class(author)
         return Response(serializer.data)
