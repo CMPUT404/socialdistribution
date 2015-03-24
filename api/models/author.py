@@ -44,7 +44,6 @@ class Author(APIUser):
     def add_follower(self, follower):
         """Create a follower from an Author/CachedAuthor model"""
         follower = self._get_cached_author(follower)
-
         # Prevent duplicate entries
         if not self.followers.filter(id=follower.id):
             self.followers.add(follower)
@@ -113,33 +112,3 @@ class CachedAuthor(models.Model):
     # This is used for the related string field serializer
     def __unicode__(self):
         return u'%s' % self.id
-
-
-#
-# These are being refactored out
-#
-class FollowerRelationship(models.Model):
-    """
-    Follower
-    """
-    created_on = models.DateField(auto_now_add=True)
-    follower = models.ForeignKey(Author, null=True, related_name='follower')
-    followee = models.ForeignKey(Author, null=True, related_name='followee')
-
-
-class FriendRelationship(models.Model):
-    """
-    Friend
-    """
-    created_on = models.DateField(auto_now_add=True)
-    friendor = models.ForeignKey(Author, null=True, related_name='friendor')
-    friend = models.ForeignKey(Author, null=True, related_name='friend')
-
-
-class FriendRequest(models.Model):
-    """
-    Requests
-    """
-    created_on = models.DateField(auto_now_add=True)
-    requestee = models.ForeignKey(Author, null=True, related_name='requestee')
-    requestor = models.ForeignKey(Author, null=True, related_name='requestor')

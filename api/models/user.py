@@ -14,3 +14,6 @@ class APIUser(models.Model):
     @property
     def host(self):
         return settings.HOST
+
+    class Meta:
+        abstract = True
