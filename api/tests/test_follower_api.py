@@ -70,7 +70,7 @@ class AuthorModelAPITests(TestCase):
         FollowerRelationship.objects.all().delete()
 
     def test_follow_author(self):
-        response = self.client.get('/following/%s/follow/%s' %(self.author.id, self.author_a.id))
+        response = self.client.get('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
         self.assertEquals(response.status_code, 200)
 
         # s.pretty_print(response.data)
@@ -83,7 +83,7 @@ class AuthorModelAPITests(TestCase):
         # Author is now following author_a
         self.author.add_following(self.author_a)
 
-        response = self.client.delete('/following/%s/follow/%s' %(self.author.id, self.author_a.id))
+        response = self.client.delete('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
         self.assertEquals(response.status_code, 200, "Follower deleted")
 
         # Confirm by database query
@@ -138,7 +138,7 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(1, len(self.author.followers.all()))
         self.assertEquals(1, len(self.author_b.followers.all()))
 
-        response = self.client.delete('/following/%s/follow/%s' %(self.author.id, self.author_b.id))
+        response = self.client.delete('/author/%s/follow/%s' %(self.author.id, self.author_b.id))
         self.assertEquals(response.status_code, 200, "deleted friendship/followship")
 
         # author should have no friends and not be following
