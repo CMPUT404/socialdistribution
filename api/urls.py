@@ -17,7 +17,7 @@ author_router.register(r'follow', FollowerViewSet)
 
 urlpatterns = patterns('',
     url(r'^grappelli/', include('grappelli.urls')),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/?', include(admin.site.urls)),
     url(r'^post', include(ContentUrls)),
     url(r'^', include(AuthorUrls)),
     url(r'^', include(router.urls)),
