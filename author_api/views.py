@@ -3,13 +3,15 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from rest_framework.generics import ListAPIView
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import detail_route
 
 from mimetypes import guess_type
 import os
 
-from api.utils.utils import AuthorNotFound
+from api.utils.utils import AuthorNotFound, AuthenticationFailure
 
 from models import (
     Author,
@@ -26,7 +28,9 @@ from serializers import (
     RetrieveFriendsSerializer,
     BaseRetrieveFollowersSerializer,
     BaseRetrieveFriendsSerializer,
-    FriendRequestSerializer )
+    BaseRetrieveFollowingSerializer,
+    FriendRequestSerializer)
+
 
 class ImageRenderer(renderers.BaseRenderer):
     media_type = 'image/**'
@@ -35,6 +39,7 @@ class ImageRenderer(renderers.BaseRenderer):
 
     def render(self, data, media_type=None, renderer_context=None):
         return data.read()
+
 
 # GET /author/images/:imageid
 class Images(ListAPIView):
@@ -58,95 +63,79 @@ class Images(ListAPIView):
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+
 class BaseRelationsMixin(object):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Author.objects.all()
     lookup_url_kwarg = "id"
 
-class BaseRetrievRelationsView(BaseRelationsMixin, generics.RetrieveAPIView):
-    """Allows read only access for followers/friends"""
 
-    def get_queryset(self):
-        return self.queryset.filter(id = self.kwargs.get(self.lookup_url_kwarg))
+class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
+    serializer_class = BaseRetrieveFollowingSerializer
 
-class BaseCreateRelationsView(BaseRelationsMixin, generics.CreateAPIView):
-    """Extends CreateAPIView to return a serializer instance upon saving"""
+    # GET followers/:pk (Returns a list of who you are following)
+    # GET followers/:author_pk/follow/:pk (This follows the pk)
+    def retrieve(self, request, pk=None, author_pk=None):
+        """
+        Creating a following/follower relationship between authors
 
-    def perform_create(self, serializer):
-        return serializer.save()
+        Takes:
+            pk: id of the person to be followed
+            author_pk: id of the person that will follow
 
-class BaseDeleteRelationsView(BaseRelationsMixin, generics.DestroyAPIView):
-    """Delete followers/friends"""
+        If pk is none then we are retrieving the followers list
+        """
+        # Following the pk author
+        if author_pk:
+            author = get_object_or_404(self.queryset, id=author_pk)
 
-    def get_cached_author(self, guid):
-        """Returns a CachedAuthor who will be removed from a relation"""
+            # Can handle this in a permission
+            if request.user != author.user:
+                raise AuthenticationFailure
+
+            try:
+                # Who we are following
+                following = Author.objects.get(id=pk)
+                following.add_follower(author)
+                author.add_following(following)
+            except:
+                # Person we are following is on foreign node
+                raise AuthorNotFound
+
+            serializer = self.serializer_class(author)
+        else:
+            author = get_object_or_404(self.queryset, id=pk)
+
+        serializer = self.serializer_class(author)
+        return Response(serializer.data)
+
+    def destroy(self, request, pk=None, author_pk=None):
+        """
+        Deleting a following/follower relationship between authors.
+        This will also delete a friendship if it exists.
+
+        Takes:
+            pk: id of the person to be unfollowed
+            author_pk: id of the person that is unfollowing.
+        """
+        author = get_object_or_404(self.queryset, id=author_pk)
+
+        # Can handle this in a permission
+        if request.user != author.user:
+            raise AuthenticationFailure
+
         try:
-            return CachedAuthor.objects.get(id = guid)
+            unfollowing = Author.objects.get(id=pk)
+            unfollowing.remove_follower(author)
+            author.remove_following(unfollowing)
         except:
-            # Cached author does not exist on this server
+            # Person we are unfollowing is on foreign node
             raise AuthorNotFound
 
-    def remove_follower(self, author, follower):
-        """
-        Remove the follower and the associated friend for the given author
-        Takes:
-            author: Author model
-            follower: CachedAuthor model
-        """
-        # This will remove the friendship. Follower/Friendship are dependents
-        author.remove_follower(follower)
+        serializer = self.serializer_class(author)
+        return Response(serializer.data)
 
-
-# Can potentially be moved to a viewset and router
-class FollowersView(
-        BaseRetrievRelationsView,
-        BaseCreateRelationsView,
-        BaseDeleteRelationsView):
-    """Authenticated Authors can create, retrieve and delete followers"""
-
-    def get_serializer_class(self):
-        """Uses CachedAuthorSerializer when creating and deleting a relation"""
-        if self.request.method == "GET":
-            return BaseRetrieveFollowersSerializer
-        else:
-            return CachedAuthorSerializer
-
-    def create(self, request, *args, **kwargs):
-        """
-        Create a CachedAuthor and append it to the AuthorModel followers field
-        """
-        author = self.get_object()
-
-        serializer = self.get_serializer(data = request.data)
-
-        # CachedAuthor exists if following home node Author. Don't serialize
-        queryset = CachedAuthor.objects.filter(id = request.data['id'])
-
-        if not queryset:
-            serializer.is_valid(raise_exception = True)
-            cached_author = self.perform_create(serializer)
-
-            author.add_follower(cached_author)
-            author.save()
-
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status = status.HTTP_201_CREATED, headers=headers)
-
-        else:
-            author.add_follower(queryset[0])
-            author.save()
-
-            # TODO send back another message ????
-            return Response(status = status.HTTP_201_CREATED)
-
-    def destroy(self, request, *args, **kwargs):
-        """Deletes the follower as well as the friend"""
-        follower = self.get_cached_author(request.data['id'])
-        author = self.get_object()
-        self.remove_follower(author, follower)
-
-        return Response(status = status.HTTP_204_NO_CONTENT)
 
 class CreateFriendRequest(generics.CreateAPIView):
     """
@@ -172,6 +161,7 @@ class CreateFriendRequest(generics.CreateAPIView):
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
     """
