@@ -1,12 +1,9 @@
-from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from ..models.content import Post, Comment
 
-class PostOptions(admin.ModelAdmin):
+class PostOptions(ModelAdmin):
     list_display = ['guid', 'author', 'title', 'pubDate', 'content', \
                     'contentType', 'visibility', 'categories', 'image']
 
-class CommentOptions(admin.ModelAdmin):
+class CommentOptions(ModelAdmin):
     list_display = ['guid', 'author', 'pubDate', 'post', 'comment']
-
-admin.site.register(Post, PostOptions)
-admin.site.register(Comment, CommentOptions)
