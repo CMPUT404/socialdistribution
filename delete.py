@@ -4,16 +4,16 @@
 import os
 import shutil
 
-paths = ['author', 'backend', 'sysadmin', 'timeline']
+paths = ['api']
 
 for path in paths:
     folder = os.path.join(path, 'migrations')
     try:
         shutil.rmtree(folder)
     except:
-        print "couldn't delete %s" %folder
+        print "couldn't delete %s" % folder
     else:
-        print "deleted from %s" %folder
+        print "deleted from %s" % folder
 
 try:
     os.remove('db.sqlite3')
