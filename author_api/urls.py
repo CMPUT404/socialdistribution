@@ -12,17 +12,9 @@ urlpatterns = [
     # GET POST /author/profile
     url(r'^author/profile/?$', viewsauth.AuthorProfile.as_view(), name='profile'),
 
-    # GET /author/friends/:username
-    # url(r'^friends/(?P<id>[0-9a-zA-Z_]+)/?$', views.GetAuthorFriends.as_view(),
-    #     name = 'user_friends'),
-
     # POST /friends/:aid/:fid
     url(r'^friends/(?P<aid>[0-9a-zA-Z_]+)/(?P<fid>[0-9a-zA-Z_]+)/?$', views.GetFriends.as_view(),
         name = 'user_friends'),
-
-    # GET/POST/DELETE /followers/:username
-    url(r'^followers/(?P<id>[0-9a-zA-Z_]+)/?$', views.FollowersView.as_view(),
-        name = 'user_followers'),
 
     # GET /friendrequests
     url(r'^friendrequest/?$', views.CreateFriendRequest.as_view(),

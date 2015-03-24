@@ -177,6 +177,13 @@ class BaseRetrieveFriendsSerializer(serializers.ModelSerializer):
         model = Author
         fields = ('friends',)
 
+class BaseRetrieveFollowingSerializer(serializers.ModelSerializer):
+    following = CachedAuthorSerializer(many = True)
+
+    class Meta:
+        model = Author
+        fields = ('following',)
+
 class RetrieveFollowersSerializer(BaseRetrieveFollowersSerializer):
     """Provideds only a list of the follower guids in the return object"""
     followers = serializers.StringRelatedField(many=True)
@@ -188,10 +195,12 @@ class RetrieveFriendsSerializer(BaseRetrieveFriendsSerializer):
 class AuthorRelationSerializer(serializers.ModelSerializer):
     """writable serializer for followers and friends only"""
     followers = CachedAuthorSerializer(many = True)
+    friends = CachedAuthorSerializer(many = True)
+    following = CachedAuthorSerializer(many = True)
 
     class Meta:
         model = Author
-        fields = ('followers', 'friends')
+        fields = ('followers', 'friends', 'following')
         read_only_fields = ('user', 'id', 'host', 'bio', 'github_username', \
             'image',)
 

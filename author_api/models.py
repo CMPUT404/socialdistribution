@@ -9,6 +9,21 @@ def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
 
 
+def FailSilently(func):
+    """
+    If an exception is thrown in a function, it will fail silently.
+    Simply wraps a function in try/except.
+    """
+
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            pass
+
+    return wrapper
+
+
 class AuthorQuerySet(models.query.QuerySet):
     def areFriends(self, authorid, friendid):
         """
@@ -43,7 +58,9 @@ class Author(models.Model):
     # Who is following the Author
     followers = models.ManyToManyField('CachedAuthor', blank=True, null=True,
                                        related_name='followers')
-
+    # Who the author is following
+    following = models.ManyToManyField('CachedAuthor', blank=True, null=True,
+                                       related_name='following')
     # All interaction with friends should be conducted through followers
     friends = models.ManyToManyField('CachedAuthor', blank=True, null=True,
                                      related_name='friends')
@@ -60,14 +77,27 @@ class Author(models.Model):
     # and AuthorQueryset.
     objects = AuthorManager()
 
-    # mixing controller logic with model logic unfortunately
+    @FailSilently
+    def _get_cached_author(self, instance):
+        """Returns a CachedAuthor model given either Author or CachedAuthor"""
+        if isinstance(instance, Author):
+            return CachedAuthor.objects.get(id=instance.id)
+        return instance
+
+    @FailSilently
+    def add_following(self, following):
+        following = self._get_cached_author(following)
+        if not self.following.filter(id=following.id):
+            self.following.add(following)
+
+    @FailSilently
     def add_follower(self, follower):
         """Create a follower from an Author/CachedAuthor model"""
-        _cached = CachedAuthor.objects.get(id=follower.id)
+        follower = self._get_cached_author(follower)
 
         # Prevent duplicate entries
         if not self.followers.filter(id=follower.id):
-            self.followers.add(_cached)
+            self.followers.add(follower)
 
         # Bidirectional follow relationships become friendships
         try:
@@ -86,46 +116,47 @@ class Author(models.Model):
             pass
 
     # Call add_follower instead
+    @FailSilently
     def add_friend(self, follower):
         """Create a friend from an author model"""
-        try:
-            _cached = CachedAuthor.objects.get(id=follower.id)
+        follower = self._get_cached_author(follower)
+        # Prevent duplicate entries
+        if not self.friends.filter(id=follower.id):
+            self.friends.add(follower)
 
-            # Prevent duplicate entries
-            # Cannot use a get
-            if not self.friends.filter(id=follower.id):
-                self.friends.add(_cached)
-        except:
-            pass
-
+    @FailSilently
     def remove_follower(self, follower):
-        try:
-            _cached = CachedAuthor.objects.get(id=follower.id)
-            self.followers.remove(_cached)
-            self.remove_friend(_cached)
+        follower = self._get_cached_author(follower)
+        self.followers.remove(follower)
+        self.remove_friend(follower)
 
-            # Remove from friends lists for users who friended self
-            try:
-                oldfriend = Author.objects.get(id=follower.id)
-                oldfriend.remove_friend(self)
-            except:
-                # This will fail if:
-                #   1. The friend is actually foreign hosted
-                pass
+        # Remove from friends lists for users who friended self
+        try:
+            oldfriend = Author.objects.get(id=follower.id)
+            oldfriend.remove_friend(self)
         except:
+            # This will fail if:
+            #   1. The friend is actually foreign hosted
             pass
 
     # Call remove_follower instead (if you remove a friend, your remove a follower)
+    @FailSilently
     def remove_friend(self, friend):
-        _cached = CachedAuthor.objects.get(id=friend.id)
-        self.friends.remove(_cached)
+        friend = self._get_cached_author(friend)
+        self.friends.remove(friend)
+
+    @FailSilently
+    def remove_following(self, following):
+        following = self._get_cached_author(following)
+        self.remove_friend(following)
+        self.following.remove(following)
 
     def __unicode__(self):
         return u'%s' % self.user.username
 
 
-# Allows the integration of foreign and home authors into friend/follower relations
-# A denormalization of sorts.
+# Allows the integration of foreign and home authors into friend/follower
+# relations. A denormalization of sorts.
 class CachedAuthor(models.Model):
     id = UUIDField(primary_key=True)
     host = models.URLField(blank=False, null=False, default=settings.HOST)
