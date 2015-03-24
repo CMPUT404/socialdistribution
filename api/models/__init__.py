@@ -1,2 +1,2 @@
-#__init__.py
 import api.utils.signals
+from content import Post, Comment
