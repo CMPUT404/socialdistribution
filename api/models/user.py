@@ -5,19 +5,12 @@ from django.db import models
 
 # Base API User Class
 class APIUser(models.Model):
-
     user = models.OneToOneField(User)
     id = UUIDField(auto=True, primary_key=True)
-    host = models.URLField(blank=False, null=False, default=settings.HOST)
+    host = models.URLField(null=False, default=settings.HOST)
+    # TODO: change this to false for production
     enabled = models.BooleanField(default=True)
-    node = models.BooleanField(default=False)
-
-    @property
-    def host(self):
-        return settings.HOST
-
-    def is_node(self):
-        return self.node
+    type = models.CharField(max_length=32, default="Author")
 
     class Meta:
         abstract = True

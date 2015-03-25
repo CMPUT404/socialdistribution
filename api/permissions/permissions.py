@@ -20,8 +20,7 @@ def isPublic(request, obj):
     return True
 
 def isOnSameHost(request, obj):
-    # TODO Add the actual check
-    return True
+    return obj.author.host == settings.HOST
 
 def isFriend(request, obj):
     # This should never fail as request.user must have Author account to be
@@ -41,7 +40,7 @@ def isFriend(request, obj):
 # Checks first to see if the authenticated Author is friends with the entity's
 # author and if the specified author host is the same as ours
 def isFriendOnSameHost(request, obj):
-    return isFriend(request, obj) and obj.author.host == settings.HOST
+    return isFriend(request, obj) and isOnSameHost(request, obj)
 
 def isFoF(request, obj):
     author = Author.objects.get(user=request.user)
