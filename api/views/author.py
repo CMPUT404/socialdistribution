@@ -4,9 +4,11 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics, viewsets
+from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import detail_route
 from ..utils.utils import AuthorNotFound, AuthenticationFailure
+from collections import OrderedDict
 
 from ..models.author import (
     Author,
@@ -97,6 +99,26 @@ class ModifyRelationsMixin(object):
     def query_foreign_author(self, author):
         # TODO after integration
         pass
+
+class FriendsWith(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        author = Author.objects.get(id=kwargs.get('fid'))
+        potential_friends = request.data.get('authors')
+        friends_list = []
+        friends_query_set = Author.objects.get(id=author.id).friends.all()
+
+        for potential_friend in potential_friends:
+            if friends_query_set.filter(id=potential_friend).exists():
+                friends_list.append(potential_friend)
+
+        response_dict = OrderedDict()
+        response_dict['query'] = 'friends'
+        response_dict['author'] = author.id
+        response_dict['friends'] = friends_list
+        return Response(response_dict, status=status.HTTP_200_OK)
 
 
 class FollowerViewSet(

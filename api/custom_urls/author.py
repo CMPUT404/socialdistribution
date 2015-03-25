@@ -12,6 +12,9 @@ urlpatterns = [
     # GET POST /author/profile
     url(r'^author/profile/?$', authentication.AuthorProfile.as_view(), name='profile'),
 
+    # POST friends/:fid
+    url(r'^friends/(?P<fid>[0-9a-zA-Z_]+)/?$', author.FriendsWith.as_view(), name='check_friends'),
+
     # POST /friends/:aid/:fid
     url(r'^friends/(?P<aid>[0-9a-zA-Z_]+)/(?P<fid>[0-9a-zA-Z_]+)/?$', author.GetFriends.as_view(),
         name = 'user_friends'),
