@@ -1,12 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
-import { Link } from 'react-router';
 import { addons } from 'react/addons';
 import { Input } from 'react-bootstrap';
 import { markdown as Markdown } from 'markdown';
 
 import AuthorActions from '../../actions/author';
-
+import ProfileLink from './profile-link';
 // Responsible for creating posts and notifying the Author store when
 // this happens.
 export default React.createClass({
@@ -43,9 +42,9 @@ export default React.createClass({
     return (
       <div className="media">
         <div className="media-left">
-          <Link to="author" params={{id: this.props.currentAuthor.id}}>
+          <ProfileLink author={this.props.currentAuthor}>
             <img className="media-object author-image" src={this.props.currentAuthor.getImage()}/>
-          </Link>
+          </ProfileLink>
         </div>
         <form onSubmit={this.submitPost} className="media-body content-creator">
           <Input type="text" placeholder="Title" valueLink={this.linkState('title')} required />

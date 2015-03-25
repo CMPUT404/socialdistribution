@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
-import { Link } from 'react-router';
 import { addons } from 'react/addons';
 import { Input, Col } from 'react-bootstrap';
 import { markdown as Markdown } from 'markdown';
 
 import AuthorActions from '../../actions/author';
+import ProfileLink from './profile-link';
 
 // Responsible for creating comments and notifying the Post store when
 // this happens.
@@ -42,9 +42,9 @@ export default React.createClass({
     return (
       <div className="media">
         <div className="media-left">
-          <Link to="author" params={{id: this.props.currentAuthor.id}}>
+          <ProfileLink author={this.props.currentAuthor}>
             <img className="media-object author-image" src={this.props.currentAuthor.getImage()}/>
-          </Link>
+          </ProfileLink>
         </div>
         <form onSubmit={this.submitComment} className="media-body content-creator">
           <Col md={10}>
