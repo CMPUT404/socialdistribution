@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React from 'react';
 import Moment from 'moment';
-import { Link } from 'react-router';
 import { markdown as Markdown } from 'markdown';
 import { Col } from 'react-bootstrap';
 
 import Spinner from '../spinner';
 
 import Comment from './comment';
+import ProfileLink from './profile-link';
 
 function convertMarkdown(markdown) {
   return Markdown.toHTML(markdown);
@@ -45,20 +45,20 @@ export default React.createClass({
     return (
       <div className="media">
         <div className="media-left">
-          <Link to="author" params={{id: this.props.data.author.id}}>
+          <ProfileLink author={this.props.data.author}>
             <img className="media-object content-auth-img" src={this.props.data.author.getImage()} />
-          </Link>
+          </ProfileLink>
         </div>
         <div className="media-body">
-          <Link to="author" params={{id: this.props.data.author.id}}>
+          <ProfileLink author={this.props.data.author}>
             <h4 className="media-heading">{this.props.data.author.name}</h4>
-          </Link>
+          </ProfileLink>
           <h4>{this.props.data.title}</h4>
           {content}
           <h6 className="timestamp">{Moment(this.props.data.pubDate).fromNow()} by
-            <Link to="author" params={{id: this.props.data.author.id}}>
+            <ProfileLink author={this.props.data.author}>
               <span> {this.props.data.author.displayname}</span>
-            </Link>
+            </ProfileLink>
           </h6>
           {comments}
         </div>
