@@ -104,13 +104,21 @@ class AuthorPostViewSet(
         # /author/:id and that the author id is going to be in pk
         if author_pk is None:
             author = get_object_or_404(Author, id=pk)
-            serializer = AuthorSerializer(author)
+            data = AuthorSerializer(author).data
+
+            # append author posts to this object
+            posts = Post.objects.filter(author__id=pk)
+            if posts is not None:
+                posts = PostSerializer(posts, many=True)
+                data["posts"] = posts.data
+
+        # otherwise fetch a specific post
         else:
             post = self.queryset.get(author__id=author_pk, guid=pk)
             self.check_object_permissions(self.request, post)
-            serializer = PostSerializer(post)
+            data = PostSerializer(post).data
 
-        return Response(serializer.data)
+        return Response(data)
 
     # TIMELINE call
     @list_route(methods=['get'], permission_classes=[IsAuthenticated, IsAuthor])
