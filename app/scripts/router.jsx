@@ -11,7 +11,7 @@ import Posts from './components/posts';
 var routes = (
 	<Route path="/" name="layout" handler={Layout}>
 		<DefaultRoute name="timeline" handler={Timeline} />
-		<Route name="author" path="/author/:id?" handler={Author} />
+		<Route name="author" path="/author/:id/:host?" handler={Author} />
 		<Route name="login" handler={Login} />
 		<Route name="register" handler={Register} />
 		<Route name="posts" handler={Posts} />

@@ -17,7 +17,7 @@ export default React.createClass({
 
     if (!_.isNull(this.props.currentAuthor)) {
       navList.unshift(
-        <NavItemLink key="author" to="author" params={{id: this.props.currentAuthor.id}}>
+        <NavItemLink key="author" to="author" params={{id : 'profile'}}>
           <img className="nav-img" src={this.props.currentAuthor.getImage()} />
           <span>{this.props.currentAuthor.displayname}</span>
         </NavItemLink>,

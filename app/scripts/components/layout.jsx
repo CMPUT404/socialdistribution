@@ -1,7 +1,7 @@
 import React from 'react';
 import Reflux from 'reflux';
 import { Grid } from 'react-bootstrap';
-import RouteHandler from 'react-router/modules/mixins/RouteHandler';
+import { RouteHandlerMixin } from 'react-router';
 
 import Navbar from './navbar';
 import AuthorActions from '../actions/author';
@@ -12,7 +12,7 @@ import ActionListener from '../mixins/action-listener';
 // We shouldn't really be putting anything here other than the Navbar.
 export default React.createClass({
 
-  mixins: [RouteHandler, ActionListener],
+  mixins: [RouteHandlerMixin, ActionListener],
 
   getInitialState: function() {
     return {
@@ -37,7 +37,7 @@ export default React.createClass({
     // we do this so we can pass essentially a global prop into the app in the
     // form of the currently logged in user
     // see http://stackoverflow.com/questions/27864720/react-router-pass-props-to-handler-component
-    var AppHandler = this.getRouteHandler({currentAuthor: this.state.currentAuthor});
+    var AppHandler = this.createChildRouteHandler({currentAuthor: this.state.currentAuthor});
     return (
       <Grid fluid={true}>
         <Navbar currentAuthor={this.state.currentAuthor} />

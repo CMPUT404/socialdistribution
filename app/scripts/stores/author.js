@@ -108,23 +108,22 @@ export default Reflux.createStore({
   },
 
   // Fetches author details via AJAX
-  onFetchDetails: function(id) {
-    // If logged-in user wants to see their own profile
-    // no need to AJAX, we already have that info from login/register
-    if (this.isLoggedIn() && id === this.currentAuthor.id) {
-      this.displayAuthor = this.currentAuthor;
-      this.trigger({displayAuthor: this.displayAuthor});
-      AuthorActions.fetchDetails.complete(this.displayAuthorhor);
-      this.fetchGHStream();
-    } else {
-      Request
-        .get(__API__ + '/author/' + id) //TODO: remove host
-        .promise(this.fetchDetailsComplete, AuthorActions.fetchDetails.fail);
-    }
+  onFetchDetails: function(id, host) {
+    Request
+      .get(__API__ + '/author/' + id) //TODO: remove host
+      .host(host)
+      .promise(this.fetchDetailsComplete, AuthorActions.fetchDetails.fail);
   },
 
   fetchDetailsComplete: function(authorData) {
-    this.displayAuthor = new Author(authorData, null);
+    if (this.isLoggedIn() && this.currentAuthor.id === authorData.id) {
+      // Update logged-in user's profile
+      this.currentAuthor = new Author(authorData, this.currentAuthor.token);
+      this.displayAuthor = this.currentAuthor;
+    } else {
+      this.displayAuthor = new Author(authorData, null);
+    }
+
     this.trigger({displayAuthor: this.displayAuthor});
     AuthorActions.fetchDetails.complete(this.displayAuthor);
     this.fetchGHStream();
@@ -160,8 +159,6 @@ export default Reflux.createStore({
       post.comments.forEach((comment) => {
         if (comment.author.id == this.displayAuthor.id) {
           comment.author = this.displayAuthor;
-        } else {
-          comment.author = new Author(comment.author);
         }
       });
     });

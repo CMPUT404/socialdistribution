@@ -22,6 +22,9 @@ PASSWORD = uuid.uuid4()
 USER = {'username':USERNAME, 'password':PASSWORD }
 USER_A = {'username':"User_A", 'password':uuid.uuid4()}
 USER_B = {'username':"User_B", 'password':uuid.uuid4()}
+USER_C = {'username':"User_C", 'password':uuid.uuid4()}
+USER_D = {'username':"User_D", 'password':uuid.uuid4()}
+USER_E = {'username':"User_E", 'password':uuid.uuid4()}
 
 AUTHOR_PARAMS = {
     'github_username':GITHUB_USERNAME,
@@ -83,6 +86,32 @@ class AuthorModelAPITests(TestCase):
         # Confirm by database query
         followers = self.author_a.followers.all()
         self.assertEquals(len(followers), 0, "follower wasn't removed")
+
+
+    def test_are_friends(self):
+        user_c, author_c = s.create_author(USER_C, AUTHOR_PARAMS)
+        user_d, author_d = s.create_author(USER_D, AUTHOR_PARAMS)
+        user_e, author_e = s.create_author(USER_E, AUTHOR_PARAMS)
+        s.create_friends(self.author, [author_c, author_d], False)
+
+        request = {
+            "query": "friends",
+            "author": str(self.author.id),
+            "authors": [
+                str(author_c.id),
+                str(author_d.id),
+                str(author_e.id)
+            ]
+        }
+
+        response = self.client.post('/friends/%s/' % self.author.id, request)
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue(response.data['query'] == 'friends')
+        self.assertTrue(len(response.data['friends']) == 2)
+        self.assertTrue(response.data['author'] == self.author.id)
+        self.assertTrue(str(author_c.id) in response.data['friends'])
+        self.assertTrue(str(author_d.id) in response.data['friends'])
+        self.assertTrue(str(author_e.id) not in response.data['friends'])
 
     def test_delete_friend_through_model(self):
         self.author_a.add_follower(self.author_b)

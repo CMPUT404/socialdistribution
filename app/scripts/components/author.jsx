@@ -19,20 +19,15 @@ import ActionListener from '../mixins/action-listener';
 // It should only display a list of posts created by the author
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), ActionListener, State, Navigation],
+  mixins: [Reflux.connect(AuthorStore), ActionListener, State],
 
-  // statics: {
-  //
-  //   // since the author component can sometimes be mounted in the background,
-  //   // ensure we update the author if we're not coming back to the same one
-  //   willTransitionTo: function (transition, params) {
-  //     AuthorActions.getAuthorAndListen(params.id);
-  //   },
-  //
-  //   willTransitionFrom: function () {
-  //     AuthorActions.unbindAuthorListener();
-  //   }
-  // },
+  statics: {
+    willTransitionTo: function(transition, params) {
+      if (params.id === 'profile' && !AuthorStore.isLoggedIn()) {
+        transition.redirect('login')
+      }
+    }
+  },
 
   getInitialState: function() {
     return {
@@ -42,23 +37,25 @@ export default React.createClass({
   },
 
   refresh: function() {
-    AuthorActions.fetchDetails(this.getParams().id);
-    AuthorActions.fetchPosts(this.getParams().id);
+    AuthorActions.fetchDetails(this.params.id, this.params.host);
+    AuthorActions.fetchPosts(this.params.id, this.params.host);
   },
 
   componentDidMount: function () {
+    this.params = this.getParams();
+
+    if (!_.isUndefined(this.params.host)) {
+      this.params.host = decodeURIComponent(this.params.host);
+    }
+
+    if (this.params.id === 'profile') {
+      this.params.id = AuthorStore.getAuthor().id;
+    }
+
     this.listen(AuthorActions.logout, () => this.transitionTo('login'));
     this.refresh();
   },
 
-  shouldComponentUpdate: function(nextProps, nextState) {
-    if (!_.isNull(nextState.displayAuthor) &&
-        nextState.displayAuthor.id !== this.getParams().id) {
-      this.refresh();
-    }
-
-    return true;
-  },
   render: function() {
     // if we haven't gotten our initial data yet, put a spinner in place
     if (_.isNull(this.state.displayAuthor)) {
@@ -67,7 +64,6 @@ export default React.createClass({
 
     // this comes from the RouterState mixin and lets us pull an author id out
     // of the uri so we can fetch their posts.
-    var authorViewId = this.getParams().id;
     var postCreator, follow, ghStream, githubUrl;
 
     githubUrl = this.state.displayAuthor.getGithubUrl();
@@ -76,7 +72,7 @@ export default React.createClass({
     if (!_.isNull(this.props.currentAuthor)) {
 
       // if viewing their own profile
-      if (this.props.currentAuthor.isAuthor(authorViewId)) {
+      if (this.props.currentAuthor.isAuthor(this.params.id)) {
         postCreator = <div className="jumbotron"><PostCreator currentAuthor={this.props.currentAuthor} /></div>;
       } else {
         // follow = <Follow currentAuthor={this.props.currentAuthor} author={this.state.displayAuthor} />;
