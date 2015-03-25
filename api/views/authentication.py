@@ -54,7 +54,7 @@ class AuthorRegistration(APIView):
             token, created = Token.objects.get_or_create(user=author.user)
             serializer = AuthorSerializer(author)
 
-            return Response({'author': serializer.data}, status=status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_201_CREATED)
         else:
             return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -81,8 +81,8 @@ class Login(APIView):
       "token": "steve's token hash"
     }
     """
-    authentication_classes = (BasicAuthentication, )
-    permission_classes = (IsAuthenticated, IsEnabled)
+    authentication_classes = (IsEnabled, )
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
       """Returns authentication token after validating Basic Auth header"""

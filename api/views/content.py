@@ -3,11 +3,12 @@ from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins, exceptions
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from ..models.content import Post, Comment
 from ..serializers.content import PostSerializer, CommentSerializer
 from ..permissions.permissions import IsAuthor, Custom
+from ..permissions.author import IsEnabled
 from ..models.author import Author
 from ..serializers.author import AuthorSerializer
 from ..renderers.content import PostsJSONRenderer
@@ -67,7 +68,7 @@ class PostPermissionsMixin(object):
         BasicAuthentication: An external node is accessing posts.
         TokenAuthentication: A 'home' node user is accessing posts.
     """
-    authentication_classes = (BasicAuthentication, TokenAuthentication, )
+    authentication_classes = (IsEnabled, TokenAuthentication, )
     permission_classes = (IsAuthenticated, Custom,)
 
 
@@ -141,7 +142,7 @@ class PostViewSet(
   mixins.DestroyModelMixin,
   viewsets.GenericViewSet
 ):
-    authentication_classes = [BasicAuthentication, TokenAuthentication]
+    authentication_classes = [IsEnabled, TokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, Custom]
     parser_classes = (MultiPartParser, FormParser, JSONParser)
 

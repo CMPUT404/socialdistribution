@@ -116,7 +116,11 @@ class AuthorAuthentication(APITestCase):
         self.assertEquals(response.status_code, 201)
 
         # Get image.
-        url = response.data.get('author').get('image')
+        self.c.basic_credentials(self.user_dict_with_img['username'], self.user_dict_with_img['password'])
+        id = Author.objects.get(user__username = self.user_dict_with_img['username']).id
+        response = self.c.get('/author/%s' % id)
+        url = response.data['image']
+        scaffold.enable_author(self.user_dict_with_img['username'])
         response = self.c.get(url)
         self.assertEquals(response.status_code, 200)
 
@@ -148,21 +152,18 @@ class AuthorAuthentication(APITestCase):
         response = self.c.post('/author/registration', self.user_dict)
 
         self.assertEquals(response.status_code, 201, "User should be created")
-        scaffold.assertUserExists(self, response.data['author']['displayname'])
 
     def test_registration_without_name(self):
         self.user_dict.pop('first_name', None)
         response = self.c.post('/author/registration', self.user_dict)
 
         self.assertEquals(response.status_code, 201, "User should be created")
-        scaffold.assertUserExists(self, response.data['author']['displayname'])
 
     def test_registration_without_github(self):
         self.user_dict.pop('github_username', None)
         response = self.c.post('/author/registration', self.user_dict)
 
         self.assertEquals(response.status_code, 201, "User should be created")
-        scaffold.assertUserExists(self, response.data['author']['displayname'])
 
     def test_login_unapproved_user(self):
         """
@@ -178,13 +179,11 @@ class AuthorAuthentication(APITestCase):
 
         self.c.basic_credentials(self.user_dict['username'], self.user_dict['password'])
         response = self.c.get('/author/login')
-        self.assertEquals(response.status_code, 403, 'user should not be allowed to log in')
-        # content = json.loads(response.content)
+        self.assertEquals(response.status_code, 401, 'user should not be allowed to log in')
 
     def test_login(self):
         response = self.basic_client.get('/author/login')
         content = json.loads(response.content)
-        print(content)
         self.assertIsNot(content['token'], '', 'Empty Token')
         self.assertIsNotNone(content['token'], 'Empty Token')
 
