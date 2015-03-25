@@ -9,7 +9,7 @@ class APIUser(models.Model):
     id = UUIDField(auto=True, primary_key=True)
     host = models.URLField(null=False, default=settings.HOST)
     # TODO: change this to false for production
-    enabled = models.BooleanField(default=True)
+    enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=32, default="Author")
 
     class Meta:

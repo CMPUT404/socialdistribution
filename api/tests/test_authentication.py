@@ -76,6 +76,8 @@ class AuthorAuthentication(APITestCase):
 
         self.basic_client = scaffold.SocialAPIClient()
         self.basic_client.basic_credentials(RUSERNAME, PASSWORD)
+        #enable registered user
+        scaffold.enable_author(RUSERNAME)
 
         self.token_client = scaffold.SocialAPIClient()
         self.token_client.token_credentials(self.author)
@@ -162,10 +164,27 @@ class AuthorAuthentication(APITestCase):
         self.assertEquals(response.status_code, 201, "User should be created")
         scaffold.assertUserExists(self, response.data['author']['displayname'])
 
+    def test_login_unapproved_user(self):
+        """
+        Test a registration where all values are given in the JSON body
+        """
+        response = self.c.post('/author/registration', self.user_dict)
+
+        self.assertEquals(response.status_code, 201, "User and Author not created")
+
+        # Confirm that model matches
+        user = User.objects.get(username = USERNAME)
+        self.assertEquals(user.username, USERNAME, "Usernames don't match")
+
+        self.c.basic_credentials(self.user_dict['username'], self.user_dict['password'])
+        response = self.c.get('/author/login')
+        self.assertEquals(response.status_code, 403, 'user should not be allowed to log in')
+        # content = json.loads(response.content)
+
     def test_login(self):
         response = self.basic_client.get('/author/login')
         content = json.loads(response.content)
-
+        print(content)
         self.assertIsNot(content['token'], '', 'Empty Token')
         self.assertIsNotNone(content['token'], 'Empty Token')
 

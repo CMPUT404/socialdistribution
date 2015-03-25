@@ -6,6 +6,7 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework import status
+from ..permissions.author import IsEnabled
 
 from ..serializers.author import (
     RegistrationSerializer,
@@ -53,7 +54,7 @@ class AuthorRegistration(APIView):
             token, created = Token.objects.get_or_create(user=author.user)
             serializer = AuthorSerializer(author)
 
-            return Response({'token': token.key, 'author': serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({'author': serializer.data}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,8 +81,8 @@ class Login(APIView):
       "token": "steve's token hash"
     }
     """
-    authentication_classes = (BasicAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    authentication_classes = (BasicAuthentication, )
+    permission_classes = (IsAuthenticated, IsEnabled)
 
     def get(self, request, format=None):
       """Returns authentication token after validating Basic Auth header"""
