@@ -1,10 +1,8 @@
-from abc import ABCMeta
-from requests.api import request
+import requests as request
 from requests.auth import HTTPBasicAuth
 from ..serializers import AuthorSerializer, PostSerializer
 
 class Integrator:
-    __metaclass__ = ABCMeta
 
     def __init__(self, node, headers={}):
         self.host = node.host
@@ -45,7 +43,7 @@ class Integrator:
         response = self.request(request.get, "posts")
 
         if response.status_code == 200:
-            return response.json()
+            return response.json()["posts"]
         else:
             print "Error calling %s/posts" % (self.host)
             return []

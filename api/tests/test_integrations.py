@@ -7,7 +7,6 @@ class IntegrationTests(TestCase):
         self.integrators = Accumulator.get_integrators()
 
     def test_public_posts(self):
-        print "WTF"
         count = 0
         for integrator in self.integrators:
             posts = integrator.get_public_posts()

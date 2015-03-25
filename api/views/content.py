@@ -151,7 +151,7 @@ class PublicPostsViewSet(
         posts = serializer.data
 
         # dont return public posts of other nodes in node-to-node calls
-        if request.auth is not None and request.user.type is not "Node":
+        if request.auth is None or request.user.type is not "Node":
             foreign_posts = Aggregator.get_public_posts()
             posts.extend(foreign_posts)
 
