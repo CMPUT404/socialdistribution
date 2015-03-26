@@ -1,9 +1,12 @@
-from django.contrib.admin import ModelAdmin
+from django.contrib.admin import ModelAdmin, BooleanFieldListFilter
 
 
 class AuthorOptions(ModelAdmin):
     list_display = ['id', 'user', 'github_username', 'host', 'bio', 'enabled']
-    list_editable = ['github_username', 'host', 'bio', 'enabled']
+    list_editable = ['user', 'github_username', 'host', 'bio', 'enabled']
+    list_filter = (
+        ('enabled', BooleanFieldListFilter),
+    )
 
     def approve_author(self, request, queryset):
         queryset.update(enabled=True)
@@ -18,7 +21,7 @@ class AuthorOptions(ModelAdmin):
 
 class CachedAuthorOptions(ModelAdmin):
     list_display = ['id', 'displayname', 'host', 'url']
-    list_editable = ['host', 'url']
+    list_editable = ['displayname', 'host', 'url']
 
     # Deletion should occur only through Author models and friend/followers
     def has_delete_permission(self, request, obj=None):
