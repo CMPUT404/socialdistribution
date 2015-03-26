@@ -36,11 +36,7 @@ export default React.createClass({
     };
   },
 
-  refresh: function() {
-    AuthorActions.fetchAuthor(this.params.id, this.params.host);
-  },
-
-  componentDidMount: function () {
+  updateParams: function() {
     this.params = this.getParams();
 
     if (!_.isUndefined(this.params.host)) {
@@ -50,8 +46,21 @@ export default React.createClass({
     if (this.params.id === 'profile') {
       this.params.id = AuthorStore.getAuthor().id;
     }
+  },
 
+  // https://github.com/rackt/react-router/blob/master/docs/guides/overview.md#important-note-about-dynamic-segments
+  componentWillReceiveProps: function(nextProps) {
+    this.updateParams();
+    this.refresh();
+  },
+
+  refresh: function() {
+    AuthorActions.fetchAuthor(this.params.id, this.params.host);
+  },
+
+  componentDidMount: function () {
     this.listen(AuthorActions.logout, () => this.transitionTo('login'));
+    this.updateParams();
     this.refresh();
   },
 
