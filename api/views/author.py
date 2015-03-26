@@ -198,8 +198,9 @@ class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
         except:
             friend = CachedAuthor.objects.get(id=friend_id)
 
+        requestHost = "http://%s/" % request.get_host()
         # parse any incoming api calls from other nodes
-        if request.get_host() not in [settings.HOST, settings.FRONTEND_HOST, "testserver"]:
+        if requestHost not in [settings.HOST, settings.FRONTEND_HOST, "testserver"]:
             author.add_request(friend)
 
         # Otherwise, figureout how to handle the request
