@@ -28,6 +28,8 @@ ALLOWED_HOSTS = []
 
 HOST = "http://localhost:8000/"
 
+NODE_IMAGE_PERMISSION = True
+
 # Application definition
 
 INSTALLED_APPS = (
