@@ -4,10 +4,10 @@ import { addons } from 'react/addons';
 import { Navigation } from 'react-router';
 import { Row, Col, Input, PageHeader } from 'react-bootstrap';
 
-import AuthorActions from '../actions/author';
-import AuthorStore from '../stores/author';
+import AuthorActions from '../../actions/author';
+import AuthorStore from '../../stores/author';
 
-import ActionListener from '../mixins/action-listener';
+import ActionListener from '../../mixins/action-listener';
 
 // This the registration handler
 export default React.createClass({
@@ -40,7 +40,7 @@ export default React.createClass({
 
   componentDidMount: function() {
     // If registration is complete, transition away
-    this.listen(AuthorActions.register.complete, () => this.transitionTo('timeline'));
+    this.listen(AuthorActions.register.complete, () => this.transitionTo('posts'));
   },
 
   register: function(evt) {
@@ -70,8 +70,8 @@ export default React.createClass({
 
   render: function() {
     return (
-      <Col md={4} mdOffset={4}>
-        <Row><PageHeader>Sign Up</PageHeader></Row>
+      <Col md={4} mdOffset={4} className="well">
+        <Row><h2 className="text-center">Sign Up</h2></Row>
         <Row>
           <form onSubmit={this.register}>
             <Input type="text"  label='Displayname *' placeholder="Displayname" valueLink={this.linkState('displayname')} required/>

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import { addons } from 'react/addons';
 import { Input, Col } from 'react-bootstrap';
-import { markdown as Markdown } from 'markdown';
+import Marked from 'marked';
 
 import AuthorActions from '../../actions/author';
 import ProfileLink from './profile-link';

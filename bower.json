@@ -20,6 +20,8 @@
     "bootstrap": "~3.3.2",
     "alertifyjs": "~0.3.16",
     "font-awesome": "~4.3.0",
-    "octicons": "~2.2.0"
+    "octicons": "~2.2.0",
+    "highlightjs": "~8.4.0",
+    "bootswatch-dist": "3.3.2-flatly"
   }
 }

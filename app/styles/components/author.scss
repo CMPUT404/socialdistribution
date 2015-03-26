@@ -6,3 +6,9 @@
 .author-biography {
   padding-bottom: 10px;
 }
+
+.author-tabs>li.active>a,
+.author-tabs>li.active>a:hover,
+.author-tabs>li.active>a:focus {
+  background-color: #ecf0f1;
+}

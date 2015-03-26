@@ -3,9 +3,9 @@ import React from 'react';
 import { NavItemLink } from 'react-router-bootstrap';
 import { Navbar, Nav, NavItem } from 'react-bootstrap';
 
-import UserSearch from './usersearch';
-import AuthorStore from '../stores/author';
-import AuthorActions from '../actions/author';
+import UserSearch from '../usersearch';
+import AuthorStore from '../../stores/author';
+import AuthorActions from '../../actions/author';
 
 export default React.createClass({
   logout: function(evt) {
@@ -30,7 +30,7 @@ export default React.createClass({
     }
 
     return (
-      <Navbar brand="Social-Distribution">
+      <Navbar brand="Socshizzle">
         <Nav right>
           {navList}
         </Nav>

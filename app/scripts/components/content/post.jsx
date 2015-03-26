@@ -1,17 +1,13 @@
 import _ from 'lodash';
 import React from 'react';
 import Moment from 'moment';
-import { markdown as Markdown } from 'markdown';
+import Marked from 'marked';
 import { Col } from 'react-bootstrap';
 
 import Spinner from '../spinner';
 
 import Comment from './comment';
 import ProfileLink from './profile-link';
-
-function convertMarkdown(markdown) {
-  return Markdown.toHTML(markdown);
-}
 
 // Represents an individual  post.
 export default React.createClass({
@@ -33,7 +29,7 @@ export default React.createClass({
 
     switch(this.props.data.contentType) {
       case 'text/x-markdown':
-        content = <div dangerouslySetInnerHTML={{__html: convertMarkdown(this.props.data.content)}} />;
+        content = <div dangerouslySetInnerHTML={{__html: Marked(this.props.data.content)}} />;
         break;
       case 'text/html':
         content = <div dangerouslySetInnerHTML={{__html: this.props.data.content}} />;

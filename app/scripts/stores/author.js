@@ -8,8 +8,6 @@ import Author from '../objects/author';
 import Comment from '../objects/comment';
 import AuthorActions from '../actions/author';
 
-import { responseToPosts } from './post';
-
 // TODO:
 // * In prod, remove host API prefixes in AJAX calls
 var __API__ = 'http://localhost:8000';
@@ -22,27 +20,28 @@ export default Reflux.createStore({
     this.currentAuthor = null;
     this.displayAuthor = null;
 
-    this.listenTo(AuthorActions.login, 'onLogin');
-    this.listenTo(AuthorActions.logout, 'logOut');
-    this.listenTo(AuthorActions.register, 'onRegister');
-    this.listenTo(AuthorActions.checkAuth, 'onCheckAuth');
-    this.listenTo(AuthorActions.addFriend, 'onAddFriend');
-    this.listenTo(AuthorActions.createPost, 'onCreatePost');
-    this.listenTo(AuthorActions.deletePost, 'onDeletePost');
-    this.listenTo(AuthorActions.fetchPosts, 'onFetchPosts');
-    this.listenTo(AuthorActions.followFriend,'onFollowFriend');
-    this.listenTo(AuthorActions.fetchDetails, 'onFetchDetails');
-    this.listenTo(AuthorActions.createComment, 'onCreateComment');
+    this.listenTo(AuthorActions.login,          'onLogin');
+    this.listenTo(AuthorActions.logout,         'logOut');
+    this.listenTo(AuthorActions.register,       'onRegister');
+    this.listenTo(AuthorActions.checkAuth,      'onCheckAuth');
+    this.listenTo(AuthorActions.addFriend,      'onAddFriend');
+    this.listenTo(AuthorActions.createPost,     'onCreatePost');
+    this.listenTo(AuthorActions.deletePost,     'onDeletePost');
+    this.listenTo(AuthorActions.fetchAuthor,    'onFetchAuthor');
+    this.listenTo(AuthorActions.followFriend,   'onFollowFriend');
+    this.listenTo(AuthorActions.unfollowFriend, 'onUnfollowFriend');
+    this.listenTo(AuthorActions.createComment,  'onCreateComment');
 
     // Ajax fail listeners
-    this.listenTo(AuthorActions.login.fail, this.ajaxFailed);
-    this.listenTo(AuthorActions.register.fail, this.ajaxFailed);
-    this.listenTo(AuthorActions.createPost.fail, this.ajaxFailed);
-    this.listenTo(AuthorActions.deletePost.fail, this.ajaxFailed);
-    this.listenTo(AuthorActions.fetchPosts.fail, this.ajaxFailed);
-    this.listenTo(AuthorActions.fetchDetails.fail, this.ajaxFailed);
-    this.listenTo(AuthorActions.followFriend.fail, this.ajaxFailed);
-    this.listenTo(AuthorActions.createComment.fail, this.ajaxFailed);
+    this.listenTo(AuthorActions.login.fail,           'ajaxFailed');
+    this.listenTo(AuthorActions.register.fail,        'ajaxFailed');
+    this.listenTo(AuthorActions.createPost.fail,      'ajaxFailed');
+    this.listenTo(AuthorActions.deletePost.fail,      'ajaxFailed');
+    this.listenTo(AuthorActions.fetchAuthor.fail,     'ajaxFailed');
+    this.listenTo(AuthorActions.addFriend.fail,       'ajaxFailed');
+    this.listenTo(AuthorActions.followFriend.fail,    'ajaxFailed');
+    this.listenTo(AuthorActions.unfollowFriend.fail,  'ajaxFailed');
+    this.listenTo(AuthorActions.createComment.fail,   'ajaxFailed');
   },
 
   // if in a static method and need acces to store state
@@ -91,9 +90,8 @@ export default Reflux.createStore({
       .promise(this.registrationComplete, AuthorActions.register.fail);
   },
 
-  // Treat post-registration as a login
   registrationComplete: function(authorData) {
-    this.loginComplete(authorData);
+    alertify.success("Registration successful, please wait for an admin's approval");
     AuthorActions.register.complete();
   },
 
@@ -108,14 +106,14 @@ export default Reflux.createStore({
   },
 
   // Fetches author details via AJAX
-  onFetchDetails: function(id, host) {
+  onFetchAuthor: function(id, host) {
     Request
       .get(__API__ + '/author/' + id) //TODO: remove host
       .host(host)
-      .promise(this.fetchDetailsComplete, AuthorActions.fetchDetails.fail);
+      .promise(this.fetchAuthorComplete, AuthorActions.fetchAuthor.fail);
   },
 
-  fetchDetailsComplete: function(authorData) {
+  fetchAuthorComplete: function(authorData) {
     if (this.isLoggedIn() && this.currentAuthor.id === authorData.id) {
       // Update logged-in user's profile
       this.currentAuthor = new Author(authorData, this.currentAuthor.token);
@@ -124,12 +122,27 @@ export default Reflux.createStore({
       this.displayAuthor = new Author(authorData, null);
     }
 
-    this.trigger({displayAuthor: this.displayAuthor});
-    AuthorActions.fetchDetails.complete(this.displayAuthor);
-    this.fetchGHStream();
-  },
+    this.displayAuthor.posts = this.displayAuthor.posts.map((post) => {
+        post = new Post(post);
 
-  fetchGHStream: function() {
+        if (post.author.id === this.displayAuthor.id) {
+          post.author = this.displayAuthor;
+        }
+
+        post.comments = post.comments.map((comment) => {
+          if (comment.author.id === this.displayAuthor.id) {
+            comment.author = this.displayAuthor;
+          }
+
+          return comment;
+        });
+
+        return post;
+    });
+
+    this.trigger({displayAuthor: this.displayAuthor});
+    AuthorActions.fetchAuthor.complete(this.displayAuthor);
+
     if (this.displayAuthor.github_username) {
       Request
         .get('https://api.github.com/users/' + this.displayAuthor.github_username + '/events')
@@ -140,31 +153,6 @@ export default Reflux.createStore({
           this.ajaxFailed('GitHub: ' + error);
       });
     }
-  },
-
-  // Fetches author's posts
-  onFetchPosts: function(id) {
-    Request
-      .get(__API__ + '/author/' + id + '/posts') //TODO: remove host
-      .token(this.getToken())
-      .promise(this.fetchPostsComplete.bind(this, id), AuthorActions.fetchPosts.fail);
-  },
-
-  fetchPostsComplete: function(id, postsData) {
-    var posts = responseToPosts(postsData);
-
-    posts.forEach((post) => {
-      post.author = this.displayAuthor;
-
-      post.comments.forEach((comment) => {
-        if (comment.author.id == this.displayAuthor.id) {
-          comment.author = this.displayAuthor;
-        }
-      });
-    });
-
-    this.displayAuthor.posts = posts;
-    this.trigger({displayAuthor: this.displayAuthor});
   },
 
   onCreatePost: function(post) {
@@ -224,6 +212,50 @@ export default Reflux.createStore({
     AuthorActions.createComment.complete(comment);
   },
 
+  onAddFriend: function(request) {
+    Request
+      .post(__API__ + '/friendrequest')
+      .token(this.getToken())
+      .send(request)
+      .promise(this.addFriendComplete.bind(this, request),
+                AuthorActions.addFriend.fail);
+  },
+
+  addFriendComplete: function(request) {
+    this.currentAuthor.following.push(request.friend.id);
+    this.currentAuthor.pending.push(request.friend.id);
+    this.trigger({currentAuthor: this.currentAuthor});
+    AuthorActions.addFriend.complete(request.friend);
+  },
+
+  onFollowFriend: function(id) {
+    Request
+      .get(__API__ + '/author/' + this.currentAuthor.id + '/follow/' + id)
+      .token(this.getToken())
+      .promise(this.followFriendComplete.bind(this, id),
+                AuthorActions.followFriend.fail);
+  },
+
+  followFriendComplete: function(id) {
+    this.currentAuthor.following.push(id);
+    this.trigger({currentAuthor: this.currentAuthor});
+    AuthorActions.followFriend.complete(id);
+  },
+
+  onUnfollowFriend: function(id) {
+    Request
+      .del(__API__ + '/author/' + this.currentAuthor.id + '/follow/' + id)
+      .token(this.getToken())
+      .promise(this.unfollowFriendComplete.bind(this, id),
+                AuthorActions.unfollowFriend.fail);
+  },
+
+  unfollowFriendComplete: function(id) {
+    _.pull(this.currentAuthor.friends, id);
+    _.pull(this.currentAuthor.following, id);
+    this.trigger({currentAuthor: this.currentAuthor});
+    AuthorActions.followFriend.complete(id);
+  },
   // This is a listener not a handler
   // `logOut` doesn't require any AJAX calls
   logOut: function() {
@@ -234,21 +266,6 @@ export default Reflux.createStore({
   // Catches all failed requests via actions listeners
   ajaxFailed: function(error) {
     alertify.error(error);
-  },
-
-  // WIP..
-
-  subscribeTo: function (author) {
-    // find authors and add subscriber
-    this.currentAuthor.subscribeTo(author);
-    // TODO: ajax call here to persist
-  },
-
-  // unsubscribes the current user from the specified author
-  unsubscribeFrom: function (author) {
-    // find authors and add subscriber
-    this.currentAuthor.unsubscribeFrom(author);
-    // TODO: ajax call here to persist
   },
 
 });

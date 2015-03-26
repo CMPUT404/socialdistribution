@@ -6,7 +6,9 @@
   "license": "None",
   "dependencies": {
     "bluebird": "^2.9.13",
+    "highlight.js": "^8.4.0",
     "lodash": "^3.5.0",
+    "marked": "^0.3.3",
     "react": "~0.12.2",
     "react-bootstrap": "~0.16.0",
     "react-router": "~0.12.4",
