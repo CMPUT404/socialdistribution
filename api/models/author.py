@@ -107,7 +107,10 @@ class CachedAuthor(models.Model):
     id = UUIDField(primary_key=True)
     host = models.URLField(blank=False, null=False, default=settings.HOST)
     displayname = models.CharField(max_length=40, blank=False, null=False)
-    url = models.URLField(blank=False, null=False, default=settings.HOST)
+
+    @property
+    def url(self):
+        return self.host + 'author/' + str(self.id)
 
     # This is used for the related string field serializer
     def __unicode__(self):

@@ -116,7 +116,7 @@ class DirtyCachedAuthorSerializer(serializers.Serializer):
     id = serializers.UUIDField(required = True)
     host = serializers.URLField(required = True)
     displayname = serializers.CharField(required = True)
-    url = serializers.URLField(required = False)
+    url = serializers.URLField(required=False)
 
     def to_internal_value(self, data):
         """Use the superclass to clean the data and then manually save it"""

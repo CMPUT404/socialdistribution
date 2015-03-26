@@ -205,14 +205,29 @@ class CreateFriendRequest(generics.CreateAPIView):
     # TODO Lock this down. People can spoof identity and create friend requests
 
     def create(self, request, *args, **kwargs):
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
-        # TODO. The action was successful
-        # We can optionally return the author's friends list in responses
-        # currently, a 201 Created and the given data are returned
-        # TODO. Working, but response could be more descriptive.
+        success = True
+
+        friend = serializer.data["friend"]
+        if friend["host"] is not settings.HOST:
+            integrator = Integrator.build_from_host(friend["host"])
+            success = integrator.send_friend_request(
+                CachedAuthor(**serializer.data["author"]),
+                CachedAuthor(**friend)
+            )
+
+        if success and request.get_host() is not settings.FRONTEND_HOST:
+            pass
+            # TODO: update friendship status to REQUESTED
+            # TODO: add friend request notification to author model
+        elif success:
+            pass
+            # TODO: update friendship status to PENDING
+            # TODO: automatically add to author followers
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

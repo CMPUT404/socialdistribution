@@ -7,14 +7,16 @@ import django
 
 django.setup()
 
-user = User.objects.create()
-Node.objects.get_or_create(
+user = User.objects.create(username="hindlebook")
+user.save()
+node = Node.objects.create(
     user=user,
-    host="http://hindlebook.tamarabyte.com",
-    api_postfix="api",
+    host="http://hindlebook.tamarabyte.com/api/",
     foreign_username="test",
     foreign_pass="test",
-    integrated=True
+    outbound=True
 )
+
+node.save()
 
 print "DONE!"

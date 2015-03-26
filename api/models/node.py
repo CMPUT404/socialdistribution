@@ -2,10 +2,9 @@ from user import APIUser
 from django.db.models import fields
 
 class Node(APIUser):
-    api_postfix = fields.CharField(max_length=32)
     foreign_username = fields.CharField(max_length=32)
     foreign_pass = fields.CharField(max_length=32)
-    integrated = fields.BooleanField(default=False)
+    outbound = fields.BooleanField(default=False)
 
     # Used to set parent "type" to "Node"
     def __init__(self, *args, **kwargs):
@@ -15,4 +14,4 @@ class Node(APIUser):
                 super(Node, self).__init__(*args, **kwargs)
 
     def __unicode__(self):
-        return u'%s' % (self.host)
+        return u'%s:%s' % (self.id, self.host)

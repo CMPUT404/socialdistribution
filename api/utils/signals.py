@@ -34,7 +34,6 @@ def update_cached_author(sender, instance, *args, **kwargs):
         return
 
     cached.host = instance.host
-    cached.url = instance.url
     cached.displayname = instance.user.username
     cached.save()
 

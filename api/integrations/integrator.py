@@ -1,23 +1,33 @@
 import requests as request
+from ..models import Node
 from requests.auth import HTTPBasicAuth
 from ..serializers import AuthorSerializer, PostSerializer
 
 class Integrator:
 
-    def __init__(self, node, headers={}):
+    def __init__(self, node, headers={}, requestor=None):
         self.host = node.host
-        self.api_postfix = node.api_postfix
         self.username = node.foreign_username
         self.password = node.foreign_pass
         self.headers = headers
+        self.requestor = requestor
+
+    @staticmethod
+    def build_for_author(author):
+        """
+        Builds an integrator that works for the provided foreign author.
+        """
+        node = Node.objects.get(host=author.host)
+        return Integrator(node)
+
+    @staticmethod
+    def build_from_host(host):
+        node = Node.objects.get(host=host)
+        return Integrator(node)
 
     def build_url(self, endpoint):
-        if self.api_postfix is not None:
-            base = "%s/%s" % (self.host, self.api_postfix)
-        else:
-            base = self.host
-
-        return "%s/%s" % (base, endpoint)
+        # Don't touch the slashes, or lack thereof, intentional.
+        return "%s%s" % (self.host, endpoint)
 
     def build_auth(self):
         """
@@ -25,13 +35,13 @@ class Integrator:
         """
         return HTTPBasicAuth(self.username, self.password)
 
-    def request(self, method, endpoint, data={}):
+    def request(self, method, url, data={}, headers={}):
         """
         Handles build and sending requests based on defined settings.
         """
         return method(
-            self.build_url(endpoint),
-            headers=self.headers,
+            url,
+            headers=headers,
             auth=self.build_auth(),
             data=data
         )
@@ -40,56 +50,81 @@ class Integrator:
         """
         Queries foreign server for /posts
         """
-        response = self.request(request.get, "posts")
-
+        response = self.request(request.get, self.build_url("posts"))
         if response.status_code == 200:
-            return response.json()["posts"]
+            return self.prepare_post_data(response)
         else:
-            print "Error calling %s/posts" % (self.host)
+            print "Error calling %s" % (self.build_url("posts"))
             return []
 
-    def get_author(self, author_id):
+    def get_author(self, origin):
         """
         Queries foreign server for /author/:id
         """
-        endpoint = "author/%s" % author_id
-        response = self.request(request.get, endpoint).json()
-        author_serializer = AuthorSerializer(response)
-        return author_serializer.data
+        response = self.request(request.get, origin, {})
+        print response
+        if response.status_code == 200:
+            return self.prepare_author_data(response)
+        else:
+            return None
 
-    def get_author_posts(self, author_id):
+    def get_author_posts(self, origin, requestor=None):
         """
         Queries foreign server for /author/:id/posts
         """
-        endpoint = "author/%s/posts" % author_id
-        response = self.request(request.get, endpoint).json()["posts"]
-        posts_serializer = PostSerializer(response)
-        return posts_serializer.data
+        headers = {"UUID": str(requestor)}
+
+        response = self.request(request.get, "%s/posts" % (origin), {}, headers)
+        print vars(response), "Data"
+        if response.status_code == 200:
+            return self.prepare_post_data(response)
+        else:
+            return []
 
     def send_friend_request(self, author, foreign_author):
         data = {
             "query": "friendrequest",
             "author": {
-                "id": foreign_author.id
+                "id": foreign_author.id,
+                "host": foreign_author.host,
+                "displayname": foreign_author.displayname
             },
             "friend": {
                 "id": author.id,
                 "host": author.host,
-                "displayname": author.username,
+                "displayname": author.displayname,
                 "url": author.url
             }
         }
-        response = self.request(request.post, "friendrequest", data)
-        print vars(response)
-        return response
 
-    def get_author_view(self, author_id):
+        response = self.request(request.post, self.build_url("friendrequest"), data)
+        if response.status_code == 201:
+            return True
+        else:
+            return False
+
+    def get_author_view(self, origin):
         """
         Combines together a bunch of foreign author calls to one object to help the
         frontend. Includes, author's info, friends, and posts.
         """
-        author = get_author(author_id)
-        posts = get_author_posts(author_id)
-        author["posts"] = posts
-        author["friends"] = friends
+        author = self.get_author(origin)
+        # posts = get_author_posts(author_id)
+        # friends = get_author_friends(author_id)
+        # author["posts"] = posts
+        # author["friends"] = friends
+        return author
+
+    def get_author_view_from_id(self, id):
+        return self.get_author_view(self.build_url("author/%s" % (id)))
+
+    def prepare_post_data(self, response):
+        posts = response.json()["posts"]
+        for post in posts:
+            post["source"] = response.url
+        return posts
+
+    def prepare_author_data(self, response):
+        author = response.json()
+        author["source"] = self.host
         return author
