@@ -11,7 +11,7 @@ class IsEnabled(authentication.BasicAuthentication):
     def authenticate_credentials(self, userid, password):
         author = Author.objects.get(user__username=userid)
         if not author.enabled:
-            raise exceptions.AuthenticationFailed('account pending approval by admin')
+            raise exceptions.AuthenticationFailed('Account pending admin approval.')
 
         return super(IsEnabled, self).authenticate_credentials(userid, password)
         # return author.enabled
