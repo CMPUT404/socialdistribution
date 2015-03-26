@@ -52,12 +52,14 @@ class Author(APIUser):
         author = self._get_cached_author(author)
         if not self.following.filter(id=author.id).exists():
             self.following.add(author)
+            self.save()
 
     def add_pending(self, friend):
         """Adds a pending friend request"""
         friend = self._get_cached_author(friend)
         if not self.pending.filter(id=friend.id).exists():
             self.pending.add(friend)
+            self.save()
 
         self.follow(friend)
 
@@ -66,6 +68,7 @@ class Author(APIUser):
         friend = self._get_cached_author(friend)
         if not self.friends.filter(id=friend.id).exists():
             self.friends.add(friend)
+            self.save()
 
         # update other status accordingly
         self.remove_pending(friend)
@@ -82,6 +85,7 @@ class Author(APIUser):
 
         elif not self.requests.filter(id=friend.id).exists():
             self.requests.add(friend)
+            self.save()
 
     def remove_friend(self, friend):
         """
@@ -92,6 +96,7 @@ class Author(APIUser):
 
         try:
             self.friends.remove(friend)
+            self.save()
         except:
             # TODO: some sort of logging/exception handling
             pass
@@ -99,6 +104,7 @@ class Author(APIUser):
         try:
             author = Author.objects.get(id=friend.id)
             author.friends.remove(self)
+            self.save()
         except:
             # TODO: some sort of logging/exception handling
             pass
@@ -108,6 +114,7 @@ class Author(APIUser):
         try:
             self.remove_friend(following)
             self.following.remove(following)
+            self.save()
         except:
             # TODO: some sort of logging/exception handling
             pass
@@ -116,6 +123,7 @@ class Author(APIUser):
         friend = self._get_cached_author(friend)
         try:
             self.requests.remove(friend)
+            self.save()
         except:
             # TODO: some sort of logging/exception handling
             pass
@@ -124,6 +132,7 @@ class Author(APIUser):
         friend = self._get_cached_author(friend)
         try:
             self.pending.remove(friend)
+            self.save()
         except:
             # TODO: some sort of logging/exception handling
             pass
