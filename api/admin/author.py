@@ -11,7 +11,7 @@ class AuthorOptions(ModelAdmin):
     def approve_author(self, request, queryset):
         try:
             queryset.update(enabled=True)
-            self.message_user(request, "account(s) successfully enabled")
+            self.message_user(request, "Account(s) successfully enabled")
         except:
             self.message_user(request, "Failed to enable account(s)")
     approve_author.short_description = "enable account(s)"
@@ -19,7 +19,7 @@ class AuthorOptions(ModelAdmin):
     def disable_author(self, request, queryset):
         try:
             queryset.update(enabled=False)
-            self.message_user(request, "account(s) successfully disabled")
+            self.message_user(request, "Account(s) successfully disabled")
         except:
             self.message_user(request, "Failed to disable account(s)")
     disable_author.short_description = "disable account(s)"

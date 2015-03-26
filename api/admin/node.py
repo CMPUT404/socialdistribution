@@ -6,7 +6,7 @@ class NodeOptions(ModelAdmin):
     def share_images(self, request, queryset):
         try:
             queryset.update(image_sharing=True)
-            self.message_user(request, "successfully enabled image sharing")
+            self.message_user(request, "Successfully enabled image sharing")
         except:
             self.message_user(request, "Failed to enable image sharing")
     share_images.short_description = "enable image sharing"
@@ -14,7 +14,7 @@ class NodeOptions(ModelAdmin):
     def dont_share_images(self, request, queryset):
         try:
             queryset.update(image_sharing=False)
-            self.message_user(request, "successfully disabled image sharing")
+            self.message_user(request, "Successfully disabled image sharing")
         except:
             self.message_user(request, "Failed to enable image sharing")
     dont_share_images.short_description = "disable image sharing"
