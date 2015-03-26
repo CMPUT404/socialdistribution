@@ -6,6 +6,7 @@ class Node(APIUser):
     foreign_username = fields.CharField(max_length=32)
     foreign_pass = fields.CharField(max_length=32)
     integrated = fields.BooleanField(default=False)
+    image_sharing = fields.BooleanField(default=True)
 
     # Used to set parent "type" to "Node"
     def __init__(self, *args, **kwargs):

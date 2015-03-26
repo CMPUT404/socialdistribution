@@ -9,12 +9,20 @@ class AuthorOptions(ModelAdmin):
     )
 
     def approve_author(self, request, queryset):
-        queryset.update(enabled=True)
-    approve_author.short_description = "Allow user access the app"
+        try:
+            queryset.update(enabled=True)
+            self.message_user(request, "account(s) successfully enabled")
+        except:
+            self.message_user(request, "Failed to enable account(s)")
+    approve_author.short_description = "enable account(s)"
 
     def disable_author(self, request, queryset):
-        queryset.update(enabled=False)
-    disable_author.short_description = "Prevent user from accessing the app"
+        try:
+            queryset.update(enabled=False)
+            self.message_user(request, "account(s) successfully disabled")
+        except:
+            self.message_user(request, "Failed to disable account(s)")
+    disable_author.short_description = "disable account(s)"
 
     actions = [approve_author, disable_author]
 
