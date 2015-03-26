@@ -11,7 +11,6 @@ from ..permissions.permissions import IsAuthor, Custom
 from ..permissions.author import IsEnabled
 from ..models.author import Author
 from ..serializers.author import AuthorSerializer
-from ..renderers.content import PostsJSONRenderer
 from ..integrations import Aggregator
 from api_settings import settings
 
@@ -107,8 +106,8 @@ class AuthorPostViewSet(
         if author_pk is None:
 
             # check if we're querying for a remote author
-            if "HTTP_AUTH_HOST" in request.META:
-                host = request.META["HTTP_AUTH_HOST"]
+            if "HTTP_AUTHOR_HOST" in request.META:
+                host = request.META["HTTP_AUTHOR_HOST"]
                 integrator = Integrator.build_from_host(host)
                 data = integrator.get_author_view_from_id(pk)
 
@@ -192,23 +191,17 @@ class PublicPostsViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    renderer_classes = (PostsJSONRenderer,)
-
     def list(self, request):
-        return Response(get_public_posts(self, request))
+        """
+        Returns a list of public posts based on APIUser type.
+        """
+        internal_posts = Post.objects.filter(visibility="PUBLIC")
+        serializer = PostSerializer(internal_posts, many=True)
+        posts = serializer.data
 
+        # dont return public posts of other nodes in node-to-node calls
+        if request.auth is None or request.user.type is not "Node":
+            foreign_posts = Aggregator.get_public_posts()
+            posts.extend(foreign_posts)
 
-def get_public_posts(self, request):
-    """
-    Returns a list of public posts based on APIUser type.
-    """
-    internal_posts = Post.objects.filter(visibility="PUBLIC")
-    serializer = PostSerializer(internal_posts, many=True)
-    posts = serializer.data
-
-    # dont return public posts of other nodes in node-to-node calls
-    if request.auth is None or request.user.type is not "Node":
-        foreign_posts = Aggregator.get_public_posts()
-        posts.extend(foreign_posts)
-
-    return posts
+        return Response({"posts": posts})

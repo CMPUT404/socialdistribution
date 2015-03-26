@@ -25,10 +25,7 @@ class Aggregator(object):
     def get_posts_for_authors(authors):
         posts = []
         for author in authors:
-            print author
             integrator = Integrator.build_for_author(author)
             posts.extend(integrator.get_author_posts(author.url))
-
-        print posts, "Author posts"
 
         return posts
