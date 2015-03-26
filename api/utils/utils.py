@@ -18,6 +18,7 @@ def custom_exception_handler(exc, context):
             "error":"message body"
         }
     """
+
     # Marshal DRF into a standardized format
     response = exception_handler(exc, context)
     if response is not None:

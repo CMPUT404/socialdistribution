@@ -57,7 +57,7 @@ class ModifyRelationsMixin(object):
         try:
             method(self.return_cached_author(relator))
         except:
-            raise RelationFailed
+            raise AuthorNotFound
 
     def get_author(self, id):
         try:
@@ -77,15 +77,6 @@ class ModifyRelationsMixin(object):
             return self.get_cached_author(instance.id)
         return instance
 
-    def add_friend(self, author, friend):
-        self.call_model(author.add_friend, friend)
-
-    def add_following(self, author, following):
-        self.call_model(author.add_following, following)
-
-    def add_request(self, author, friend):
-        self.call_model(author.add_request, friend)
-
     def remove_friend(self, author, friend):
         self.call_model(author.remove_friend, friend)
 
@@ -94,12 +85,6 @@ class ModifyRelationsMixin(object):
 
     def remove_request(self, author, friend):
         self.call_model(author.remove_request, friend)
-
-    def is_following(self, author, following):
-        return True if author.following.filter(id=following.id) else False
-
-    def is_friend(self, author, friend):
-        return True if author.friend.filter(id=friend.id) else False
 
     def query_foreign_author(self, author):
         # TODO after integration
@@ -151,19 +136,12 @@ class FollowerViewSet(
 
             # Can handle this in a permission
             if request.user != author.user:
+                print "Trying to spoof author"
                 raise AuthenticationFailure
 
-            try:
-                # Who we are following
-                following = Author.objects.get(id=pk)
-            except:
-                # Person we are following is on foreign node
-                # TODO integration
-                raise AuthorNotFound
-
-            self.add_following(author, following)
-
-            serializer = self.serializer_class(author)
+            # Who we are following
+            follow = get_object_or_404(self.queryset, id=pk)
+            author.follow(follow)
         else:
             author = get_object_or_404(self.queryset, id=pk)
 
@@ -207,10 +185,6 @@ class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
     queryset = Author.objects.all()
     serializer_class = FriendRequestSerializer
 
-    # TODO Lock this down. People can spoof identity and create friend requests
-
-    # TODO. This code currently only works for locally hosted authors
-
     def create(self, request, *args, **kwargs):
 
         serializer = self.get_serializer(data=request.data)
@@ -225,54 +199,37 @@ class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
             friend = CachedAuthor.objects.get(id=friend_id)
 
         # parse any incoming api calls from other nodes
-        if request.get_host() is not settings.FRONTEND_HOST:
-            self.add_request(author, friend)
-            # TODO: check if friend request has been sent already, convert to
-                # friends
-                # self.add_friend(friend, author)
-                # self.add_friend(author, friend)
-                # headers = self.get_success_headers(serializer.data)
-                # return Response(serializer.data, status=status.HTTP_202_ACCEPTED,
-                                # headers=headers)
+        if request.get_host() not in [settings.HOST, settings.FRONTEND_HOST, "testserver"]:
+            author.add_request(friend)
 
         # Otherwise, figureout how to handle the request
         else:
-
             # perform remote calls if necessary
             if friend.is_local() is False:
                 integrator = Integrator.build_from_host(friend["host"])
                 success = integrator.send_friend_request(
                     CachedAuthor(**serializer.data["author"]),
-                    CachedAuthor(**friend)
+                    friend
                 )
 
                 if not success:
                     # TODO: Exception of some sort
                     pass
 
-                # TODO add pending state
-                self.add_following(author, friend)
+                author.follow(friend)
+                author.add_pending(friend)
 
+            # otherwise assume we're operating on two local authors
             else:
+                # if both want to be friends, make it so
+                if author.is_pending_friend(friend):
+                    author.add_friend(friend)
+                    friend.add_friend(author)
+                else:
+                    author.add_pending(friend)
+                    friend.add_request(author)
 
-                # If friend is already following -> Instant friendship
-                if self.is_following(friend, author) is False:
-                    self.add_following(author, friend)
-
-                # TODO: check if friend request has been sent already, convert to
-                # friends
-                # self.add_friend(friend, author)
-                # self.add_friend(author, friend)
-                # headers = self.get_success_headers(serializer.data)
-                # return Response(serializer.data, status=status.HTTP_202_ACCEPTED,
-                                # headers=headers)
-
-                # Otherwise add resuest to friend
-                self.add_request(friend, author)
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                              headers=headers)
+        return Response(status=status.HTTP_200_OK)
 
 
 class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):

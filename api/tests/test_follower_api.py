@@ -7,13 +7,14 @@ from ..models.author import (
     CachedAuthor)
 import uuid
 from ..utils import scaffold as s
+from api_settings import settings
 
 c = APIClient()
 
 # Values to be inserted and checked in the Author model
 GITHUB_USERNAME = "gituser"
 BIO = "This is my witty biography!"
-HOST = "http://example.com/"
+HOST = settings.HOST
 
 # required User model attributes
 USERNAME = "ausername"
@@ -77,7 +78,7 @@ class AuthorModelAPITests(TestCase):
 
     def test_delete_follow(self):
         # Author is now following author_a
-        self.author.add_following(self.author_a)
+        self.author.follow(self.author_a)
 
         response = self.client.delete('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
         print response
@@ -148,27 +149,29 @@ class AuthorModelAPITests(TestCase):
             "author":{
                 "id":self.author.id,
                 "host":HOST,
-                "displayname":self.author.user.username
+                "displayname":self.author.user.username,
             },
             "friend":{
                 "id":self.author_a.id,
-                "host":"http://example.org/",
-                "displayname":"foreignuser",
-                "url":"http://example.org/author/" + str(self.author_a.id),
+                "host": HOST,
+                "displayname":self.author_a.displayname,
             }
         }
         response = self.client.post('/friendrequest', request)
-        self.assertEquals(response.status_code, 202)
+        self.assertEquals(response.status_code, 200)
 
         # This should have created only a following and request status
-        self.assertEquals(1, len(self.author.following.all()))
-        self.assertEquals(1, len(self.author_a.requests.all()))
-
         self.assertEquals(0, len(self.author.friends.all()))
+        self.assertEquals(1, len(self.author.following.all()))
+        self.assertEquals(1, len(self.author.pending.all()))
+
+        self.assertEquals(1, len(self.author_a.requests.all()))
+        self.assertEquals(0, len(self.author_a.following.all()))
+        self.assertEquals(0, len(self.author_a.pending.all()))
         self.assertEquals(0, len(self.author_a.friends.all()))
 
     def test_api_friend_request(self):
-        self.author_a.add_following(self.author)
+        self.author.add_pending(self.author_a)
         request = {
             "query":"friendrequest",
             "author":{
@@ -178,19 +181,19 @@ class AuthorModelAPITests(TestCase):
             },
             "friend":{
                 "id":self.author_a.id,
-                "host":"http://example.org/",
-                "displayname":"foreignuser",
-                "url":"http://example.org/author/" + str(self.author_a.id),
+                "host": HOST,
+                "displayname":self.author_a.displayname,
             }
         }
         response = self.client.post('/friendrequest', request)
-        self.assertEquals(response.status_code, 201)
+        self.assertEquals(response.status_code, 200)
 
         # This should have created the friendship as author already follows author_a
         self.assertEquals(1, len(self.author.following.all()))
-        self.assertEquals(0, len(self.author_a.requests.all()))
-
+        self.assertEquals(0, len(self.author.pending.all()))
         self.assertEquals(1, len(self.author.friends.all()))
+
+        self.assertEquals(0, len(self.author_a.requests.all()))
         self.assertEquals(1, len(self.author_a.friends.all()))
 
     def test_api_get_friends(self):
@@ -198,8 +201,8 @@ class AuthorModelAPITests(TestCase):
         self.author_a.add_friend(self.author)
 
         # These friends should not show up in response
-        self.author.add_following(self.author_b)
-        self.author_b.add_following(self.author)
+        self.author.follow(self.author_b)
+        self.author_b.follow(self.author)
 
         response = self.client.get('/friends/%s/%s' %(self.author.id, self.author_a.id))
         self.assertEquals(response.status_code, 200)
@@ -214,7 +217,7 @@ class AuthorModelAPITests(TestCase):
         self.assertTrue(str(self.author_a.id) in authors)
 
     def test_api_query_no_friends(self):
-        self.author.add_following(self.author_a)
+        self.author.follow(self.author_a)
 
         response = self.client.get('/friends/%s/%s' %(self.author.id, self.author_a.id))
         self.assertEquals(response.status_code, 200)

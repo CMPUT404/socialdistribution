@@ -1,10 +1,12 @@
 import requests as request
+from rest_framework import exceptions
 from ..models import Node
 from requests.auth import HTTPBasicAuth
-from ..serializers import AuthorSerializer, PostSerializer
 
 class Integrator:
-
+    """Handles building, executing, and formatting responses from calls to
+    foreign nodes.
+    """
     def __init__(self, node, headers={}, requestor=None):
         self.host = node.host
         self.username = node.foreign_username
@@ -17,12 +19,13 @@ class Integrator:
         """
         Builds an integrator that works for the provided foreign author.
         """
-        node = Node.objects.get(host=author.host)
-        return Integrator(node)
+        return Integrator.build_from_host(author.host)
 
     @staticmethod
     def build_from_host(host):
         node = Node.objects.get(host=host)
+        if not node:
+            exceptions.NotFound(detail="No node correspoding to remote author host")
         return Integrator(node)
 
     def build_url(self, endpoint):
