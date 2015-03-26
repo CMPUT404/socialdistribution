@@ -3,34 +3,30 @@
 [![Build Status](https://travis-ci.org/CMPUT404/socialdistribution.svg?branch=master)](https://travis-ci.org/CMPUT404/socialdistribution)
 
 [Project Specifications](https://github.com/abramhindle/CMPUT404-project-socialdistribution)
+[API Documentation](https://github.com/CMPUT404/socialdistribution/wiki).
 
-Overview: Our stack consists of a React.js app and a backend powered by Django
-Rest Framework. For more information, check out our [API Documentation](https://github.com/CMPUT404/socialdistribution/wiki).
+### Setup
+Getting things up and running is a bit more complicated because we're running a separate purely restful backend and a React.js frontend.
 
-### Frontend
-#### Installation
+### Frontend Installation
 ```bash
 npm install
 bower install
 ```
 #### How To Run
-Assuming you've already installed everything:
+You're going to need "gulp" to build our frontend. So you need to run `npm install -g gulp`. Then running the command below should automatically build everything and open a tab in your browser with the app running. By default the app is not configured to find our remote production api so you'll need to follow the instructions below on starting the api up as well.
+
 ```bash
 gulp serve
 ```
-#### How to test
 
-```bash
-npm test
-```
-
-### Backend
-#### Installation
+### Backend Installation
 ```
 pip install -r requirements
 ./manage.py migrate
 ```
-#### How To Test
+
+#### Testing
 ```
 ./manage.py test
 ```
