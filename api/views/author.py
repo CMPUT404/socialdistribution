@@ -1,6 +1,6 @@
 from rest_framework import renderers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics, viewsets
@@ -8,6 +8,8 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import detail_route
 from ..utils.utils import AuthorNotFound, AuthenticationFailure
+from ..permissions.author import IsEnabled
+
 from collections import OrderedDict
 
 from ..models.author import (
@@ -197,7 +199,7 @@ class CreateFriendRequest(generics.CreateAPIView):
     Given a json request parameter body, create the approriate
     friend/follower relationship.
     """
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (TokenAuthentication, IsEnabled)
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Author.objects.all()
     serializer_class = FriendRequestSerializer

@@ -69,6 +69,7 @@ class PostSerializer(serializers.ModelSerializer):
     author = CompactAuthorSerializer(many = False, read_only = True)
     comments = CommentSerializer(read_only = True, many = True)
     # pubDate = UnixDateTimeField(read_only=True)
+    categories = serializers.ListField(required=False)
     source = SourceSerializer(read_only = True)
     origin = OriginSerializer(read_only = True)
     visibility = serializers.CharField()
@@ -77,7 +78,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ('guid', 'title', 'source', 'origin', 'content', 'contentType', \
-                    'pubDate', 'visibility', 'image', 'author', 'comments')
+                    'pubDate', 'visibility', 'image', 'author', 'comments', 'categories')
         read_only_fields = ('guid', 'pubDate', 'comments', 'author', 'visibility')
 
     # DRF does not currently support creation of nested relations...

@@ -12,7 +12,7 @@ class Post(models.Model):
     title = models.CharField(blank=False, max_length=200)
     content = models.TextField(blank=False)
     contentType = models.CharField(blank=False, max_length=16)
-    categories = ListField(blank=True)
+    categories = ListField(blank=True, default=[])
     pubDate = models.DateTimeField(auto_now_add=True, editable=False)
     visibility = models.CharField(blank=False, max_length=10)
     image = models.ImageField(upload_to='images/posts', null=True, blank=True)
