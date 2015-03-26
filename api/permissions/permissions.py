@@ -20,22 +20,13 @@ def isPublic(request, obj):
     return True
 
 def isOnSameHost(request, obj):
-    return obj.author.host == settings.HOST
+    return obj.author.is_local()
 
 def isFriend(request, obj):
     # This should never fail as request.user must have Author account to be
     # authenticated
     author = Author.objects.get(user=request.user)
-
-    try:
-        # This will throw an exception if not friends
-        author = Author.objects.get(user=request.user,
-                                    friends__id=obj.author.id)
-        return True
-    except Exception as e:
-        # print e
-        return False
-
+    return author.is_friend(obj.author.id)
 
 # Checks first to see if the authenticated Author is friends with the entity's
 # author and if the specified author host is the same as ours

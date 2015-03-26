@@ -1,7 +1,7 @@
 from django.contrib.admin import ModelAdmin, site
 
 class NodeOptions(ModelAdmin):
-    list_display = ['user', 'host', 'enabled', 'api_postfix', 'integrated', 'image_sharing', 'foreign_username']
+    list_display = ['user', 'host', 'enabled', 'outbound', 'image_sharing', 'foreign_username']
 
     def share_images(self, request, queryset):
         try:

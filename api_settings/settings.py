@@ -27,6 +27,7 @@ TEMPLATE_DEBUG = True
 ALLOWED_HOSTS = []
 
 HOST = "http://localhost:8000/"
+FRONTEND_HOST = "http://localhost:8000/"
 
 # Application definition
 

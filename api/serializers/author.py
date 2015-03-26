@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from image import ImageSerializer
-from ..utils.utils import AuthorNotFound
 from ..models.author import (
     Author,
     CachedAuthor
@@ -116,7 +115,7 @@ class DirtyCachedAuthorSerializer(serializers.Serializer):
     id = serializers.UUIDField(required = True)
     host = serializers.URLField(required = True)
     displayname = serializers.CharField(required = True)
-    url = serializers.URLField(required = False)
+    url = serializers.URLField(required=False)
 
     def to_internal_value(self, data):
         """Use the superclass to clean the data and then manually save it"""

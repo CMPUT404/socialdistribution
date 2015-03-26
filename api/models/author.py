@@ -1,7 +1,7 @@
 from django.db import models
-from django.conf import settings
 from uuidfield import UUIDField
 from user import APIUser
+from api_settings import settings
 import os
 
 def get_image_path(instance, filename):
@@ -39,21 +39,21 @@ class Author(APIUser):
 
     def add_following(self, following):
         following = self._get_cached_author(following)
-        if not self.following.filter(id=following.id):
+        if not self.following.exists(id=following.id):
             self.following.add(following)
 
     def add_friend(self, friend):
         """Create a friend from an author model"""
         friend = self._get_cached_author(friend)
 
-        if not self.friends.filter(id=friend.id):
+        if not self.friends.exists(id=friend.id):
             self.friends.add(friend)
 
         self.add_following(friend)
 
     def add_request(self, friend):
         friend = self._get_cached_author(friend)
-        if not self.requests.filter(id=friend.id):
+        if not self.requests.exists(id=friend.id):
             self.requests.add(friend)
 
     def remove_friend(self, friend):
@@ -66,12 +66,14 @@ class Author(APIUser):
         try:
             self.friends.remove(friend)
         except:
+            # TODO: some sort of logging/exception handling
             pass
 
         try:
             author = Author.objects.get(id=friend.id)
             author.friends.remove(self)
         except:
+            # TODO: some sort of logging/exception handling
             pass
 
     def remove_following(self, following):
@@ -80,6 +82,7 @@ class Author(APIUser):
             self.remove_friend(following)
             self.following.remove(following)
         except:
+            # TODO: some sort of logging/exception handling
             pass
 
     def remove_request(self, friend):
@@ -87,7 +90,11 @@ class Author(APIUser):
         try:
             self.requests.remove(friend)
         except:
+            # TODO: some sort of logging/exception handling
             pass
+
+    def is_friend(self, friend_id):
+        return self.friends.exists(id=friend_id)
 
     def __unicode__(self):
         return u'%s' % self.user.username
@@ -99,7 +106,20 @@ class CachedAuthor(models.Model):
     id = UUIDField(primary_key=True)
     host = models.URLField(blank=False, null=False, default=settings.HOST)
     displayname = models.CharField(max_length=40, blank=False, null=False)
-    url = models.URLField(blank=False, null=False, default=settings.HOST)
+
+    @property
+    def url(self):
+        return self.host + 'author/' + str(self.id)
+
+    def is_local(self):
+        return self.host == settings.HOST
+
+    def get_author(self):
+        # TODO: throw an exception here instead since this is being used poorly
+        if self.is_local() is False:
+            return None
+        else:
+            return Author.objects.get(id=self.id)
 
     # This is used for the related string field serializer
     def __unicode__(self):

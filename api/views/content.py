@@ -11,8 +11,8 @@ from ..permissions.permissions import IsAuthor, Custom
 from ..permissions.author import IsEnabled
 from ..models.author import Author
 from ..serializers.author import AuthorSerializer
-from ..renderers.content import PostsJSONRenderer
 from ..integrations import Aggregator
+from api_settings import settings
 
 #
 # Delete Posts and Comments
@@ -104,14 +104,23 @@ class AuthorPostViewSet(
         # Careful, gotchya here, if author_pk is none, it means we are dealing with
         # /author/:id and that the author id is going to be in pk
         if author_pk is None:
-            author = get_object_or_404(Author, id=pk)
-            data = AuthorSerializer(author).data
 
-            # append author posts to this object
-            posts = Post.objects.filter(author__id=pk)
-            if posts is not None:
-                posts = PostSerializer(posts, many=True)
-                data["posts"] = posts.data
+            # check if we're querying for a remote author
+            if "HTTP_AUTHOR_HOST" in request.META:
+                host = request.META["HTTP_AUTHOR_HOST"]
+                integrator = Integrator.build_from_host(host)
+                data = integrator.get_author_view_from_id(pk)
+
+            # otherwise try and find them locally
+            else:
+                author = get_object_or_404(Author, id=pk)
+                data = AuthorSerializer(author).data
+
+                # append author posts to this object
+                posts = Post.objects.filter(author__id=pk)
+                if posts is not None:
+                    posts = PostSerializer(posts, many=True)
+                    data["posts"] = posts.data
 
         # otherwise fetch a specific post
         else:
@@ -121,16 +130,46 @@ class AuthorPostViewSet(
 
         return Response(data)
 
-    # TIMELINE call
+    # TIMELINE call aka /author/posts
     @list_route(methods=['get'], permission_classes=[IsAuthenticated, IsAuthor])
     def posts(self, request):
-        user = self.request.user
-        # TODO: filter by author id and following ids as well
-        # author = Author.objects.get(user__id=user.id)
-        # followers = author.followers
-        queryset = Post.objects.all().filter(author__user__id=user.id)
-        serializer = PostSerializer(queryset, many=True)
-        return Response({"posts": serializer.data})
+
+        # get our logged in author
+        author = Author.objects.get(user__id=self.request.user.id)
+
+        # get author post ids
+        local_posts = list(Post.objects.filter(author__id=author.id))
+
+        # build a list of subscribers, or anyone we want posts for
+        subscribed_to = []
+        subscribed_to.extend(list(author.friends.all()))
+        subscribed_to.extend(list(author.following.all()))
+
+        # filter friends by local or foreign hosts
+        foreign_authors = []
+        for author in subscribed_to:
+            # if on the same node as us, get posts directly
+            if author.is_local():
+                local_posts.extend(list(Post.objects.filter(author__id=author.id)))
+
+            # otherwise build a list of remote authors to fetch posts from
+            else:
+                foreign_authors.append(author)
+
+        # make sure we are respeting author permissions locally
+        for post in local_posts:
+            try:
+                self.check_object_permissions(self.request, post)
+            except:
+                local_posts.remove(post)
+
+        # aggregate foreign posts from other nodes
+        if foreign_authors:
+            foreign_posts = Aggregator.get_posts_for_authors(foreign_authors)
+            local_posts.extend(foreign_posts)
+
+        posts = PostSerializer(local_posts, many=True).data
+        return Response({"posts": posts})
 
 
 # Handles all interactions with post objects
@@ -152,9 +191,10 @@ class PublicPostsViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    renderer_classes = (PostsJSONRenderer,)
-
     def list(self, request):
+        """
+        Returns a list of public posts based on APIUser type.
+        """
         internal_posts = Post.objects.filter(visibility="PUBLIC")
         serializer = PostSerializer(internal_posts, many=True)
         posts = serializer.data
@@ -164,4 +204,4 @@ class PublicPostsViewSet(
             foreign_posts = Aggregator.get_public_posts()
             posts.extend(foreign_posts)
 
-        return Response(posts)
+        return Response({"posts": posts})

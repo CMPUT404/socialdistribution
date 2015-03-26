@@ -29,7 +29,7 @@ class AuthorOptions(ModelAdmin):
 
 class CachedAuthorOptions(ModelAdmin):
     list_display = ['id', 'displayname', 'host', 'url']
-    list_editable = ['displayname', 'host', 'url']
+    list_editable = ['displayname', 'host']
 
     # Deletion should occur only through Author models and friend/followers
     def has_delete_permission(self, request, obj=None):
