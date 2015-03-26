@@ -12,5 +12,11 @@ class APIUser(models.Model):
     enabled = models.BooleanField(default=False)
     type = models.CharField(max_length=32, default="Author")
 
+    def __setattr__(self, attr, value):
+        if attr == 'type':
+            if value not in ["Author", "Node"]:
+                raise ValueError('User type must be "Author" or "Node"')
+        super(APIUser, self).__setattr__(attr, value)
+
     class Meta:
         abstract = True
