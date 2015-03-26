@@ -261,3 +261,8 @@ def create_multiple_cached_authors(amount, host, username):
         cached.save()
         authors.append(cached)
     return authors
+
+def enable_author(username):
+    author = Author.objects.get(user__username=username)
+    author.enabled = True
+    author.save()
