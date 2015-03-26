@@ -26,7 +26,7 @@ def isFriend(request, obj):
     # This should never fail as request.user must have Author account to be
     # authenticated
     author = Author.objects.get(user=request.user)
-    return author.is_friend(obj.author.id)
+    return author.is_friend(obj.author)
 
 # Checks first to see if the authenticated Author is friends with the entity's
 # author and if the specified author host is the same as ours
