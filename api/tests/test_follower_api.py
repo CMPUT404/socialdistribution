@@ -66,27 +66,22 @@ class AuthorModelAPITests(TestCase):
         Author.objects.all().delete()
         User.objects.all().delete()
 
-    # def test_follow_author(self):
-    #     response = self.client.get('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
-    #     self.assertEquals(response.status_code, 200)
-    #
-    #     # s.pretty_print(response.data)
-    #
-    #     self.assertTrue(response.data['following'][0]['id'], self.author_a.id)
-    #     self.assertEquals(1, len(self.author.following.all()))
-    #     self.assertEquals(1, len(self.author_a.followers.all()))
-    #
+    def test_follow_author(self):
+        response = self.client.get('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
+        self.assertEquals(response.status_code, 200)
+
+        # s.pretty_print(response.data)
+
+        self.assertTrue(response.data['following'][0]['id'], self.author_a.id)
+        self.assertEquals(1, len(self.author.following.all()))
+
     def test_delete_follow(self):
         # Author is now following author_a
         self.author.add_following(self.author_a)
 
         response = self.client.delete('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
+        print response
         self.assertEquals(response.status_code, 200, "Follower deleted")
-
-        # Confirm by database query
-        followers = self.author_a.followers.all()
-        self.assertEquals(len(followers), 0, "follower wasn't removed")
-
 
     def test_are_friends(self):
         user_c, author_c = s.create_author(USER_C, AUTHOR_PARAMS)
@@ -114,8 +109,8 @@ class AuthorModelAPITests(TestCase):
         self.assertTrue(str(author_e.id) not in response.data['friends'])
 
     def test_delete_friend_through_model(self):
-        self.author_a.add_follower(self.author_b)
-        self.author_b.add_follower(self.author_a)
+        self.author_a.add_friend(self.author_b)
+        self.author_b.add_friend(self.author_a)
 
         # Confirm that A/B follow each other and thus are friends
         self.assertEquals(1, len(self.author_a.friends.all()))
@@ -123,43 +118,19 @@ class AuthorModelAPITests(TestCase):
 
         # This will remove the friendship. Follower/Friendship are dependents
         # Other author should no longer be a friend either
-        self.author_a.remove_follower(self.author_b)
+        self.author_a.remove_friend(self.author_b)
         self.assertEquals(0, len(self.author_a.friends.all()))
         self.assertEquals(0, len(self.author_b.friends.all()))
 
         # Other author should still have follow relationship
-        self.assertEquals(1, len(self.author_b.followers.all()))
+        self.assertEquals(1, len(self.author_b.following.all()))
 
         # Author a should have no followers or friends
-        self.assertEquals(0, len(self.author_a.followers.all()))
-
-    def test_user_a_now_friend(self):
-        """
-        Ensure the users who have now both followed each other are friends
-        """
-        # author_a follows author_b and then author_b follows author_a
-        self.author_a.add_follower(self.author_b)
-        self.author_b.add_follower(self.author_a)
-
-        # Confirm that A/B follow each other
-        self.assertEquals(1, len(self.author_a.followers.all()))
-        self.assertEquals(1, len(self.author_b.followers.all()))
-
-        # A/B should be friends
-        if not Author.objects.get(id = self.author_a.id, friends__id = self.author_b.id):
-            self.assertTrue(True, "Author b should be in author a friends list")
-
-        if not Author.objects.get(id = self.author_b.id, friends__id = self.author_a.id):
-            self.assertTrue(True, "Author a should be in author b friends list")
+        self.assertEquals(0, len(self.author_a.friends.all()))
 
     def test_http_unfollow_after_friendship(self):
-        # author_a follows author_b and then author_b follows author_a
-        self.author.add_follower(self.author_b)
-        self.author_b.add_follower(self.author)
-
-        # Confirm that A/B follow each other
-        self.assertEquals(1, len(self.author.followers.all()))
-        self.assertEquals(1, len(self.author_b.followers.all()))
+        self.author.add_friend(self.author_b)
+        self.author_b.add_friend(self.author)
 
         response = self.client.delete('/author/%s/follow/%s' %(self.author.id, self.author_b.id))
         self.assertEquals(response.status_code, 200, "deleted friendship/followship")
@@ -169,12 +140,9 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(0, len(self.author.friends.all()))
 
         # b should still follow a, but not be friends or be followed by a
-        self.assertEquals(1, len(self.author.followers.all()))
-        self.assertEquals(0, len(self.author_b.followers.all()))
         self.assertEquals(0, len(self.author_b.friends.all()))
 
     def test_api_friend_request_only_follow(self):
-        fuuid = str(uuid.uuid4())
         request = {
             "query":"friendrequest",
             "author":{
@@ -183,21 +151,24 @@ class AuthorModelAPITests(TestCase):
                 "displayname":self.author.user.username
             },
             "friend":{
-                "id":fuuid,
+                "id":self.author_a.id,
                 "host":"http://example.org/",
                 "displayname":"foreignuser",
-                "url":"http://example.org/author/" + str(fuuid),
+                "url":"http://example.org/author/" + str(self.author_a.id),
             }
         }
         response = self.client.post('/friendrequest', request)
-        self.assertEquals(response.status_code, 201)
+        self.assertEquals(response.status_code, 202)
 
-        # This should have created only a follower relationship
-        self.assertEquals(1, len(self.author.followers.all()))
+        # This should have created only a following and request status
+        self.assertEquals(1, len(self.author.following.all()))
+        self.assertEquals(1, len(self.author_a.requests.all()))
+
         self.assertEquals(0, len(self.author.friends.all()))
+        self.assertEquals(0, len(self.author_a.friends.all()))
 
     def test_api_friend_request(self):
-        self.author_a.add_follower(self.author)
+        self.author_a.add_following(self.author)
         request = {
             "query":"friendrequest",
             "author":{
@@ -216,18 +187,19 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(response.status_code, 201)
 
         # This should have created the friendship as author already follows author_a
-        self.assertEquals(1, len(self.author.followers.all()))
+        self.assertEquals(1, len(self.author.following.all()))
+        self.assertEquals(0, len(self.author_a.requests.all()))
+
         self.assertEquals(1, len(self.author.friends.all()))
         self.assertEquals(1, len(self.author_a.friends.all()))
-        self.assertEquals(1, len(self.author_a.followers.all()))
 
     def test_api_get_friends(self):
-        self.author.add_follower(self.author_a)
-        self.author_a.add_follower(self.author)
+        self.author.add_friend(self.author_a)
+        self.author_a.add_friend(self.author)
 
         # These friends should not show up in response
-        self.author.add_follower(self.author_b)
-        self.author_b.add_follower(self.author)
+        self.author.add_following(self.author_b)
+        self.author_b.add_following(self.author)
 
         response = self.client.get('/friends/%s/%s' %(self.author.id, self.author_a.id))
         self.assertEquals(response.status_code, 200)
@@ -242,7 +214,7 @@ class AuthorModelAPITests(TestCase):
         self.assertTrue(str(self.author_a.id) in authors)
 
     def test_api_query_no_friends(self):
-        self.author.add_follower(self.author_a)
+        self.author.add_following(self.author_a)
 
         response = self.client.get('/friends/%s/%s' %(self.author.id, self.author_a.id))
         self.assertEquals(response.status_code, 200)

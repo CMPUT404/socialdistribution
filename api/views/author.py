@@ -1,4 +1,3 @@
-from rest_framework import renderers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import status
@@ -6,26 +5,24 @@ from rest_framework.response import Response
 from rest_framework import generics, viewsets
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import detail_route
 from ..utils.utils import AuthorNotFound, AuthenticationFailure
 from ..permissions.author import IsEnabled
+from ..integrations import Integrator
+from api_settings import settings
 
 from collections import OrderedDict
 
 from ..models.author import (
     Author,
-    CachedAuthor)
+    CachedAuthor
+)
 
 from ..serializers.author import (
-    AuthorSerializer,
-    CachedAuthorSerializer,
-    RetrieveFollowersSerializer,
     RetrieveFriendsSerializer,
-    BaseRetrieveFollowersSerializer,
-    BaseRetrieveFriendsSerializer,
     BaseRetrieveFollowingSerializer,
     FriendRequestSerializer
 )
+
 
 class BaseRelationsMixin(object):
     authentication_classes = (TokenAuthentication,)
@@ -55,16 +52,16 @@ class ModifyRelationsMixin(object):
 
         Pass in an Author model method and the relator to add to the method.
         eg:
-            self.call_model(author.add_follower, follower)
+            self.call_model(author.add_friend, friend)
         """
         try:
             method(self.return_cached_author(relator))
         except:
             raise RelationFailed
 
-    def get_author(self, guid):
+    def get_author(self, id):
         try:
-            return Author.objects.get(id=guid)
+            return Author.objects.get(id=id)
         except:
             raise AuthorNotFound
 
@@ -83,24 +80,31 @@ class ModifyRelationsMixin(object):
     def add_friend(self, author, friend):
         self.call_model(author.add_friend, friend)
 
-    def add_follower(self, author, follower):
-        self.call_model(author.add_follower, follower)
-
     def add_following(self, author, following):
         self.call_model(author.add_following, following)
+
+    def add_request(self, author, friend):
+        self.call_model(author.add_request, friend)
 
     def remove_friend(self, author, friend):
         self.call_model(author.remove_friend, friend)
 
-    def remove_follower(self, author, follower):
-        self.call_model(author.remove_follower, follower)
-
     def remove_following(self, author, following):
         self.call_model(author.remove_following, following)
+
+    def remove_request(self, author, friend):
+        self.call_model(author.remove_request, friend)
+
+    def is_following(self, author, following):
+        return True if author.following.filter(id=following.id) else False
+
+    def is_friend(self, author, friend):
+        return True if author.friend.filter(id=friend.id) else False
 
     def query_foreign_author(self, author):
         # TODO after integration
         pass
+
 
 class FriendsWith(APIView):
     authentication_classes = (TokenAuthentication,)
@@ -129,8 +133,8 @@ class FollowerViewSet(
                       viewsets.ViewSet):
     serializer_class = BaseRetrieveFollowingSerializer
 
-    # GET followers/:pk (Returns a list of who you are following)
-    # GET followers/:author_pk/follow/:pk (This follows the pk)
+    # GET author/:pk (Returns a list of who you are following)
+    # GET author/:author_pk/follow/:pk (This follows the pk)
     def retrieve(self, request, pk=None, author_pk=None):
         """
         Creating a following/follower relationship between authors
@@ -154,9 +158,9 @@ class FollowerViewSet(
                 following = Author.objects.get(id=pk)
             except:
                 # Person we are following is on foreign node
+                # TODO integration
                 raise AuthorNotFound
 
-            self.add_follower(following, author)
             self.add_following(author, following)
 
             serializer = self.serializer_class(author)
@@ -187,14 +191,13 @@ class FollowerViewSet(
             # Person we are unfollowing is on foreign node
             raise AuthorNotFound
 
-        self.remove_follower(unfollowing, author)
         self.remove_following(author, unfollowing)
 
         serializer = self.serializer_class(author)
         return Response(serializer.data)
 
 
-class CreateFriendRequest(generics.CreateAPIView):
+class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
     """
     Given a json request parameter body, create the approriate
     friend/follower relationship.
@@ -206,33 +209,70 @@ class CreateFriendRequest(generics.CreateAPIView):
 
     # TODO Lock this down. People can spoof identity and create friend requests
 
+    # TODO. This code currently only works for locally hosted authors
+
     def create(self, request, *args, **kwargs):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
 
-        success = True
+        # get our author and friend models
+        author = self.get_author(serializer.validated_data['author']['id'])
+        friend_id = serializer.validated_data["friend"]["id"]
+        try:
+            friend = self.get_author(friend_id)
+        except:
+            friend = CachedAuthor.objects.get(id=friend_id)
 
-        friend = serializer.data["friend"]
-        if friend["host"] is not settings.HOST:
-            integrator = Integrator.build_from_host(friend["host"])
-            success = integrator.send_friend_request(
-                CachedAuthor(**serializer.data["author"]),
-                CachedAuthor(**friend)
-            )
+        # parse any incoming api calls from other nodes
+        if request.get_host() is not settings.FRONTEND_HOST:
+            self.add_request(author, friend)
+            # TODO: check if friend request has been sent already, convert to
+                # friends
+                # self.add_friend(friend, author)
+                # self.add_friend(author, friend)
+                # headers = self.get_success_headers(serializer.data)
+                # return Response(serializer.data, status=status.HTTP_202_ACCEPTED,
+                                # headers=headers)
 
-        if success and request.get_host() is not settings.FRONTEND_HOST:
-            pass
-            # TODO: update friendship status to REQUESTED
-            # TODO: add friend request notification to author model
-        elif success:
-            pass
-            # TODO: update friendship status to PENDING
-            # TODO: automatically add to author followers
+        # Otherwise, figureout how to handle the request
+        else:
+
+            # perform remote calls if necessary
+            if friend.is_local() is False:
+                integrator = Integrator.build_from_host(friend["host"])
+                success = integrator.send_friend_request(
+                    CachedAuthor(**serializer.data["author"]),
+                    CachedAuthor(**friend)
+                )
+
+                if not success:
+                    # TODO: Exception of some sort
+                    pass
+
+                # TODO add pending state
+                self.add_following(author, friend)
+
+            else:
+
+                # If friend is already following -> Instant friendship
+                if self.is_following(friend, author) is False:
+                    self.add_following(author, friend)
+
+                # TODO: check if friend request has been sent already, convert to
+                # friends
+                # self.add_friend(friend, author)
+                # self.add_friend(author, friend)
+                # headers = self.get_success_headers(serializer.data)
+                # return Response(serializer.data, status=status.HTTP_202_ACCEPTED,
+                                # headers=headers)
+
+                # Otherwise add resuest to friend
+                self.add_request(friend, author)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                              headers=headers)
 
 
 class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
@@ -247,7 +287,7 @@ class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
     lookup_url_kwarg = "aid"
 
     def get_queryset(self):
-        return self.queryset.filter(id = self.kwargs.get(self.lookup_url_kwarg))
+        return self.queryset.filter(id=self.kwargs.get(self.lookup_url_kwarg))
 
     # Alter the response to fit request before returning
     def retrieve(self, request, *arg, **kwargs):

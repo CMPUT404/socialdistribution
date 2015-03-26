@@ -144,13 +144,13 @@ class AuthorPostViewSet(
         # build a list of subscribers, or anyone we want posts for
         subscribed_to = []
         subscribed_to.extend(list(author.friends.all()))
-        subscribed_to.extend(list(author.followers.all()))
+        subscribed_to.extend(list(author.following.all()))
 
         # filter friends by local or foreign hosts
         foreign_authors = []
         for author in subscribed_to:
             # if on the same node as us, get posts directly
-            if author.host == settings.HOST:
+            if author.is_local():
                 local_posts.extend(list(Post.objects.filter(author__id=author.id)))
 
             # otherwise build a list of remote authors to fetch posts from

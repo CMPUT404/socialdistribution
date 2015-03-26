@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from image import ImageSerializer
-from ..utils.utils import AuthorNotFound
 from ..models.author import (
     Author,
     CachedAuthor
@@ -199,29 +198,3 @@ class FriendRequestSerializer(serializers.Serializer):
     query = serializers.RegexField('(friendrequest?)', allow_blank=False)
     author = DirtyCachedAuthorSerializer()
     friend = DirtyCachedAuthorSerializer()
-
-    def save(self):
-        """
-        Do not save serializer data, as it is done with the field serializers
-        Do create the friendship/follower relationships if valid.
-        """
-        self.create(self.validated_data)
-        pass
-
-    def create(self, validated_data):
-        """
-        Creates the friendship if dependencies satisfied, else just follow.
-
-        If a request is given for an author that does not exist, an exception
-        message is returned along with a 404 error response.
-        """
-        try:
-            author = Author.objects.get(id = validated_data['author']['id'])
-            cached = CachedAuthor.objects.get(id = str(validated_data['friend']['id']))
-
-            # Adding the follower, will automatically determine if friend
-            # request is valid and promote the relationship.
-            author.add_follower(cached)
-            return None
-        except:
-            raise AuthorNotFound
