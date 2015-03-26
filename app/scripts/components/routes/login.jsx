@@ -4,10 +4,10 @@ import { addons } from 'react/addons';
 import { Navigation } from 'react-router';
 import { Row, Col, Input, PageHeader, Button } from 'react-bootstrap';
 
-import AuthorActions from '../actions/author';
-import AuthorStore from '../stores/author';
+import AuthorActions from '../../actions/author';
+import AuthorStore from '../../stores/author';
 
-import ActionListener from '../mixins/action-listener';
+import ActionListener from '../../mixins/action-listener';
 
 export default React.createClass({
 
@@ -50,17 +50,17 @@ export default React.createClass({
 
   render: function() {
     return (
-      <Col md={4} mdOffset={4}>
+      <Col md={4} mdOffset={4} className="well">
         <Row>
-          <PageHeader>Login</PageHeader>
-          <Button className="pull-right" bsStyle="info" onClick={this.toRegister}>Sign Up?</Button>
+          <h2 className="text-center">Login</h2>
         </Row>
         <Row>
           <form onSubmit={this.logIn}>
             <Input type="text" label="Username" placeholder="Username"  valueLink={this.linkState('username')} required/>
             <Input type="password" label='Password' placeholder="secret" valueLink={this.linkState('password')} required/>
 
-            <Input className="pull-right" bsStyle="primary" type="submit" value="Login" />
+            <Col md={6}><Button className="pull-left" bsStyle="default" onClick={this.toRegister}>Sign Up?</Button></Col>
+            <Col md={6}><Input className="pull-right" bsStyle="primary" type="submit" value="Login" /></Col>
           </form>
         </Row>
       </Col>

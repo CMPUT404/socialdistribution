@@ -4,9 +4,9 @@ import { Grid } from 'react-bootstrap';
 import { RouteHandlerMixin } from 'react-router';
 
 import Navbar from './navbar';
-import AuthorActions from '../actions/author';
+import AuthorActions from '../../actions/author';
 
-import ActionListener from '../mixins/action-listener';
+import ActionListener from '../../mixins/action-listener';
 
 // This layout is used by React-Router to layout the base container of the app.
 // We shouldn't really be putting anything here other than the Navbar.

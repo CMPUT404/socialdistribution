@@ -1,5 +1,6 @@
-@import '../bootstrap/dist/css/bootstrap.min.css';
+@import '../bootswatch-dist/css/bootstrap.min.css';
 @import '../alertifyjs/dist/css/alertify-bootstrap-3.css';
+@import '../highlightjs/styles/tomorrow.css';
 @import './components/github/events.scss';
 @import './components/content/content-viewer';
 @import './components/content/comment-creator';
@@ -8,6 +9,11 @@
 @import './components/content/post';
 @import './components/typeahead';
 @import './components/author';
+
+// Flatten everything ;)
+* {
+  border-radius: 0 !important;
+}
 
 body {
   background: #fafafa;
@@ -33,6 +39,10 @@ body {
 .alertify-logs {
 	top: 50%;
 	right: 10px;
+}
+
+.timestamp {
+ color: #bbb;
 }
 
 .spinner {

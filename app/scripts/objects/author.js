@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Post from './post';
 
 export default class {
 
@@ -20,22 +21,17 @@ export default class {
     this.displayname     = author.displayname;
     this.github_username = author.github_username;
 
-    this.posts = [];
+    this.posts     = [];
+    this.friends   = [];
+    this.following = [];
+    this.requests  = [];
+    this.pending   = [];
+
+    if (!_.isUndefined(author.posts) && !_.isEmpty(author.posts)) {
+      this.posts = author.posts;
+    }
 
     // this.notifications = data.notifications;
-    // this.subscriptionCount = data.subscriptions.length;
-    // this.subscriptionStore = subscriptionStore;
-
-    // create or update list of subscriptions for each author this author is
-    // subscribed to
-    // for (let authorId of data.subscriptions) {
-    //   var subscriptions = this.subscriptionStore.get(authorId);
-    //   if (_.isUndefined(subscriptions)) {
-    //     this.subscriptionStore.set(authorId, [this.id]);
-    //   } else {
-    //     subscriptions.push(this.id);
-    //   }
-    // }
   }
 
   getName() {
@@ -58,64 +54,16 @@ export default class {
     return this.github_username ? 'http://github.com/' + this.github_username : null;
   }
 
-  // checks whether both authors subscribe to each other
   hasFriend (author) {
-    return this.follows(author.id) && author.follows(this.id) ? true : false;
-  }
-
-  followedBy (author) {
-    return author.follows(this.id);
+    return _.indexOf(this.friends, author.id) === -1 ? false : true;
   }
 
   follows (author) {
-    var subscriptions = this.subscriptionStore.get(author.id);
-
-    // if author has no subscriptions then nope
-    if (_.isUndefined(subscriptions)) {
-      return false;
-    }
-
-    // otherwise try and find it in the list
-    for (let subscriberId of subscriptions) {
-      if (subscriberId == this.id) {
-        return true;
-      }
-    }
-    return false;
+    return _.indexOf(this.following, author.id) === -1 ? false : true;
   }
 
-  subscribeTo (author) {
-    var subscriptions = this.subscriptionStore.get(author.id);
-    if (_.isUndefined(subscriptions)) {
-      this.subscriptionStore.set(author.id, [this.id]);
-    } else {
-      subscriptions.push(this.id);
-    }
-    this.subscriptionCount++;
-  }
-
-  unsubscribeFrom (author) {
-    var subscriptions = this.subscriptionStore.get(author.id);
-
-    // remove the author id using splice
-    var index = subscriptions.indexOf(this.id);
-    subscriptions.splice(index, 1);
-    this.subscriptionCount--;
-  }
-
-  getSubscriptions () {
-    return this.subscriptionStore.get(this.id);
-  }
-
-  getSubscriptionCount() {
-    return this.subscriptionCount;
-  }
-
-  // This one we can't track through the Author because subscriptions are
-  // coming from outside
-  getSubscriberCount () {
-    var subscriptions = this.getSubscriptions();
-    return _.isUndefined(subscriptions) ? 0 : subscriptions.length;
+  pendingFriend (author) {
+    return _.indexOf(this.pending, author.id) === -1 ? false : true;
   }
 
   sortedPosts() {

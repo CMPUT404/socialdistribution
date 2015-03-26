@@ -7,12 +7,13 @@ export default Reflux.createActions({
   'logout'               : {},
   'login'                : Async,
   'checkAuth'            : Async,
-  'fetchDetails'         : Async,
-  'fetchPosts'           : Async,
+  'fetchAuthor'          : Async,
   'createPost'           : Async,
   'deletePost'           : Async,
   'createComment'        : Async,
-  'addFriend'            : {},
-  'followFriend'         : Async
+  'addFriend'            : Async,
+  'followFriend'         : Async,
+  'unfollowFriend'       : Async,
+
   // unfollow, unfriend?
 });

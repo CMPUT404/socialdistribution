@@ -1,12 +1,12 @@
 import React from 'react';
 import { default as Router, Route, DefaultRoute } from 'react-router';
 
-import Layout from './components/layout';
-import Timeline from './components/timeline';
-import Author from './components/author';
-import Login from './components/login';
-import Register from './components/register';
-import Posts from './components/posts';
+import Layout from './components/routes/layout';
+import Timeline from './components/routes/timeline';
+import Author from './components/routes/author';
+import Login from './components/routes/login';
+import Register from './components/routes/register';
+import Posts from './components/routes/posts';
 
 var routes = (
 	<Route path="/" name="layout" handler={Layout}>
