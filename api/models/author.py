@@ -39,21 +39,21 @@ class Author(APIUser):
 
     def add_following(self, following):
         following = self._get_cached_author(following)
-        if not self.following.exists(id=following.id):
+        if not self.following.filter(id=following.id).exists():
             self.following.add(following)
 
     def add_friend(self, friend):
         """Create a friend from an author model"""
         friend = self._get_cached_author(friend)
 
-        if not self.friends.exists(id=friend.id):
+        if not self.friends.filter(id=friend.id).exists():
             self.friends.add(friend)
 
         self.add_following(friend)
 
     def add_request(self, friend):
         friend = self._get_cached_author(friend)
-        if not self.requests.exists(id=friend.id):
+        if not self.requests.filter(id=friend.id).exists():
             self.requests.add(friend)
 
     def remove_friend(self, friend):
@@ -94,7 +94,7 @@ class Author(APIUser):
             pass
 
     def is_friend(self, friend_id):
-        return self.friends.exists(id=friend_id)
+        return self.friends.filter(id=friend_id).exists()
 
     def __unicode__(self):
         return u'%s' % self.user.username
