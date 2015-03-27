@@ -1,3 +1,4 @@
+var fs          = require('fs');
 var gulp        = require('gulp');
 
 var $           = require('gulp-load-plugins')();
@@ -20,6 +21,12 @@ gulp.task('clean:dev', function() {
 
 gulp.task('clean:dist', function() {
   return del(['dist']);
+});
+
+gulp.task('create-config', function(cb) {
+  fs.writeFile('app/config.json', JSON.stringify({
+    env: env,
+  }), cb);
 });
 
 gulp.task('scripts', function() {
@@ -78,8 +85,6 @@ gulp.task('bundle', function () {
     .pipe(htmlFilter)
     .pipe($.htmlmin({collapseWhitespace: true}))
     .pipe(htmlFilter.restore())
-    .pipe($.revAll({ ignore: [/^\/favicon.ico$/g, '.html'] }))
-    .pipe($.revReplace())
     .pipe(gulp.dest('dist'))
     .pipe($.size());
 });
@@ -95,7 +100,7 @@ gulp.task('webserver', function() {
 });
 
 gulp.task('serve', function() {
-  runSequence('clean:dev', ['scripts', 'compass'], 'webserver');
+  runSequence('clean:dev', ['create-config', 'scripts', 'compass'], 'webserver');
 
   gulp.watch('app/*.html');
 
@@ -110,7 +115,7 @@ gulp.task('build', function() {
   env = 'prod';
 
   runSequence(['clean:dev', 'clean:dist'],
-              ['scripts', 'compass', 'imagemin', 'copy'],
+              ['create-config', 'scripts', 'compass', 'imagemin', 'copy'],
               'bundle');
 });
 

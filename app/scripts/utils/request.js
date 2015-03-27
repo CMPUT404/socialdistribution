@@ -2,7 +2,9 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import SuperAgent from 'superagent';
 
-var __API__ = 'http://localhost:8000/';
+import { API } from '../settings';
+
+var localhost = API() + '/';
 
 SuperAgent.Request.prototype.promise = function createPromise(done, fail) {
   var self = this;
@@ -45,11 +47,18 @@ SuperAgent.Request.prototype.token = function(token) {
 };
 
 SuperAgent.Request.prototype.host = function(host) {
-  if (!_.isUndefined(host) && host !== __API__) {
+  if (!_.isUndefined(host) && host !== localhost) {
     return this.set('Author-Host', host);
   } else {
     return this;
   }
 };
 
-export default SuperAgent;
+export function apiPrefix(request) {
+  if (request.url[0] === '/') {
+    request.url = API() + request.url;
+  }
+
+  return request;
+}
+export const Request = SuperAgent;
