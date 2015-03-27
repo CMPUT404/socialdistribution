@@ -118,6 +118,11 @@ class AuthorPostViewSet(
 
                 # append author posts to this object
                 posts = Post.objects.filter(author__id=pk)
+                for post in posts:
+                    try:
+                        self.check_object_permissions(self.request, post)
+                    except:
+                        posts.remove(post)
                 if posts is not None:
                     posts = PostSerializer(posts, many=True)
                     data["posts"] = posts.data
