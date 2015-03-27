@@ -116,6 +116,12 @@ class AuthorPostViewSet(
                 author = get_object_or_404(Author, id=pk)
                 data = AuthorSerializer(author).data
 
+                # dont return some info if not author making request
+                if request.user.id != author.user.id:
+                    data.pop("following", None)
+                    data.pop("pending", None)
+                    data.pop("requests", None)
+
                 # append author posts to this object
                 posts = Post.objects.filter(author__id=pk)
                 if posts is not None:
