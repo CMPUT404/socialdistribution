@@ -108,6 +108,7 @@ export default Reflux.createStore({
   onFetchAuthor: function(id, host) {
     Request
       .get('/author/' + id)
+      .token(this.getToken())
       .use(apiPrefix)
       .host(host)
       .promise(this.fetchAuthorComplete, AuthorActions.fetchAuthor.fail);
