@@ -123,7 +123,7 @@ export default Reflux.createStore({
       this.displayAuthor = new Author(authorData, null);
     }
 
-    this.displayAuthor.posts = this.displayAuthor.posts.map((post) => {
+    this.displayAuthor.posts = authorData.posts.map((post) => {
         post = new Post(post);
 
         if (post.author.id === this.displayAuthor.id) {

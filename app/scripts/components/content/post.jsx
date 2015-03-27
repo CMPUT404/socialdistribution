@@ -46,9 +46,6 @@ export default React.createClass({
           </ProfileLink>
         </div>
         <div className="media-body">
-          <ProfileLink author={this.props.data.author}>
-            <h4 className="media-heading">{this.props.data.author.name}</h4>
-          </ProfileLink>
           <h4>{this.props.data.title}</h4>
           {content}
           <h6 className="timestamp">{Moment(this.props.data.pubDate).fromNow()} by
