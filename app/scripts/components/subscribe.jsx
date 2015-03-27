@@ -71,7 +71,7 @@ export default React.createClass({
 
     // see if the current author has already "friended" to the target author
     // under any context
-    if (this.state.currentAuthor.hasFriend(this.props.author)) {
+    if (this.state.currentAuthor.inList('friends', this.props.author)) {
       return (
         <Button bsStyle={this.state.btnStyle}
                 className="pull-right"
@@ -83,7 +83,7 @@ export default React.createClass({
       );
     }
 
-    if (this.state.currentAuthor.follows(this.props.author)) {
+    if (this.state.currentAuthor.inList('following', this.props.author)) {
       following = (
         <Button onClick={this.unFollow}
                 bsStyle={this.state.btnStyle}
@@ -100,7 +100,7 @@ export default React.createClass({
       );
     }
 
-    if (this.state.currentAuthor.pendingFriend(this.props.author)) {
+    if (this.state.currentAuthor.inList('pending', this.props.author)) {
       friend = (
         <Button>Pending</Button>
       );

@@ -14,6 +14,7 @@ import ContentViewer from '../content/content-viewer';
 import PostCreator from '../content/post-creator';
 
 import ActionListener from '../../mixins/action-listener';
+import ProfileLink from '../content/profile-link';
 
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
@@ -81,8 +82,28 @@ export default React.createClass({
     // this comes from the RouterState mixin and lets us pull an author id out
     // of the uri so we can fetch their posts.
     var postCreator, follow, ghStream, githubUrl;
+    var friends = [];
 
     githubUrl = this.state.displayAuthor.getGithubUrl();
+
+
+    this.state.displayAuthor.friends.forEach((friend) => {
+      friends.push(
+        <li key={friend.id} className="list-group-item">
+          <div className="media">
+            <div className="media-left">
+              <ProfileLink author={friend}>
+                <img className="media-object author-image" src={friend.getImage()}/>
+              </ProfileLink>
+            </div>
+            <div className="media-body">
+              <h4>{friend.displayname}</h4>
+              <h6>Host: {friend.host}</h6>
+            </div>
+          </div>
+        </li>
+      );
+    });
 
     // see if the viewer is logged in
     if (!_.isNull(this.props.currentAuthor)) {
@@ -145,7 +166,12 @@ export default React.createClass({
                 currentAuthor={this.props.currentAuthor}
                 posts={this.state.displayAuthor.sortedPosts()} />
             </div>
-            <div role="tabpanel" className="tab-pane active" id="friends-tab">
+            <div role="tabpanel" className="tab-pane" id="friends-tab">
+              <div className="well">
+                <ul className="list-group">
+                  {friends}
+                </ul>
+              </div>
             </div>
           </div>
         </Col>

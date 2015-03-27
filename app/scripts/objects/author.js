@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Post from './post';
 
-export default class {
+class Author {
 
   constructor(author, token = null) {
 
@@ -27,11 +27,21 @@ export default class {
     this.requests  = [];
     this.pending   = [];
 
-    if (!_.isUndefined(author.posts) && !_.isEmpty(author.posts)) {
-      this.posts = author.posts;
+    if (!_.isEmpty(author.friends)) {
+      this.friends = author.friends.map(responseToAuthor)
     }
 
-    // this.notifications = data.notifications;
+    if (!_.isEmpty(author.following)) {
+      this.following = author.following.map(responseToAuthor)
+    }
+
+    if (!_.isEmpty(author.requests)) {
+      this.requests = author.requests.map(responseToAuthor)
+    }
+
+    if (!_.isEmpty(author.pending)) {
+      this.pending = author.pending.map(responseToAuthor)
+    }
   }
 
   getName() {
@@ -54,19 +64,21 @@ export default class {
     return this.github_username ? 'http://github.com/' + this.github_username : null;
   }
 
-  hasFriend (author) {
-    return _.indexOf(this.friends, author.id) === -1 ? false : true;
+  inList (list, author) {
+    if (list in this) {
+      return _.findIndex(this[list], a => a.id === author.id) === -1 ? false : true;
+    } else {
+      return false;
+    }
   }
 
-  follows (author) {
-    return _.indexOf(this.following, author.id) === -1 ? false : true;
-  }
-
-  pendingFriend (author) {
-    return _.indexOf(this.pending, author.id) === -1 ? false : true;
-  }
-
-  sortedPosts() {
+  sortedPosts () {
     return _.sortByOrder(this.posts, ['pubDate'], [false]);
   }
 }
+
+function responseToAuthor(authorData) {
+  return new Author(authorData);
+}
+
+export default Author;
