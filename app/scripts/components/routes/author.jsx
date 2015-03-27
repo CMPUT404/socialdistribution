@@ -36,6 +36,10 @@ export default React.createClass({
     };
   },
 
+  onLogout: function() {
+    this.transitionTo('login');
+  },
+
   updateParams: function() {
     this.params = this.getParams();
 
@@ -50,8 +54,12 @@ export default React.createClass({
 
   // https://github.com/rackt/react-router/blob/master/docs/guides/overview.md#important-note-about-dynamic-segments
   componentWillReceiveProps: function(nextProps) {
-    this.updateParams();
-    this.refresh();
+    if (_.isNull(nextProps.currentAuthor)) {
+      this.onLogout();
+    } else {
+      this.updateParams();
+      this.refresh();
+    }
   },
 
   refresh: function() {
@@ -59,7 +67,7 @@ export default React.createClass({
   },
 
   componentDidMount: function () {
-    this.listen(AuthorActions.logout, () => this.transitionTo('login'));
+    this.listen(AuthorActions.logout, this.onLogout);
     this.updateParams();
     this.refresh();
   },
