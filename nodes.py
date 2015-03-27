@@ -8,13 +8,15 @@ import django
 django.setup()
 
 user = User.objects.create(username="hindlebook")
+user.set_password("hindlebook")
 user.save()
 node = Node.objects.create(
     user=user,
     host="http://hindlebook.tamarabyte.com/api/",
-    foreign_username="test",
-    foreign_pass="test",
-    outbound=True
+    foreign_username="socshizzle",
+    foreign_pass="socshizzle",
+    outbound=True,
+    enabled=True
 )
 
 node.save()
