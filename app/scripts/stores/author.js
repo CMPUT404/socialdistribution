@@ -1,16 +1,13 @@
 import _ from 'lodash';
 import Reflux from 'reflux';
 
-import Request from '../utils/request';
+import { Request, apiPrefix } from '../utils/request';
 
 import Post from '../objects/post';
 import Author from '../objects/author';
 import Comment from '../objects/comment';
 import AuthorActions from '../actions/author';
 
-// TODO:
-// * In prod, remove host API prefixes in AJAX calls
-var __API__ = 'http://localhost:8000';
 
 // Deals with store Author information. Both for the logged in user and other
 // author's we need to load with their content.
@@ -67,7 +64,8 @@ export default Reflux.createStore({
   // Fires authentication AJAX
   onLogin: function(username, password) {
     Request
-      .get(__API__ + '/author/login/') //TODO: remove host
+      .get('/author/login/')
+      .use(apiPrefix)
       .auth(username, password)
       .promise(this.loginComplete, AuthorActions.login.fail);
   },
@@ -85,7 +83,8 @@ export default Reflux.createStore({
   // Fires registration AJAX
   onRegister: function(payload) {
     Request
-      .post(__API__ + '/author/registration/') //TODO: remove host
+      .post('/author/registration/')
+      .use(apiPrefix)
       .send(payload)
       .promise(this.registrationComplete, AuthorActions.register.fail);
   },
@@ -108,7 +107,8 @@ export default Reflux.createStore({
   // Fetches author details via AJAX
   onFetchAuthor: function(id, host) {
     Request
-      .get(__API__ + '/author/' + id) //TODO: remove host
+      .get('/author/' + id)
+      .use(apiPrefix)
       .host(host)
       .promise(this.fetchAuthorComplete, AuthorActions.fetchAuthor.fail);
   },
@@ -157,7 +157,8 @@ export default Reflux.createStore({
 
   onCreatePost: function(post) {
     Request
-      .post(__API__ + '/post')
+      .post('/post')
+      .use(apiPrefix)
       .token(this.getToken())
       .send(post)
       .promise(this.createPostComplete, AuthorActions.createPost.fail);
@@ -178,7 +179,8 @@ export default Reflux.createStore({
 
   onDeletePost: function(post) {
     Request
-      .del(__API__ + '/post/' + post.guid)
+      .del('/post/' + post.guid)
+      .use(apiPrefix)
       .token(this.getToken())
       .promise(this.deletePostComplete.bind(this, post),
                 AuthorActions.deletePost.fail);
@@ -195,7 +197,8 @@ export default Reflux.createStore({
 
   onCreateComment: function(post, comment) {
     Request
-      .post(__API__ + '/post/' + post.guid +'/comments')
+      .post('/post/' + post.guid +'/comments')
+      .use(apiPrefix)
       .token(this.getToken())
       .send(comment)
       .promise(this.createCommentComplete.bind(this, post),
@@ -214,7 +217,8 @@ export default Reflux.createStore({
 
   onAddFriend: function(request) {
     Request
-      .post(__API__ + '/friendrequest')
+      .post('/friendrequest')
+      .use(apiPrefix)
       .token(this.getToken())
       .send(request)
       .promise(this.addFriendComplete.bind(this, request),
@@ -230,7 +234,8 @@ export default Reflux.createStore({
 
   onFollowFriend: function(id) {
     Request
-      .get(__API__ + '/author/' + this.currentAuthor.id + '/follow/' + id)
+      .get('/author/' + this.currentAuthor.id + '/follow/' + id)
+      .use(apiPrefix)
       .token(this.getToken())
       .promise(this.followFriendComplete.bind(this, id),
                 AuthorActions.followFriend.fail);
@@ -244,7 +249,8 @@ export default Reflux.createStore({
 
   onUnfollowFriend: function(id) {
     Request
-      .del(__API__ + '/author/' + this.currentAuthor.id + '/follow/' + id)
+      .del('/author/' + this.currentAuthor.id + '/follow/' + id)
+      .use(apiPrefix)
       .token(this.getToken())
       .promise(this.unfollowFriendComplete.bind(this, id),
                 AuthorActions.unfollowFriend.fail);

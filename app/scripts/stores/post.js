@@ -1,14 +1,12 @@
 import _ from 'lodash';
 import Reflux from 'reflux';
 
-import Request from '../utils/request';
+import { Request, apiPrefix } from '../utils/request';
 
 import PostActions from '../actions/post';
 import AuthorActions from '../actions/author';
 
 import Post from '../objects/post';
-
-var __API__ = 'http://localhost:8000';
 
 // Deals with App State Machine state
 export default Reflux.createStore({
@@ -33,7 +31,8 @@ export default Reflux.createStore({
   // fetches timelines posts
   onGetTimeline: function(token) {
     Request
-      .get(__API__ + '/author/posts')
+      .get('/author/posts')
+      .use(apiPrefix)
       .token(token)
       .promise(this.timelineComplete, PostActions.getTimeline.fail)
   },
@@ -48,7 +47,8 @@ export default Reflux.createStore({
   // fetches public posts
   onGetPubPosts: function () {
     Request
-      .get(__API__ + '/posts')
+      .get('/posts')
+      .use(apiPrefix)
       .promise(this.pubPostsComplete, PostActions.getPublicPosts.fail)
   },
 
