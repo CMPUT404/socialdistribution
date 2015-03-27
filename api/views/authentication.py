@@ -34,7 +34,7 @@ class AuthorProfile(APIView):
         if serializer.is_valid(raise_exception = True):
             user_details = Author.objects.get(user = request.user)
             instance = serializer.update(user_details, serializer.validated_data)
-            details = AuthorSerializer(instance)
+            details = AuthorSerializer(instance, context={'request': request})
 
             return Response(details.data, status=status.HTTP_200_OK)
         else:
@@ -52,7 +52,7 @@ class AuthorRegistration(APIView):
         if serializer.is_valid(raise_exception = True):
             author = serializer.create(serializer.validated_data)
             token, created = Token.objects.get_or_create(user=author.user)
-            serializer = AuthorSerializer(author)
+            serializer = AuthorSerializer(author, context={'request': request})
 
             return Response(status=status.HTTP_201_CREATED)
         else:
@@ -90,7 +90,7 @@ class Login(APIView):
       login(request, request.user)
 
       author = Author.objects.get(user = request.user)
-      serializer = AuthorSerializer(author)
+      serializer = AuthorSerializer(author, context={'request': request})
 
       return Response({'token': token.key, 'author': serializer.data})
 

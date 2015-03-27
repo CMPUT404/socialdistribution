@@ -114,7 +114,7 @@ class AuthorPostViewSet(
             # otherwise try and find them locally
             else:
                 author = get_object_or_404(Author, id=pk)
-                data = AuthorSerializer(author).data
+                data = AuthorSerializer(author, context={'request': request}).data
 
                 # append author posts to this object
                 posts = Post.objects.filter(author__id=pk)
