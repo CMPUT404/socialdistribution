@@ -189,11 +189,12 @@ class AuthorSerializer(serializers.ModelSerializer):
     friends     = CachedAuthorSerializer(many = True)
     following   = CachedAuthorSerializer(many = True)
     pending     = CachedAuthorSerializer(many = True)
+    requests    = CachedAuthorSerializer(many = True)
 
     class Meta:
         model = Author
         fields = ('id', 'displayname', 'email', 'first_name', 'last_name', \
-            'github_username', 'bio', 'host', 'url', 'image', 'friends', 'following', 'pending')
+            'github_username', 'bio', 'host', 'url', 'image', 'friends', 'following', 'pending', 'requests')
 
 # Serializer for given API specs
 # https://github.com/abramhindle/CMPUT404-project-socialdistribution/blob/master/example-article.json
