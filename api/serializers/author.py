@@ -196,6 +196,17 @@ class AuthorSerializer(serializers.ModelSerializer):
         fields = ('id', 'displayname', 'email', 'first_name', 'last_name', \
             'github_username', 'bio', 'host', 'url', 'image', 'friends', 'following', 'pending', 'requests')
 
+    def to_representation(self, data):
+        representation = super(AuthorSerializer, self).to_representation(data)
+
+        if hasattr(self.context, 'request') and (self.context.request.user.id == data.id):
+            representation = super(AuthorSerializer, self).to_representation(data)
+        else:
+            representation.pop("following", None)
+            representation.pop("pending", None)
+            representation.pop("requests", None)
+        return representation
+
 # Serializer for given API specs
 # https://github.com/abramhindle/CMPUT404-project-socialdistribution/blob/master/example-article.json
 class FriendRequestSerializer(serializers.Serializer):
