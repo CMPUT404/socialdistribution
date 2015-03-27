@@ -156,7 +156,7 @@ class Author(APIUser):
 # Allows the integration of foreign and home authors into friend/follower
 # relations. A denormalization of sorts.
 class CachedAuthor(models.Model):
-    id = UUIDField(primary_key=True)
+    id = UUIDField(primary_key=True, hyphenate=True)
     host = models.URLField(blank=False, null=False, default=settings.HOST)
     displayname = models.CharField(max_length=40, blank=False, null=False)
 

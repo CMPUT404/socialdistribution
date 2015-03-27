@@ -11,8 +11,7 @@ from ..permissions.permissions import IsAuthor, Custom
 from ..permissions.author import IsEnabled
 from ..models.author import Author
 from ..serializers.author import AuthorSerializer
-from ..integrations import Aggregator
-from api_settings import settings
+from ..integrations import Aggregator, Integrator
 
 #
 # Delete Posts and Comments
@@ -103,13 +102,17 @@ class AuthorPostViewSet(
     def retrieve(self, request, author_pk=None, pk=None):
         # Careful, gotchya here, if author_pk is none, it means we are dealing with
         # /author/:id and that the author id is going to be in pk
+
+        author = Author.objects.get(user__id=self.request.user.id)
+        print author, "Author"
         if author_pk is None:
 
             # check if we're querying for a remote author
             if "HTTP_AUTHOR_HOST" in request.META:
                 host = request.META["HTTP_AUTHOR_HOST"]
                 integrator = Integrator.build_from_host(host)
-                data = integrator.get_author_view_from_id(pk)
+                data = integrator.get_author_view_from_id(pk, author)
+                print data
 
             # otherwise try and find them locally
             else:

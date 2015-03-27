@@ -12,9 +12,12 @@ user.set_password("hindlebook")
 user.save()
 node = Node.objects.create(
     user=user,
-    host="http://hindlebook.tamarabyte.com/api/",
-    foreign_username="socshizzle",
-    foreign_pass="socshizzle",
+    # host="http://hindlebook.tamarabyte.com/api/",
+    # foreign_username="socshizzle",
+    # foreign_pass="socshizzle",
+    host="http://localhost:8001/api/",
+    foreign_username="test",
+    foreign_pass="test",
     outbound=True,
     enabled=True
 )

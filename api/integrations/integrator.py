@@ -42,6 +42,7 @@ class Integrator:
         """
         Handles build and sending requests based on defined settings.
         """
+        print headers, "HEADERS"
         return method(
             url,
             headers=headers,
@@ -60,12 +61,12 @@ class Integrator:
             print "Error calling %s" % (self.build_url("posts"))
             return []
 
-    def get_author(self, origin):
+    def get_author(self, origin, local_author):
         """
         Queries foreign server for /author/:id
         """
-        response = self.request(request.get, origin, {})
-        print response
+        headers = {"Uuid": str(local_author.id)}
+        response = self.request(request.get, origin, headers=headers)
         if response.status_code == 200:
             return self.prepare_author_data(response)
         else:
@@ -75,22 +76,23 @@ class Integrator:
         """
         Queries foreign server for /author/:id/posts
         """
-        headers = {"UUID": str(requestor)}
+        headers = {"Uuid": str(requestor)}
 
-        response = self.request(request.get, "%s/posts" % (origin), {}, headers)
-        print vars(response), "Data"
+        response = self.request(request.get, "%s/posts" % (origin), headers=headers)
         if response.status_code == 200:
             return self.prepare_post_data(response)
         else:
             return []
 
     def send_friend_request(self, author, foreign_author):
+        print foreign_author
         data = {
             "query": "friendrequest",
             "author": {
                 "id": foreign_author.id,
                 "host": foreign_author.host,
-                "displayname": foreign_author.displayname
+                "displayname": foreign_author.displayname,
+                "url": foreign_author.url
             },
             "friend": {
                 "id": author.id,
@@ -100,26 +102,30 @@ class Integrator:
             }
         }
 
-        response = self.request(request.post, self.build_url("friendrequest"), data)
+        headers = {"Uuid": str(author.id)}
+
+        response = self.request(request.post, self.build_url("friendrequest"), data, headers=headers)
+        print response
         if response.status_code == 201:
             return True
         else:
             return False
 
-    def get_author_view(self, origin):
+    def get_author_view(self, origin, author):
         """
         Combines together a bunch of foreign author calls to one object to help the
         frontend. Includes, author's info, friends, and posts.
         """
-        author = self.get_author(origin)
-        # posts = get_author_posts(author_id)
+        author = self.get_author(origin, author)
+        posts = self.get_author_posts(origin, author)
+        print posts
         # friends = get_author_friends(author_id)
-        # author["posts"] = posts
+        author["posts"] = posts
         # author["friends"] = friends
         return author
 
-    def get_author_view_from_id(self, id):
-        return self.get_author_view(self.build_url("author/%s" % (id)))
+    def get_author_view_from_id(self, id, author):
+        return self.get_author_view(self.build_url("author/%s" % (id)), author)
 
     def prepare_post_data(self, response):
         posts = response.json()["posts"]
