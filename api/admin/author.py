@@ -2,7 +2,7 @@ from django.contrib.admin import ModelAdmin, BooleanFieldListFilter
 
 
 class AuthorOptions(ModelAdmin):
-    list_display = ['id', 'user', 'github_username', 'host', 'bio', 'enabled']
+    list_display = ['id', 'user', 'github_username', 'host', 'bio', 'enabled','friends','following','requests','pending']
     list_editable = ['user', 'github_username', 'host', 'bio', 'enabled']
     list_filter = (
         ('enabled', BooleanFieldListFilter),
