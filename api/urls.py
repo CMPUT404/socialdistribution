@@ -7,8 +7,8 @@ from custom_urls import author as AuthorUrls
 from views.author import FollowerViewSet
 
 router = routers.SimpleRouter(trailing_slash=False)
-router.register(r'author', AuthorPostViewSet)
 router.register(r'post', PostViewSet)
+router.register(r'author', AuthorPostViewSet)
 router.register(r'posts', PublicPostsViewSet)
 
 author_router = routers.NestedSimpleRouter(router, r'author', lookup='author',trailing_slash=False)

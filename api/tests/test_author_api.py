@@ -51,16 +51,19 @@ class AuthorModelAPITests(APITestCase):
         self.user_b = User.objects.create_user(**USER_B)
         self.author = Author.objects.create(
             user = self.user,
+            displayname="Jimmy",
             github_username = GITHUB_USERNAME,
             bio = BIO,
             host = HOST)
         self.author_a = Author.objects.create(
             user = self.user_a,
+            displayname="Bobby",
             github_username = GITHUB_USERNAME,
             bio = BIO,
             host = HOST)
         self.author_b = Author.objects.create(
             user = self.user_b,
+            displayname="Drake",
             github_username = GITHUB_USERNAME,
             bio = BIO,
             host = HOST)
@@ -88,6 +91,7 @@ class AuthorModelAPITests(APITestCase):
         # Reg. unauthenticated client from APITestCase
         response = self.client.get('/author/%s' % self.author.id,
             content_type="application/json")
+        print response
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.data['email'], EMAIL)

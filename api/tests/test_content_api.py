@@ -4,6 +4,7 @@ from rest_framework.authtoken.models import Token
 from ..models.author import Author, CachedAuthor
 from ..models.content import Post, Comment
 from ..utils import scaffold
+from api_settings import settings
 import uuid
 import os
 
@@ -83,7 +84,10 @@ class ContentAPITestCase(TestCase):
 
     def test_get_post(self):
         response = self.client.get('/post/%s' % self.post.guid)
+        print vars(response)
         self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.data["source"], settings.HOST, "Not setting source properly")
+        self.assertEquals(response.data["origin"], settings.HOST, "Not setting origin properly")
         scaffold.assertPostAuthor(self, response.data, self.author_a)
         # scaffold.pretty_print(response.data)
 

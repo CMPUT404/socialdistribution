@@ -25,7 +25,7 @@ class Integrator:
     def build_from_host(host):
         node = Node.objects.get(host=host)
         if not node:
-            exceptions.NotFound(detail="No node correspoding to remote author host")
+            exceptions.NotFound(detail="No node correspoding to provided remote author host")
         return Integrator(node)
 
     def build_url(self, endpoint):
@@ -42,7 +42,6 @@ class Integrator:
         """
         Handles build and sending requests based on defined settings.
         """
-        print headers, "HEADERS"
         return method(
             url,
             headers=headers,
@@ -55,9 +54,12 @@ class Integrator:
         Queries foreign server for /posts
         """
         response = self.request(request.get, self.build_url("posts"))
+        print vars(response)
         if response.status_code == 200:
             return self.prepare_post_data(response)
         else:
+            # we're returning an empty list here because we dont' want to crash
+            # the call if a foreign node breaks on us
             print "Error calling %s" % (self.build_url("posts"))
             return []
 
@@ -118,19 +120,16 @@ class Integrator:
         """
         author = self.get_author(origin, author)
         posts = self.get_author_posts(origin, author)
-        print posts
         # friends = get_author_friends(author_id)
         author["posts"] = posts
         # author["friends"] = friends
         return author
 
-    def get_author_view_from_id(self, id, author):
-        return self.get_author_view(self.build_url("author/%s" % (id)), author)
-
     def prepare_post_data(self, response):
         posts = response.json()["posts"]
         for post in posts:
-            post["source"] = response.url
+            post["source"] = self.host
+            post["author"]["source"] = self.host
         return posts
 
     def prepare_author_data(self, response):

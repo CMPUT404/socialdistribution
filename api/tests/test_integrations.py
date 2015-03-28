@@ -31,18 +31,6 @@ class IntegrationTests(APITestCase):
             url= "%sauthor/%s" % (settings.HOST, str(id))
         )
 
-    def test_public_posts(self):
-        count = 0
-        for integrator in self.integrators:
-            posts = integrator.get_public_posts()
-            count += len(posts)
-            self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
-            self.assertEqual(posts is not None, True, "No posts returned")
-
-        posts = Aggregator.get_public_posts()
-        self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
-        self.assertTrue(posts is not None, "posts shouldn't be empty")
-
     # finds a queryable author from the public posts on a given node
     def get_available_author(self, integrator):
         test_post_set = integrator.get_public_posts()
@@ -56,7 +44,22 @@ class IntegrationTests(APITestCase):
                 displayname=data["displayname"]
             )
         else:
-            return None
+            self.assertFalse(True, "Error fetching a test author")
+
+    def test_public_posts(self):
+        count = 0
+        for integrator in self.integrators:
+            posts = integrator.get_public_posts()
+            print posts, "Posts"
+            count += len(posts)
+            self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
+            self.assertEqual(posts, True, "No posts returned")
+            self.assertEqual(integrator.host, posts[0]["source"])
+            self.assertEqual(integrator.host, posts[0]["author"]["source"])
+
+        posts = Aggregator.get_public_posts()
+        self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
+        self.assertTrue(posts is not None, "posts shouldn't be empty")
 
     def test_get_author_view(self):
         for integrator in self.integrators:
