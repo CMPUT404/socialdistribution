@@ -17,10 +17,11 @@ from ..models.author import (
     CachedAuthor
 )
 
-from ..serializers.author import (
-    RetrieveFriendsSerializer,
+from ..serializers.relations import (
+    # RetrieveFriendsSerializer,
     BaseRetrieveFollowingSerializer,
-    FriendRequestSerializer
+    FriendRequestSerializer,
+    APIRetrieveFriendsSerializer
 )
 
 
@@ -240,31 +241,17 @@ class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
     Possible Exceptions:
         404: Author id does not exist
     """
-    serializer_class = RetrieveFriendsSerializer
+    serializer_class = APIRetrieveFriendsSerializer
     queryset = Author.objects.all()
     lookup_url_kwarg = "aid"
 
-    def get_queryset(self):
-        return self.queryset.filter(id=self.kwargs.get(self.lookup_url_kwarg))
+    def get_serializer_context(self):
+        """
+        Provide the serializer_class with a nested relations queryset.
+        """
+        author = self.get_object()
+        queryset = author.friends.filter(id=self.kwargs.get("fid"))
 
-    # Alter the response to fit request before returning
-    def retrieve(self, request, *arg, **kwargs):
-        """Gets list response from super class and then alter to fit query"""
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-
-        # Alter the data to match API specifications
-        _ret = serializer.data
-        _ret['query'] = 'friends'
-
-        # Return only friends that were queried for. Probably can do this with the ORM
-        _ret['authors'] = [a for a in _ret['friends'] if a == self.kwargs.get('fid')]
-        # Insert the originating author to the friends list (friends with self)
-        _ret['authors'].insert(0, self.kwargs.get(self.lookup_url_kwarg))
-
-        if len(_ret['authors']) > 1:
-            _ret['friends'] = 'YES'
-        else:
-            _ret['friends'] = "NO"
-
-        return Response(_ret)
+        context = super(GetFriends, self).get_serializer_context()
+        context['nested_queryset'] = queryset
+        return context

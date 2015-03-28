@@ -111,7 +111,6 @@ class ContentAPITestCase(TestCase):
         scaffold.assertNumberPosts(self, posts, 1)
         scaffold.assertPostAuthor(self, posts["posts"][0], self.author_a)
 
-
     def test_get_posts_of_fof(self):
         # Add Friends and a post each
         scaffold.create_friends(self.author_a, [self.author_b], create_post = True, visibility="FOAF")

@@ -115,9 +115,14 @@ class CachedAuthorSerializer(serializers.ModelSerializer):
         fields = ('id', 'host', 'displayname', 'url',)
 
 
+class CompactCachedAuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CachedAuthor
+        fields = ('id',)
+
 # This will not throw an error if duplicate id's
 # Instead returns an existing model
-class DirtyCachedAuthorSerializer(serializers.Serializer):
+class CachedAuthorFieldsSerializer(serializers.Serializer):
     id = serializers.UUIDField(required=True)
     host = serializers.URLField(required=True)
     displayname = serializers.CharField(required=True)
@@ -144,53 +149,6 @@ class DirtyCachedAuthorSerializer(serializers.Serializer):
         cached = CachedAuthor(**validated_data)
         cached.save()
         return cached
-
-
-class BaseRetrieveFollowersSerializer(serializers.ModelSerializer):
-    followers = CachedAuthorSerializer(many=True)
-
-    class Meta:
-        model = Author
-        fields = ('followers',)
-
-
-class BaseRetrieveFriendsSerializer(serializers.ModelSerializer):
-    friends = CachedAuthorSerializer(many=True)
-
-    class Meta:
-        model = Author
-        fields = ('friends',)
-
-
-class BaseRetrieveFollowingSerializer(serializers.ModelSerializer):
-    following = CachedAuthorSerializer(many=True)
-
-    class Meta:
-        model = Author
-        fields = ('following',)
-
-
-class RetrieveFollowersSerializer(BaseRetrieveFollowersSerializer):
-    """Provideds only a list of the follower guids in the return object"""
-    followers = serializers.StringRelatedField(many=True)
-
-
-class RetrieveFriendsSerializer(BaseRetrieveFriendsSerializer):
-    """Provides only a list of the friend guids in the return object"""
-    friends = serializers.StringRelatedField(many=True)
-
-
-class AuthorRelationSerializer(serializers.ModelSerializer):
-    """writable serializer for followers and friends only"""
-    followers = CachedAuthorSerializer(many=True)
-    friends = CachedAuthorSerializer(many=True)
-    following = CachedAuthorSerializer(many=True)
-
-    class Meta:
-        model = Author
-        fields = ('followers', 'friends', 'following')
-        read_only_fields = ('user', 'id', 'host', 'bio', 'github_username',
-                            'image',)
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -220,11 +178,3 @@ class AuthorSerializer(serializers.ModelSerializer):
             representation["pending"] = []
 
         return representation
-
-
-# Serializer for given API specs
-# https://github.com/abramhindle/CMPUT404-project-socialdistribution/blob/master/example-article.json
-class FriendRequestSerializer(serializers.Serializer):
-    query = serializers.RegexField('(friendrequest?)', allow_blank=False)
-    author = DirtyCachedAuthorSerializer()
-    friend = DirtyCachedAuthorSerializer()
