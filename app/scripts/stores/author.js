@@ -264,6 +264,7 @@ export default Reflux.createStore({
       .get('/author/' + this.currentAuthor.id + '/follow/' + friend.id)
       .use(apiPrefix)
       .token(this.getToken())
+      .host(friend.host)
       .promise(this.followFriendComplete.bind(this, friend),
                 AuthorActions.followFriend.fail);
   },

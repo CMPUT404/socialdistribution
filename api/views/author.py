@@ -263,10 +263,7 @@ class QueryAuthors(APIView):
     Queries the database for all cached authors
 
     """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
     def get(self, request, *args, **kwargs):
-        cached_authors =  CachedAuthor.objects.all()
+        cached_authors = CachedAuthor.objects.all()
         serializer = CachedAuthorSerializer(cached_authors, many=True)
         return Response({"authors": serializer.data}, status=status.HTTP_200_OK)
