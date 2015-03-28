@@ -200,7 +200,7 @@ class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
 
         requestHost = "http://%s/" % request.get_host()
         # parse any incoming api calls from other nodes
-        if requestHost not in [settings.HOST, settings.FRONTEND_HOST, "testserver"]:
+        if requestHost not in [settings.HOST, settings.FRONTEND_HOST, "http://testserver/"]:
             author.add_request(friend)
 
         # Otherwise, figureout how to handle the request
