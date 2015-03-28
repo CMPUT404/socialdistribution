@@ -103,3 +103,9 @@ class AuthorModelAPITests(APITestCase):
 
         self.assertEquals(response.status_code, 200)
         scaffold.assertNumberPosts(self, response.data, 1)
+
+    def test_get_authors_with_http(self):
+        response = c.get("/authors")
+
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue(len(response.data['authors']) > 0)
