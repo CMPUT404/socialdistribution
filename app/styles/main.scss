@@ -38,7 +38,7 @@ body {
 	right: 10px;
 }
 
-.timestamp {
+.light-text {
  color: #bbb;
 }
 
@@ -47,4 +47,33 @@ body {
   margin-left: 50%;
   margin-right: 50%;
   margin-top: 10%;
+}
+
+.popover {
+  max-width: 500px;
+
+  .popover-content {
+    padding: 0;
+
+    .list-group {
+      margin-bottom: 0;
+
+      .list-group-item .badge {
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.well .list-group .list-group-item {
+  padding: 10px;
+}
+
+.row-padding {
+  margin-left: 0;
+  margin-right: 0;
+  [class*="col-"] {
+    padding-left: 15px !important;
+    padding-right: 5px !important;
+  }
 }

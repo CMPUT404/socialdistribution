@@ -4,18 +4,18 @@ import Reflux from 'reflux';
 import { Col, Button } from 'react-bootstrap';
 import { Navigation } from 'react-router';
 
-import AuthorActions from '../../actions/author';
-import PostActions from '../../actions/post';
+import AuthorActions from '../actions/author';
+import PostActions from '../actions/post';
 
-import PostCreator from '../content/post-creator';
-import ContentViewer from '../content/content-viewer';
-import UserSearch from '../usersearch';
-import Spinner from '../spinner';
+import PostCreator from '../components/content/post-creator';
+import ContentViewer from '../components/content/content-viewer';
+import UserSearch from '../components/usersearch';
+import Spinner from '../components/spinner';
 
-import AuthorStore from '../../stores/author';
-import PostStore from '../../stores/post';
+import AuthorStore from '../stores/author';
+import PostStore from '../stores/post';
 
-import ActionListener from '../../mixins/action-listener';
+import ActionListener from '../mixins/action-listener';
 
 // Represents a collection of posts within the logged in user's social network.
 export default React.createClass({

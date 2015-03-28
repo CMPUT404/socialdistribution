@@ -81,7 +81,6 @@ class AuthorModelAPITests(TestCase):
         self.author.follow(self.author_a)
 
         response = self.client.delete('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
-        print response
         self.assertEquals(response.status_code, 200, "Follower deleted")
 
     def test_are_friends(self):
@@ -143,6 +142,7 @@ class AuthorModelAPITests(TestCase):
         # b should still follow a, but not be friends or be followed by a
         self.assertEquals(0, len(self.author_b.friends.all()))
 
+    # TODO fix in next PR
     def test_api_friend_request_only_follow(self):
         request = {
             "query":"friendrequest",
@@ -198,7 +198,9 @@ class AuthorModelAPITests(TestCase):
 
     def test_api_get_friends(self):
         self.author.add_friend(self.author_a)
+        self.author.add_friend(self.author_b)
         self.author_a.add_friend(self.author)
+        self.author_b.add_friend(self.author)
 
         # These friends should not show up in response
         self.author.follow(self.author_b)
