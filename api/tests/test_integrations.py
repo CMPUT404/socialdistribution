@@ -4,7 +4,7 @@ from ..integrations import Integrator, Aggregator
 from ..models import Node, Author, CachedAuthor
 from django.contrib.auth.models import User
 from ..utils import scaffold
-from ..serializers.author import DirtyCachedAuthorSerializer
+from ..serializers.author import CachedAuthorFieldsSerializer
 import uuid
 
 class IntegrationTests(APITestCase):
