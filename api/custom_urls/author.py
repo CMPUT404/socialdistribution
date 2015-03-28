@@ -30,4 +30,8 @@ urlpatterns = [
     # GET /author/:path_prefix/images/:imageid
     url(r'^author/(?P<path_prefix>[a-zA-Z]+)/images/(?P<id>.*)', image.Images.as_view(),
         name = 'images'),
+
+    # GET /authors
+    url(r'^authors/?$', author.QueryAuthors.as_view(),
+        name = 'authors'),
 ]

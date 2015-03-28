@@ -16,7 +16,7 @@ from ..models.author import (
     Author,
     CachedAuthor
 )
-
+from ..serializers.author import CachedAuthorSerializer
 from ..serializers.relations import (
     # RetrieveFriendsSerializer,
     BaseRetrieveFollowingSerializer,
@@ -255,3 +255,17 @@ class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
         context = super(GetFriends, self).get_serializer_context()
         context['nested_queryset'] = queryset
         return context
+
+
+class QueryAuthors(APIView):
+    """
+    Queries the database for all cached authors
+
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        cached_authors =  CachedAuthor.objects.all()
+        serializer = CachedAuthorSerializer(cached_authors, many=True)
+        return Response({"authors": serializer.data}, status=status.HTTP_200_OK)
