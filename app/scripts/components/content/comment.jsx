@@ -26,10 +26,11 @@ export default React.createClass({
             <h4 className="media-heading">{this.props.data.author.name}</h4>
           </ProfileLink>
           {this.props.data.comment}
-          <h6 className="timestamp">{Moment(this.props.data.pubDate).fromNow()} by
+          <h6 className="light-text">{Moment(this.props.data.pubDate).fromNow()} by
             <ProfileLink author={this.props.data.author}>
-              <span> {this.props.data.author.displayname}</span>
+              <span className="text-capitalize"> {this.props.data.author.displayname}</span>
             </ProfileLink>
+            <span className="text-lowercase pull-right">{this.props.data.author.host}</span>
           </h6>
         </div>
       </div>

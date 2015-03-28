@@ -72,6 +72,18 @@ class Author {
     }
   }
 
+  removeFrom(list, author) {
+    if(list in this) {
+      _.remove(this[list], a => a.id == author.id);
+    }
+  }
+
+  addTo(list, author) {
+    if (!this.inList(list, author)) {
+      this[list].push(author);
+    }
+  }
+
   sortedPosts () {
     return _.sortByOrder(this.posts, ['pubDate'], [false]);
   }

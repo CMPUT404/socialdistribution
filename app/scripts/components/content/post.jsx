@@ -48,10 +48,11 @@ export default React.createClass({
         <div className="media-body">
           <h4>{this.props.data.title}</h4>
           {content}
-          <h6 className="timestamp">{Moment(this.props.data.pubDate).fromNow()} by
+          <h6 className="light-text">{Moment(this.props.data.pubDate).fromNow()} by
             <ProfileLink author={this.props.data.author}>
-              <span> {this.props.data.author.displayname}</span>
+              <span className="text-capitalize"> {this.props.data.author.displayname}</span>
             </ProfileLink>
+            <span className="text-lowercase pull-right">{this.props.data.author.host}</span>
           </h6>
           {comments}
         </div>
