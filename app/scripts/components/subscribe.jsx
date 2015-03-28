@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
-import { ButtonGroup, Button, Col } from 'react-bootstrap';
+import { addons } from 'react/addons';
+import { Button, Col, Row } from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
@@ -12,88 +13,85 @@ export default React.createClass({
 
   getInitialState: function() {
     return {
-      currentAuthor: null
+      currentAuthor: AuthorStore.getAuthor(),
+      friendStyle: 'success',
+      followStyle: 'success'
     };
   },
 
-  componentDidMount: function() {
+  componentWillReceiveProps: function() {
     this.setState({
-      currentAuthor: AuthorStore.getAuthor(),
-      btnStyle: "success",
+      friendStyle: 'success',
+      followStyle: 'success'
     });
   },
 
-  onMouseOver: function(value, style, evt) {
-    this.setState({btnStyle: style});
+  // this next bit is really ugly but there is no around it
+  // unless if we split buttons into child components...
+
+  setBtnStyle: function(btn, style) {
+    switch(btn) {
+      case 'friend': this.setState({friendStyle: style}); break;
+      case 'follow': this.setState({followStyle: style}); break;
+    }
+  },
+
+  onMouseOver: function(btn, style, value, evt) {
+    this.setBtnStyle(btn, style);
     $(evt.target).html(value);
   },
-  onMouseOut: function(value, style, evt) {
-    this.setState({btnStyle: style});
+  onMouseOut: function(btn, style, value, evt) {
+    this.setBtnStyle(btn, style);
     $(evt.target).html(value);
   },
 
   unFollow: function() {
-    AuthorActions.unfollowFriend(this.props.author.id);
+    AuthorActions.unfollowFriend(this.props.author);
   },
 
   follow: function() {
-    AuthorActions.followFriend(this.props.author.id);
+    AuthorActions.followFriend(this.props.author);
   },
 
   friend: function() {
-    // Manual construction is needed for two reasons
-    // 1. Privacy (currentAuthor has stuff we don't want to send)
-    // 2. Crazy circular references that break JSON.stringify
-    AuthorActions.addFriend({
-      query: "friendrequest",
-      author: {
-        id         : this.state.currentAuthor.id,
-        url        : this.state.currentAuthor.url,
-        host       : this.state.currentAuthor.host,
-        displayname: this.state.currentAuthor.displayname
-      },
-      friend: {
-        id         : this.props.author.id,
-        url        : this.props.author.url,
-        host       : this.props.author.host,
-        displayname: this.props.author.displayname
-      }
-    });
+    AuthorActions.addFriend(this.props.author);
   },
 
   render: function () {
 
-    if (_.isNull(this.state.currentAuthor)) {
+    if (_.isNull(this.state.currentAuthor) ||
+        this.state.currentAuthor.id === this.props.author.id) {
       return false;
     }
 
-    var friend, following;
+    var friend, follow;
 
     // see if the current author has already "friended" to the target author
     // under any context
     if (this.state.currentAuthor.inList('friends', this.props.author)) {
       return (
-        <Button bsStyle={this.state.btnStyle}
-                className="pull-right"
-                onClick={this.unFollow}
-                onMouseOut={this.onMouseOut.bind(this, 'Friends', 'success')}
-                onMouseOver={this.onMouseOver.bind(this, 'Un-Friend', 'danger')} >
-          Friends
-        </Button>
+        <Row  className="pull-right row-padding">
+          <Button onClick={this.unFollow}
+                  bsStyle={this.state.friendStyle}
+                  onMouseOut={this.onMouseOut.bind(this, 'friend', 'success', 'Friends')}
+                  onMouseOver={this.onMouseOver.bind(this, 'friend', 'danger', 'Un-Friend')} >
+            Friends
+          </Button>
+        </Row>
       );
     }
 
     if (this.state.currentAuthor.inList('following', this.props.author)) {
-      following = (
+      follow = (
         <Button onClick={this.unFollow}
-                bsStyle={this.state.btnStyle}
-                onMouseOut={this.onMouseOut.bind(this, 'Following', 'success')}
-                onMouseOver={this.onMouseOver.bind(this, 'Unfollow', 'danger')} >
+                bsStyle={this.state.followStyle}
+                onMouseOut={this.onMouseOut.bind(this, 'follow', 'success', 'Following')}
+                onMouseOver={this.onMouseOver.bind(this, 'follow', 'danger', 'Unfollow')} >
                 Following
         </Button>
       );
     } else {
-      following = (
+      follow = (
         <Button bsStyle="primary" onClick={this.follow}>
           Follow
         </Button>
@@ -111,10 +109,10 @@ export default React.createClass({
     }
 
     return (
-      <div className="pull-right">
+      <Row className="pull-right row-padding">
         <Col md={6}>{friend}</Col>
-        <Col md={6}>{following}</Col>
-      </div>
+        <Col md={6}>{follow}</Col>
+      </Row>
     );
   }
 });

@@ -3,11 +3,11 @@ import React from 'react';
 import Reflux from 'reflux';
 import { Col, Button } from 'react-bootstrap';
 
-import PostStore from '../../stores/post';
-import PostActions from '../../actions/post';
+import PostStore from '../stores/post';
+import PostActions from '../actions/post';
 
-import ContentViewer from '../content/content-viewer';
-import Spinner from '../spinner';
+import ContentViewer from '../components/content/content-viewer';
+import Spinner from '../components/spinner';
 
 // Represents a collection of posts within the logged in user's social network.
 export default React.createClass({

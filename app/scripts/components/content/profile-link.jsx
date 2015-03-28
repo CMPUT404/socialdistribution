@@ -19,7 +19,7 @@ export default React.createClass({
     }
 
     return (
-      <Link to="author" params={params}>
+      <Link to="author" params={params} title={this.props.author.host}>
         {this.props.children}
       </Link>
     );

@@ -4,10 +4,10 @@ import { addons } from 'react/addons';
 import { Navigation } from 'react-router';
 import { Row, Col, Input, PageHeader } from 'react-bootstrap';
 
-import AuthorActions from '../../actions/author';
-import AuthorStore from '../../stores/author';
+import AuthorActions from '../actions/author';
+import AuthorStore from '../stores/author';
 
-import ActionListener from '../../mixins/action-listener';
+import ActionListener from '../mixins/action-listener';
 
 // This the registration handler
 export default React.createClass({

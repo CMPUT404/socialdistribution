@@ -216,53 +216,81 @@ export default Reflux.createStore({
     AuthorActions.createComment.complete(comment);
   },
 
-  onAddFriend: function(request) {
+  onAddFriend: function(friend) {
+    // Manual construction is needed for two reasons
+    // 1. Privacy (currentAuthor has stuff we don't want to send)
+    // 2. Crazy circular references that break JSON.stringify
+    let request = {
+      query: "friendrequest",
+      author: {
+        id         : this.currentAuthor.id,
+        url        : this.currentAuthor.url,
+        host       : this.currentAuthor.host,
+        displayname: this.currentAuthor.displayname
+      },
+      friend: {
+        id         : friend.id,
+        url        : friend.url,
+        host       : friend.host,
+        displayname: friend.displayname
+      }
+    };
+
     Request
       .post('/friendrequest')
       .use(apiPrefix)
       .token(this.getToken())
       .send(request)
-      .promise(this.addFriendComplete.bind(this, request),
+      .promise(this.addFriendComplete.bind(this, request.friend),
                 AuthorActions.addFriend.fail);
   },
 
-  addFriendComplete: function(request) {
-    this.currentAuthor.following.push(request.friend.id);
-    this.currentAuthor.pending.push(request.friend.id);
+  addFriendComplete: function(friend) {
+    this.currentAuthor.following.push(friend);
+
+    if (this.currentAuthor.inList('requests', friend)) {
+      this.currentAuthor.removeFrom('requests', friend);
+      this.currentAuthor.addTo('friends', friend);
+    } else {
+      this.currentAuthor.addTo('pending', friend);
+    }
+
     this.trigger({currentAuthor: this.currentAuthor});
-    AuthorActions.addFriend.complete(request.friend);
+    AuthorActions.addFriend.complete(friend);
   },
 
-  onFollowFriend: function(id) {
+  onFollowFriend: function(friend) {
     Request
-      .get('/author/' + this.currentAuthor.id + '/follow/' + id)
+      .get('/author/' + this.currentAuthor.id + '/follow/' + friend.id)
       .use(apiPrefix)
       .token(this.getToken())
-      .promise(this.followFriendComplete.bind(this, id),
+      .promise(this.followFriendComplete.bind(this, friend),
                 AuthorActions.followFriend.fail);
   },
 
-  followFriendComplete: function(id) {
-    this.currentAuthor.following.push(id);
+  followFriendComplete: function(friend) {
+    this.currentAuthor.following.push(friend);
     this.trigger({currentAuthor: this.currentAuthor});
-    AuthorActions.followFriend.complete(id);
+    AuthorActions.followFriend.complete(friend);
   },
 
-  onUnfollowFriend: function(id) {
+  onUnfollowFriend: function(friend) {
     Request
-      .del('/author/' + this.currentAuthor.id + '/follow/' + id)
+      .del('/author/' + this.currentAuthor.id + '/follow/' + friend.id)
       .use(apiPrefix)
       .token(this.getToken())
-      .promise(this.unfollowFriendComplete.bind(this, id),
+      .promise(this.unfollowFriendComplete.bind(this, friend),
                 AuthorActions.unfollowFriend.fail);
   },
 
-  unfollowFriendComplete: function(id) {
-    _.pull(this.currentAuthor.friends, id);
-    _.pull(this.currentAuthor.following, id);
+  unfollowFriendComplete: function(friend) {
+    this.currentAuthor.removeFrom('friends', friend);
+    this.currentAuthor.removeFrom('pending', friend);
+    this.currentAuthor.removeFrom('following', friend);
     this.trigger({currentAuthor: this.currentAuthor});
-    AuthorActions.followFriend.complete(id);
+    AuthorActions.followFriend.complete(friend);
   },
+
   // This is a listener not a handler
   // `logOut` doesn't require any AJAX calls
   logOut: function() {

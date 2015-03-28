@@ -4,17 +4,17 @@ import Reflux from 'reflux';
 import { State, Navigation } from 'react-router';
 import { Col, Row, Button } from 'react-bootstrap';
 
-import AuthorStore from '../../stores/author';
-import AuthorActions from '../../actions/author';
-import Follow from '../subscribe';
-import Spinner from '../spinner';
-import Stream from '../github/stream';
+import AuthorStore from '../stores/author';
+import AuthorActions from '../actions/author';
+import Subcribe from '../components/subscribe';
+import Spinner from '../components/spinner';
+import Stream from '../components/github/stream';
 
-import ContentViewer from '../content/content-viewer';
-import PostCreator from '../content/post-creator';
+import ContentViewer from '../components/content/content-viewer';
+import PostCreator from '../components/content/post-creator';
 
-import ActionListener from '../../mixins/action-listener';
-import ProfileLink from '../content/profile-link';
+import ActionListener from '../mixins/action-listener';
+import ProfileLink from '../components/content/profile-link';
 
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
@@ -81,7 +81,7 @@ export default React.createClass({
 
     // this comes from the RouterState mixin and lets us pull an author id out
     // of the uri so we can fetch their posts.
-    var postCreator, follow, ghStream, githubUrl;
+    var postCreator, ghStream, githubUrl;
     var friends = [];
 
     githubUrl = this.state.displayAuthor.getGithubUrl();
@@ -96,24 +96,29 @@ export default React.createClass({
                 <img className="media-object author-image" src={friend.getImage()}/>
               </ProfileLink>
             </div>
-            <div className="media-body">
-              <h4>{friend.displayname}</h4>
-              <h6>Host: {friend.host}</h6>
-            </div>
+            <Row className="media-body row-padding">
+              <Col md={6}>
+                <h4 className="text-capitalize">{friend.displayname}</h4>
+                <h6 className="light-text">Host: {friend.host}</h6>
+              </Col>
+              <Col md={6}>
+                <Subcribe author={friend} />
+              </Col>
+            </Row>
           </div>
         </li>
       );
     });
 
     // see if the viewer is logged in
-    if (!_.isNull(this.props.currentAuthor)) {
-
-      // if viewing their own profile
-      if (this.props.currentAuthor.isAuthor(this.params.id)) {
-        postCreator = <div className="jumbotron"><PostCreator currentAuthor={this.props.currentAuthor} /></div>;
-      } else {
-        follow = <Follow className="pull-right" author={this.state.displayAuthor} />;
-      }
+    // and if viewing their own profile
+    if (!_.isNull(this.props.currentAuthor) &&
+        this.props.currentAuthor.isAuthor(this.params.id)) {
+      postCreator = (
+        <div className="jumbotron">
+          <PostCreator currentAuthor={this.props.currentAuthor} />
+        </div>
+      );
     }
 
     if (!_.isNull(githubUrl)) {
@@ -138,18 +143,18 @@ export default React.createClass({
             <div className="media-left">
               <img className="media-object profile-image" src={this.state.displayAuthor.getImage()} />
             </div>
-            <div className="media-body">
+            <Row className="media-body row-padding">
               <Col md={6}>
-                <h2 className="media-heading">{this.state.displayAuthor.getName()}</h2>
-                <h4 className="media-heading">{this.state.displayAuthor.displayname}</h4>
+                <h2 className="media-heading text-capitalize">{this.state.displayAuthor.getName()}</h2>
+                <h4 className="media-heading text-capitalize">{this.state.displayAuthor.displayname}</h4>
                 <p>{this.state.displayAuthor.bio}</p>
                 <p>{this.state.displayAuthor.email}</p>
                 {githubUrl}
               </Col>
               <Col md={6}>
-                {follow}
+                <Subcribe author={this.state.displayAuthor} />
               </Col>
-            </div>
+            </Row>
           </div>
           {postCreator}
           <ul className="nav nav-tabs author-tabs">
