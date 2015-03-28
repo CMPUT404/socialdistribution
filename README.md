@@ -2,7 +2,10 @@
 
 [![Build Status](https://travis-ci.org/CMPUT404/socialdistribution.svg?branch=master)](https://travis-ci.org/CMPUT404/socialdistribution)
 
+[App](http://socshizzle.divshot.io/)
+
 [Project Specifications](https://github.com/abramhindle/CMPUT404-project-socialdistribution)
+
 [API Documentation](https://github.com/CMPUT404/socialdistribution/wiki).
 
 ### Setup
