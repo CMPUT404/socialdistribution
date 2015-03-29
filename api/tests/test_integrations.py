@@ -1,15 +1,15 @@
 from rest_framework.test import APITestCase
 from api_settings import settings
 from ..integrations import Integrator, Aggregator
-from ..models import Node, Author, CachedAuthor
+from ..models import Node, CachedAuthor
 from django.contrib.auth.models import User
-from ..utils import scaffold
-from ..serializers.author import CachedAuthorFieldsSerializer
 import uuid
 
 class IntegrationTests(APITestCase):
 
     def setUp(self):
+        # need to specify nodes here otherwise there won't be anything in the nodes
+        # db
         user = User.objects.create(username="hindlebook")
         user.save()
         Node.objects.get_or_create(
@@ -22,18 +22,14 @@ class IntegrationTests(APITestCase):
         )
         self.integrators = Aggregator.get_integrators()
 
-    def test_public_posts(self):
-        count = 0
-        for integrator in self.integrators:
-            posts = integrator.get_public_posts()
-            count += len(posts)
-            self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
-            self.assertEqual(posts is not None, True, "No posts returned")
-
-        posts = Aggregator.get_public_posts()
-        print type(posts)
-        self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
-        self.assertTrue(posts is not None, "posts shouldn't be empty")
+    def test_author(self):
+        id = uuid.uuid4()
+        return CachedAuthor(
+            id=id,
+            host=settings.HOST,
+            displayname="JimmyBob",
+            url= "%sauthor/%s" % (settings.HOST, str(id))
+        )
 
     # finds a queryable author from the public posts on a given node
     def get_available_author(self, integrator):
@@ -44,31 +40,32 @@ class IntegrationTests(APITestCase):
             return CachedAuthor(
                 host="http://localhost:8001/api/",
                 # host=data["host"],
-                id=data["id"],
+                id=str(data["id"]),
                 displayname=data["displayname"]
             )
         else:
-            return None
+            self.assertFalse(True, "No posts to fetch an author from")
 
-    # def test_get_author_view(self):
-        # for integrator in self.integrators:
-            # author = self.get_available_author(integrator)
-            # if author is not None:
-                # author_data = integrator.get_author_view(author.url)
-                # print author_data
-                # self.assertTrue(author_data is not None, "Empty author data")
-                # self.assertTrue(False)
-            # else:
-                # self.assertTrue(False, "Unable to find available author")
+    def test_public_posts(self):
+        count = 0
+        for integrator in self.integrators:
+            posts = integrator.get_public_posts()
+            count += len(posts)
+            self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
+            self.assertEqual(len(posts) > 0, True, "No posts returned")
+            self.assertEqual(integrator.host, posts[0]["source"])
+            self.assertEqual(integrator.host, posts[0]["author"]["source"])
+
+        posts = Aggregator.get_public_posts()
+        self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
+        self.assertTrue(posts is not None, "posts shouldn't be empty")
 
     def test_get_author_posts(self):
         for integrator in self.integrators:
             author = self.get_available_author(integrator)
             if author is not None:
-                author_data = integrator.get_author_posts(author.url)
-                print author_data
-                self.assertTrue(author_data is not None, "Empty author posts")
-                self.assertTrue(False)
+                author_posts = integrator.get_author_posts(author.url, author)
+                self.assertTrue(len(author_posts) > 0, "Empty author posts")
             else:
                 self.assertTrue(False, "Unable to find available author")
 
@@ -79,16 +76,21 @@ class IntegrationTests(APITestCase):
                 author_posts = Aggregator.get_posts_for_authors([author])
                 self.assertTrue(type(author_posts) is list, "Expected get_author_posts to return a list")
 
+    def test_get_author_view(self):
+        for integrator in self.integrators:
+            author = self.get_available_author(integrator)
+            if author is not None:
+                author_data = integrator.get_author_view(author.url, self.test_author())
+                print author_data
+                self.assertTrue(author_data is not None, "Empty author data")
+                self.assertTrue(author_data["posts"] is not None, "No posts returned")
+            else:
+                self.assertTrue(False, "Unable to find available author")
+
     def test_send_friend_request(self):
         for integrator in self.integrators:
             foreign_author = self.get_available_author(integrator)
             if foreign_author is not None:
-                id = uuid.uuid4()
-                author = CachedAuthor(
-                    id=id,
-                    host=settings.HOST,
-                    displayname="Jimmy Bob",
-                    url= "%sauthor/%s" % (settings.HOST, id)
-                )
-                success = integrator.send_friend_request(author, foreign_author)
+                success = integrator.send_friend_request(self.test_author(), foreign_author)
+                print success
                 self.assertTrue(success, "Friend Request Failed")

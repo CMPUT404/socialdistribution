@@ -26,7 +26,7 @@ from ..serializers.relations import (
 
 
 class BaseRelationsMixin(object):
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication, IsEnabled)
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Author.objects.all()
     lookup_url_kwarg = "id"
@@ -93,7 +93,7 @@ class ModifyRelationsMixin(object):
 
 
 class FriendsWith(APIView):
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication, IsEnabled)
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
@@ -114,9 +114,10 @@ class FriendsWith(APIView):
 
 
 class FollowerViewSet(
-                      BaseRelationsMixin,
-                      ModifyRelationsMixin,
-                      viewsets.ViewSet):
+    BaseRelationsMixin,
+    ModifyRelationsMixin,
+    viewsets.ViewSet
+):
     serializer_class = BaseRetrieveFollowingSerializer
 
     # GET author/:pk (Returns a list of who you are following)

@@ -11,14 +11,13 @@ from ..permissions.permissions import IsAuthor, Custom
 from ..permissions.author import IsEnabled
 from ..models.author import Author
 from ..serializers.author import AuthorSerializer
-from ..integrations import Aggregator
-from api_settings import settings
+from ..integrations import Aggregator, Integrator
 
 #
 # Delete Posts and Comments
 #
 class BaseDeleteView(generics.DestroyAPIView):
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication, IsEnabled)
     permission_classes = (IsAuthenticated, IsAuthor,)
     pass
 
@@ -37,7 +36,7 @@ class CreateComment(generics.CreateAPIView):
     Create a comment in the given post using postid.
     Can only create comments on posts you have permission to view.
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication, IsEnabled)
     permission_classes = (IsAuthenticated, Custom,)
     serializer_class = CommentSerializer
     lookup_url_kwarg = "postid"
@@ -68,7 +67,7 @@ class PostPermissionsMixin(object):
         BasicAuthentication: An external node is accessing posts.
         TokenAuthentication: A 'home' node user is accessing posts.
     """
-    authentication_classes = (IsEnabled, TokenAuthentication, )
+    authentication_classes = (IsEnabled, TokenAuthentication,)
     permission_classes = (IsAuthenticated, Custom,)
 
 
@@ -103,13 +102,16 @@ class AuthorPostViewSet(
     def retrieve(self, request, author_pk=None, pk=None):
         # Careful, gotchya here, if author_pk is none, it means we are dealing with
         # /author/:id and that the author id is going to be in pk
+
         if author_pk is None:
 
             # check if we're querying for a remote author
             if "HTTP_AUTHOR_HOST" in request.META:
+                author = Author.objects.get(user__id=self.request.user.id)
                 host = request.META["HTTP_AUTHOR_HOST"]
+                host = "%s/author/%s" % (host, pk)
                 integrator = Integrator.build_from_host(host)
-                data = integrator.get_author_view_from_id(pk)
+                data = integrator.get_author_view(host, author)
 
             # otherwise try and find them locally
             else:
