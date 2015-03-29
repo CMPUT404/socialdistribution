@@ -117,15 +117,10 @@ class CachedAuthorSerializer(serializers.ModelSerializer):
         fields = ('id', 'host', 'displayname', 'url',)
 
 
-class CompactCachedAuthorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CachedAuthor
-        fields = ('id',)
-
 # This will not throw an error if duplicate id's
 # Instead returns an existing model
 class CachedAuthorFieldsSerializer(serializers.Serializer):
-    id = serializers.UUIDField(required=True)
+    id = serializers.CharField(required=True)
     host = serializers.URLField(required=True)
     displayname = serializers.CharField(required=True)
     url = serializers.URLField(required=False)

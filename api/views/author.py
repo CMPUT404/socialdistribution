@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import generics, viewsets
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from ..utils.utils import AuthorNotFound, AuthenticationFailure
+from ..utils.utils import AuthorNotFound, NotAuthor
 from ..permissions.author import IsEnabled
 from ..integrations import Integrator, Aggregator
 from api_settings import settings
@@ -18,9 +18,9 @@ from ..models.author import (
 )
 from ..serializers.author import CachedAuthorSerializer
 from ..serializers.relations import (
-    # RetrieveFriendsSerializer,
     BaseRetrieveFollowingSerializer,
     FriendRequestSerializer,
+    FollowRequestSerializer,
     APIRetrieveFriendsSerializer
 )
 
@@ -30,66 +30,6 @@ class BaseRelationsMixin(object):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Author.objects.all()
     lookup_url_kwarg = "id"
-
-
-class ModifyRelationsMixin(object):
-    """
-    Calling conventions for interacting with the Other model to provide
-    more detailed HTTP response messages for relation failures.
-
-    Author must be an Author model.
-    friend/follower/following can be either an Author or CachedAuthor model.
-    """
-
-    #
-    # WIP. A lot of the controller logic within the models will be moved
-    # in here such that the model is only interacting with itself and
-    # preventing duplicate entries.
-    #
-
-    def call_model(self, method, relator):
-        """
-        Wraps the calling of a models method so that HTTP error is returned
-
-        Pass in an Author model method and the relator to add to the method.
-        eg:
-            self.call_model(author.add_friend, friend)
-        """
-        try:
-            method(self.return_cached_author(relator))
-        except:
-            raise AuthorNotFound
-
-    def get_author(self, id):
-        try:
-            return Author.objects.get(id=id)
-        except:
-            raise AuthorNotFound
-
-    def get_cached_author(self, guid):
-        try:
-            return CachedAuthor.objects.get(id=guid)
-        except:
-            raise AuthorNotFound
-
-    def return_cached_author(self, instance):
-        """Returns a CachedAuthor model given either Author or CachedAuthor"""
-        if isinstance(instance, Author):
-            return self.get_cached_author(instance.id)
-        return instance
-
-    def remove_friend(self, author, friend):
-        self.call_model(author.remove_friend, friend)
-
-    def remove_following(self, author, following):
-        self.call_model(author.remove_following, following)
-
-    def remove_request(self, author, friend):
-        self.call_model(author.remove_request, friend)
-
-    def query_foreign_author(self, author):
-        # TODO after integration
-        pass
 
 
 class FriendsWith(APIView):
@@ -113,43 +53,32 @@ class FriendsWith(APIView):
         return Response(response_dict, status=status.HTTP_200_OK)
 
 
-class FollowerViewSet(
-    BaseRelationsMixin,
-    ModifyRelationsMixin,
-    viewsets.ViewSet
-):
+class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
     serializer_class = BaseRetrieveFollowingSerializer
+    follow_serializer_class = FollowRequestSerializer
 
-    # GET author/:pk (Returns a list of who you are following)
-    # GET author/:author_pk/follow/:pk (This follows the pk)
-    def retrieve(self, request, pk=None, author_pk=None):
-        """
-        Creating a following/follower relationship between authors
+    SAFE_METHODS = ['GET',]
 
-        Takes:
-            pk: id of the person to be followed
-            author_pk: id of the person that will follow
-
-        If pk is none then we are retrieving the followers list
-        """
-        # Following the pk author
-        if author_pk:
-            author = get_object_or_404(self.queryset, id=author_pk)
-
-            # Can handle this in a permission
-            if request.user != author.user:
-                print "Trying to spoof author"
-                raise AuthenticationFailure
-
-            # Who we are following
-            follow = get_object_or_404(self.queryset, id=pk)
-            author.follow(follow)
-        else:
-            author = get_object_or_404(self.queryset, id=pk)
-
+    # GET author/:author_pk/follow
+    # Returns who author_pk following
+    def list(self, request, author_pk=None):
+        author = get_object_or_404(self.queryset, id=author_pk)
         serializer = self.serializer_class(author)
         return Response(serializer.data)
 
+    # POST author/:author_pk/follow
+    # Create a follow relationship
+    def create(self, request, author_pk=None):
+        author = get_object_or_404(self.queryset, id=author_pk)
+        self.is_author(request.user, author)
+
+        serializer = self.follow_serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(serializer.validated_data)
+            return Response(status=status.HTTP_200_OK)
+
+    # DELETE author/:author_pk/follow/:pk
+    # Delete pk CachedAuthor from author_pk following
     def destroy(self, request, pk=None, author_pk=None):
         """
         Deleting a following/follower relationship between authors.
@@ -160,10 +89,7 @@ class FollowerViewSet(
             author_pk: id of the person that is unfollowing.
         """
         author = get_object_or_404(self.queryset, id=author_pk)
-
-        # Can handle this in a permission
-        if request.user != author.user:
-            raise AuthenticationFailure
+        self.is_author(request.user, author)
 
         try:
             unfollowing = Author.objects.get(id=pk)
@@ -171,13 +97,16 @@ class FollowerViewSet(
             # Person we are unfollowing is on foreign node
             raise AuthorNotFound
 
-        self.remove_following(author, unfollowing)
+        author.remove_following(unfollowing)
 
         serializer = self.serializer_class(author)
         return Response(serializer.data)
 
+    def is_author(self, user, author):
+        if user != author.user:
+            raise NotAuthor
 
-class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
+class CreateFriendRequest(generics.CreateAPIView):
     """
     Given a json request parameter body, create the approriate
     friend/follower relationship.
@@ -186,6 +115,12 @@ class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Author.objects.all()
     serializer_class = FriendRequestSerializer
+
+    def get_author(self, id):
+        try:
+            return Author.objects.get(id=id)
+        except:
+            raise AuthorNotFound
 
     def create(self, request, *args, **kwargs):
 

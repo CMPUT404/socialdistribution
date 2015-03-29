@@ -1,19 +1,11 @@
 from rest_framework import serializers
 from author import (
     CachedAuthorFieldsSerializer,
-    CachedAuthorSerializer,
-    CompactCachedAuthorSerializer)
+    CachedAuthorSerializer)
 from ..models.author import (
     Author,
     CachedAuthor
 )
-
-class BaseRetrieveFollowersSerializer(serializers.ModelSerializer):
-    followers = CachedAuthorSerializer(many=True)
-
-    class Meta:
-        model = Author
-        fields = ('followers',)
 
 
 class BaseRetrieveFriendsSerializer(serializers.ModelSerializer):
@@ -100,3 +92,27 @@ class FriendRequestSerializer(serializers.Serializer):
     query = serializers.RegexField('(friendrequest?)', allow_blank=False)
     author = CachedAuthorFieldsSerializer()
     friend = CachedAuthorFieldsSerializer()
+
+
+class FollowRequestSerializer(serializers.Serializer):
+    author = CachedAuthorFieldsSerializer()
+    following = CachedAuthorFieldsSerializer()
+
+    def save(self, validated_data):
+        """
+        Creates a following relationship using the created CachedAuthor
+        models in the nested serializers.
+
+        If an Author model does not exist, then the serializer will have
+        already exceptioned out. The below checks are simply a further safety.
+        """
+        author_id = validated_data['author']['id']
+        following_id = validated_data['following']['id']
+
+        author = Author.objects.filter(id=author_id)
+        following = CachedAuthor.objects.filter(id=following_id)
+
+        if author.exists() and following.exists():
+            author[0].follow(following[0])
+
+        return author[0]
