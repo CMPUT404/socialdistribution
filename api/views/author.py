@@ -200,9 +200,8 @@ class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
         except:
             friend = CachedAuthor.objects.get(id=friend_id)
 
-        requestHost = "http://%s/" % request.get_host()
         # parse any incoming api calls from other nodes
-        if requestHost not in [settings.HOST, settings.FRONTEND_HOST, "http://testserver/"]:
+        if request.META["HTTP_ORIGIN"] not in [settings.HOST, settings.FRONTEND_HOST, "http://testserver/"]:
             author.add_request(friend)
 
         # Otherwise, figureout how to handle the request
@@ -210,14 +209,15 @@ class CreateFriendRequest(ModifyRelationsMixin, generics.CreateAPIView):
             # perform remote calls if necessary
             if friend.is_local() is False:
                 integrator = Integrator.build_from_host(friend["host"])
+                print integrator
                 success = integrator.send_friend_request(
                     CachedAuthor(**serializer.data["author"]),
                     friend
                 )
 
                 if not success:
-                    # TODO: Exception of some sort
-                    pass
+                    print "Friend Request failed"
+                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 author.follow(friend)
                 author.add_pending(friend)
@@ -261,7 +261,6 @@ class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
 class QueryAuthors(APIView):
     """
     Queries the database for all cached authors
-
     """
     def get(self, request, *args, **kwargs):
         cached_authors = CachedAuthor.objects.all()

@@ -29,9 +29,6 @@ test_user = User.objects.get_or_create(username="test")
 test_user.set_password("test")
 test_node = Node.objects.get_or_create(
     user=test_user,
-    # host="http://hindlebook.tamarabyte.com/api/",
-    # foreign_username="socshizzle",
-    # foreign_pass="socshizzle",
     host="",
     foreign_username="",
     foreign_pass="",
