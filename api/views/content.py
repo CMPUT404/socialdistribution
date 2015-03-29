@@ -75,7 +75,7 @@ class AuthorPostViewSet(
     PostBaseView,
     viewsets.ViewSet
 ):
-    # authentication_classes = [BasicAuthentication, TokenAuthentication]
+    # authentication_classes = [IsEnabled, TokenAuthentication]
     permission_classes = [Custom]
 
     """
@@ -109,9 +109,8 @@ class AuthorPostViewSet(
             if "HTTP_AUTHOR_HOST" in request.META:
                 author = Author.objects.get(user__id=self.request.user.id)
                 host = request.META["HTTP_AUTHOR_HOST"]
-                host = "%s/author/%s" % (host, pk)
                 integrator = Integrator.build_from_host(host)
-                data = integrator.get_author_view(host, author)
+                data = integrator.get_author_view(pk, author)
 
             # otherwise try and find them locally
             else:
@@ -172,7 +171,7 @@ class AuthorPostViewSet(
 
         # aggregate foreign posts from other nodes
         if foreign_authors:
-            foreign_posts = Aggregator.get_posts_for_authors(foreign_authors)
+            foreign_posts = Aggregator.get_posts_for_authors(foreign_authors, author)
             local_posts.extend(foreign_posts)
 
         posts = PostSerializer(local_posts, many=True).data

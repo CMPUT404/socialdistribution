@@ -19,18 +19,14 @@ def custom_exception_handler(exc, context):
         }
     """
 
-    if isinstance(exc, exceptions.APIException):
-        data = {'error': exc.detail}
-        return Response(data, status=exc.status_code)
-
-    elif isinstance(exc, Http404):
+    if isinstance(exc, Http404):
         msg = ('Entity not found.')
-        data = {'error': six.text_type(msg)}
+        data = {'detail': six.text_type(msg)}
         return Response(data, status=status.HTTP_404_NOT_FOUND)
 
     elif isinstance(exc, PermissionDenied):
         msg = ('Permission denied.')
-        data = {'error': six.text_type(msg)}
+        data = {'detail': six.text_type(msg)}
         return Response(data, status=status.HTTP_403_FORBIDDEN)
 
     # Marshal DRF into a standardized format

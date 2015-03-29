@@ -13,6 +13,7 @@ from ..models.author import (
     Author,
     CachedAuthor)
 from ..models.content import Post, Comment
+from api_settings import settings
 import uuid
 import json
 import base64
@@ -100,7 +101,7 @@ def create_author(user_dict, author_dict):
 
 def create_authenticated_author(user_dict, author_dict):
     user, author = create_author(user_dict, author_dict)
-    client = SocialAPIClient()
+    client = SocialAPIClient(HTTP_ORIGIN=settings.FRONTEND_HOST)
     client.token_credentials(author)
 
     return (user, author, client)

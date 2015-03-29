@@ -66,24 +66,27 @@ class Integrator:
             print "Error calling %s" % (self.build_url("posts"))
             return []
 
-    def get_author(self, origin, local_author):
+    def get_author(self, id, local_author):
         """
         Queries foreign server for /author/:id
         """
         headers = {"Uuid": str(local_author.id)}
-        response = self.request(request.get, origin, headers=headers)
+        url = self.build_url("author/%s" % id)
+        response = self.request(request.get, url, headers=headers)
+
         if response and response.status_code == 200:
             return self.prepare_author_data(response.json())
         else:
             return None
 
-    def get_author_posts(self, origin, requestor=None):
+    def get_author_posts(self, id, author):
         """
         Queries foreign server for /author/:id/posts
         """
-        headers = {"Uuid": str(requestor)}
+        headers = {"UUID": str(author.id)}
+        url = self.build_url("author/%s/posts" % id)
+        response = self.request(request.get, url, headers=headers)
 
-        response = self.request(request.get, "%s/posts" % (origin), headers=headers)
         if response and response.status_code == 200:
             return self.prepare_post_data(response)
         else:
@@ -113,16 +116,14 @@ class Integrator:
         else:
             return False
 
-    def get_author_view(self, origin, author):
+    def get_author_view(self, id, local_author):
         """
         Combines together a bunch of foreign author calls to one object to help the
         frontend. Includes, author's info, friends, and posts.
         """
-        author = self.get_author(origin, author)
-        posts = self.get_author_posts(origin, author)
-        # friends = get_author_friends(author_id)
+        author = self.get_author(id, local_author)
+        posts = self.get_author_posts(id, local_author)
         author["posts"] = posts
-        # author["friends"] = friends
         return author
 
     def get_authors(self):
@@ -139,7 +140,7 @@ class Integrator:
         posts = response.json()["posts"]
         for post in posts:
             post["source"] = self.host
-            post["author"]["source"] = self.host
+            post["author"]["host"] = self.host
         return posts
 
     def prepare_authors(self, response):

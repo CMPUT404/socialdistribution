@@ -22,11 +22,11 @@ class Aggregator(object):
 
     @staticmethod
     # aggregate posts using a list of cached authors
-    def get_posts_for_authors(authors):
+    def get_posts_for_authors(authors, local_author):
         posts = []
         for author in authors:
             integrator = Integrator.build_for_author(author)
-            posts.extend(integrator.get_author_posts(author.url))
+            posts.extend(integrator.get_author_posts(author.id, local_author))
 
         return posts
 

@@ -54,7 +54,7 @@ class IntegrationTests(APITestCase):
             self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
             self.assertEqual(len(posts) > 0, True, "No posts returned")
             self.assertEqual(integrator.host, posts[0]["source"])
-            self.assertEqual(integrator.host, posts[0]["author"]["source"])
+            self.assertEqual(integrator.host, posts[0]["author"]["host"])
 
         posts = Aggregator.get_public_posts()
         self.assertTrue(isinstance(posts, list), "Expecting posts to be a list")
@@ -64,7 +64,7 @@ class IntegrationTests(APITestCase):
         for integrator in self.integrators:
             author = self.get_available_author(integrator)
             if author is not None:
-                author_posts = integrator.get_author_posts(author.url, author)
+                author_posts = integrator.get_author_posts(author.id, author)
                 self.assertTrue(len(author_posts) > 0, "Empty author posts")
             else:
                 self.assertTrue(False, "Unable to find available author")
@@ -73,17 +73,17 @@ class IntegrationTests(APITestCase):
         for integrator in self.integrators:
             author = self.get_available_author(integrator)
             if author is not None:
-                author_posts = Aggregator.get_posts_for_authors([author])
+                author_posts = Aggregator.get_posts_for_authors([author], self.test_author())
                 self.assertTrue(type(author_posts) is list, "Expected get_author_posts to return a list")
 
     def test_get_author_view(self):
         for integrator in self.integrators:
             author = self.get_available_author(integrator)
             if author is not None:
-                author_data = integrator.get_author_view(author.url, self.test_author())
-                print author_data
+                author_data = integrator.get_author_view(author.id, self.test_author())
                 self.assertTrue(author_data is not None, "Empty author data")
                 self.assertTrue(author_data["posts"] is not None, "No posts returned")
+                self.assertTrue(author_data["host"] is not None, "No host is set")
             else:
                 self.assertTrue(False, "Unable to find available author")
 
