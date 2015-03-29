@@ -29,3 +29,13 @@ class Aggregator(object):
             posts.extend(integrator.get_author_posts(author.url))
 
         return posts
+
+    @staticmethod
+    # Fetches all available authors from all nodes
+    def get_authors():
+        authors = []
+        for integrator in Aggregator.get_integrators():
+            node_authors = integrator.get_authors()
+            authors.extend(node_authors)
+
+        return authors

@@ -94,3 +94,7 @@ class IntegrationTests(APITestCase):
                 success = integrator.send_friend_request(self.test_author(), foreign_author)
                 print success
                 self.assertTrue(success, "Friend Request Failed")
+
+    def test_get_authors(self):
+        authors = Aggregator.get_authors()
+        self.assertTrue(len(authors) > 0, "No authors returned")
