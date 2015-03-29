@@ -54,17 +54,8 @@ class FriendsWith(APIView):
 
 
 class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
-    serializer_class = BaseRetrieveFollowingSerializer
-    follow_serializer_class = FollowRequestSerializer
-
-    SAFE_METHODS = ['GET',]
-
-    # GET author/:author_pk/follow
-    # Returns who author_pk following
-    def list(self, request, author_pk=None):
-        author = get_object_or_404(self.queryset, id=author_pk)
-        serializer = self.serializer_class(author)
-        return Response(serializer.data)
+    serializer_class = FollowRequestSerializer
+    permission_classes = (IsAuthenticated,)
 
     # POST author/:author_pk/follow
     # Create a follow relationship
@@ -72,7 +63,7 @@ class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
         author = get_object_or_404(self.queryset, id=author_pk)
         self.is_author(request.user, author)
 
-        serializer = self.follow_serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(serializer.validated_data)
             return Response(status=status.HTTP_200_OK)
@@ -98,9 +89,7 @@ class FollowerViewSet(BaseRelationsMixin, viewsets.ViewSet):
             raise AuthorNotFound
 
         author.remove_following(unfollowing)
-
-        serializer = self.serializer_class(author)
-        return Response(serializer.data)
+        return Response(status=status.HTTP_200_OK)
 
     def is_author(self, user, author):
         if user != author.user:

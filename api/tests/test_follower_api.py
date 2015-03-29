@@ -67,12 +67,6 @@ class AuthorModelAPITests(TestCase):
         Author.objects.all().delete()
         User.objects.all().delete()
 
-    def test_get_following(self):
-        self.author.follow(self.author_a)
-        response = self.client.get('/author/%s/follow' % self.author.id)
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(len(response.data['following']), 1, "Should be 1 follower")
-
     # test following local author
     def test_follow_author(self):
         request = {
