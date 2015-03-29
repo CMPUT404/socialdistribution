@@ -32,4 +32,8 @@ urlpatterns = [
     url(r'^author/(?P<aid>[a-zA-Z0-9]+)/image/?$', AuthorImage.as_view(),
         name = 'author_image'),
 
+    # GET /authors
+    url(r'^authors/?$', author.QueryAuthors.as_view(),
+        name = 'authors'),
+
 ]
