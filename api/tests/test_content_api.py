@@ -237,7 +237,7 @@ class ContentAPITestCase(TestCase):
         response = self.client.get('doesnt_exist.jpg')
         self.assertEquals(response.status_code, 404)
 
-        scaffold.clean_up_imgs('posts', url)
+        scaffold.clean_up_imgs('posts')
 
     def test_create_post_no_auth(self):
         ptext = TEXT + " message"

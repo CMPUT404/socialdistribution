@@ -124,7 +124,7 @@ class AuthorAuthentication(APITestCase):
         response = self.c.get(url)
         self.assertEquals(response.status_code, 200)
 
-        scaffold.clean_up_imgs('profile', url)
+        scaffold.clean_up_imgs('profile')
 
     def test_registration_same_user(self):
         """
@@ -225,7 +225,7 @@ class AuthorAuthentication(APITestCase):
 
         # Get image.
         url = response.data.get('image')
-        response = self.c.get(url)
+        response = self.token_client.get(url)
         self.assertEquals(response.status_code, 200)
         # scaffold.pretty_print(response.data)
 
@@ -241,7 +241,7 @@ class AuthorAuthentication(APITestCase):
         self.assertEquals(details.github_username, update_author_dict['github_username'])
 
         # Clean up
-        scaffold.clean_up_imgs('profile', url)
+        scaffold.clean_up_imgs('profile')
 
     def test_author_update_bad_authorization(self):
         old = User.objects.get(username = RUSERNAME)

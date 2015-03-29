@@ -1,5 +1,6 @@
 from django.conf.urls import url
 from ..views import author, authentication, image
+from ..views.image import AuthorImage
 
 urlpatterns = [
 
@@ -27,11 +28,8 @@ urlpatterns = [
     url(r'^author/registration/?$', authentication.AuthorRegistration.as_view(),
         name = 'registration'),
 
-    # GET /author/:path_prefix/images/:imageid
-    url(r'^author/(?P<path_prefix>[a-zA-Z]+)/images/(?P<id>.*)', image.Images.as_view(),
-        name = 'images'),
+    # GET /author/:id/image
+    url(r'^author/(?P<aid>[a-zA-Z0-9]+)/image/?$', AuthorImage.as_view(),
+        name = 'author_image'),
 
-    # GET /authors
-    url(r'^authors/?$', author.QueryAuthors.as_view(),
-        name = 'authors'),
 ]
