@@ -61,4 +61,17 @@ export function apiPrefix(request) {
 
   return request;
 }
+
 export const Request = SuperAgent;
+
+export function filterAuthors(authors, value) {
+  value = _.trim(value);
+
+  if (_.isEmpty(value)) {
+    return []
+  }
+
+  var regex = new RegExp(value, 'i');
+
+  return authors.filter(a => regex.test(a.displayname))
+}

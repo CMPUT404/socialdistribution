@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Reflux from 'reflux';
 
-import { Request, apiPrefix } from '../utils/request';
+import { Request, apiPrefix } from '../utils/helpers';
 
 import PostActions from '../actions/post';
 import AuthorActions from '../actions/author';

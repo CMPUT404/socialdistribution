@@ -1,13 +1,14 @@
 import React from 'react';
 import { Route, DefaultRoute, NotFoundRoute } from 'react-router';
 
-import Layout from './routes/layout';
+import NotFound from './routes/not-found';
+import Register from './routes/register';
 import Timeline from './routes/timeline';
+import Layout from './routes/layout';
 import Author from './routes/author';
 import Login from './routes/login';
-import Register from './routes/register';
 import Posts from './routes/posts';
-import NotFound from './routes/not-found';
+import Users from './routes/users';
 
 export default (
 	<Route path="/" name="layout" handler={Layout}>
@@ -16,6 +17,7 @@ export default (
 		<Route name="login" handler={Login} />
 		<Route name="register" handler={Register} />
 		<Route name="posts" handler={Posts} />
+		<Route name="users" handler={Users} />}
 		<NotFoundRoute handler={NotFound} />
 	</Route>
 );

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { addons } from 'react/addons';
-import { Input } from 'react-bootstrap';
+import { TabbedArea, TabPane, Input } from 'react-bootstrap';
 import Marked from 'marked';
 
 import AuthorActions from '../../actions/author';
@@ -14,11 +14,12 @@ export default React.createClass({
 
   getInitialState: function() {
     return {
-      contentType: "text/plain",
-      visibility: "PUBLIC",
-      preview: "",
-      content: "",
-      title: ""
+      contentType: 'text/plain',
+      visibility : 'PUBLIC',
+      preview    : '',
+      content    : '',
+      title      : '',
+      tabKey     : 1
     };
   },
 
@@ -26,7 +27,9 @@ export default React.createClass({
     evt.preventDefault();
 
     var post = _.clone(this.state);
+
     delete post.preview;
+    delete post.tabKey;
 
     // reset content state now that we have it stored
     this.setState(this.getInitialState());
@@ -34,18 +37,22 @@ export default React.createClass({
     AuthorActions.createPost(post);
   },
 
-  updatePreview: function(evt) {
-    var content = this.state.content;
+  updatePreview: function(key) {
+    this.setState({tabKey: key});
 
-    switch(this.state.contentType) {
-      case 'text/x-markdown':
-        this.setState({preview: <div dangerouslySetInnerHTML={{__html: Marked(content)}} />});
-        break;
-      case 'text/html':
-        this.setState({preview: <div dangerouslySetInnerHTML={{__html: content}} />});
-        break;
-      default:
-        this.setState({preview: <p>{content}</p>});
+    if (key === 2) {
+      var content = this.state.content;
+
+      switch(this.state.contentType) {
+        case 'text/x-markdown':
+          this.setState({preview: <div dangerouslySetInnerHTML={{__html: Marked(content)}} />});
+          break;
+        case 'text/html':
+          this.setState({preview: <div dangerouslySetInnerHTML={{__html: content}} />});
+          break;
+        default:
+          this.setState({preview: <p>{content}</p>});
+      }
     }
   },
 
@@ -64,16 +71,9 @@ export default React.createClass({
           </ProfileLink>
         </div>
         <div className="media-body content-creator">
-          <ul className="nav nav-tabs">
-            <li role="presentation" className="active">
-              <a href="#write-tab" aria-controls="write-tab" role="tab" data-toggle="tab">Write</a>
-            </li>
-            <li role="presentation" className="">
-              <a href="#preview-tab" aria-controls="preview-tab" role="tab" data-toggle="tab" onClick={this.updatePreview}>Preview</a>
-            </li>
-          </ul>
-          <div className="tab-content">
-            <div role="tabpanel" className="tab-pane active" id="write-tab">
+
+          <TabbedArea activeKey={this.state.tabKey}  onSelect={this.updatePreview}>
+            <TabPane eventKey={1} tab='Write'>
               <form onSubmit={this.submitPost} className="media-body content-creator">
                 <Input type="text" placeholder="Title" valueLink={this.linkState('title')} required />
                 <Input type="textarea" placeholder="Say something witty..." valueLink={this.linkState('content')}  required />
@@ -92,12 +92,12 @@ export default React.createClass({
 
                 <Input className="pull-right" type="submit" value="Post" />
               </form>
-            </div>
-            <div role="tabpanel" className="tab-pane" id="preview-tab">
+            </TabPane>
+            <TabPane eventKey={2} tab='Preview'>
               <h4>{this.linkState('title')}</h4>
               {this.linkState('preview')}
-            </div>
-          </div>
+            </TabPane>
+          </TabbedArea>
         </div>
       </div>
     );

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Reflux from 'reflux';
 
-import { Request, apiPrefix } from '../utils/request';
+import { Request, apiPrefix } from '../utils/helpers';
 
 import Post from '../objects/post';
 import Author from '../objects/author';
@@ -16,6 +16,7 @@ export default Reflux.createStore({
   init: function() {
     this.currentAuthor = null;
     this.displayAuthor = null;
+    this.authorsList   = [];
 
     this.listenTo(AuthorActions.login,          'onLogin');
     this.listenTo(AuthorActions.logout,         'logOut');
@@ -28,6 +29,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.followFriend,   'onFollowFriend');
     this.listenTo(AuthorActions.unfollowFriend, 'onUnfollowFriend');
     this.listenTo(AuthorActions.createComment,  'onCreateComment');
+    this.listenTo(AuthorActions.getAuthors,     'onGetAuthors');
 
     // Ajax fail listeners
     this.listenTo(AuthorActions.login.fail,           'ajaxFailed');
@@ -120,7 +122,7 @@ export default Reflux.createStore({
       this.currentAuthor = new Author(authorData, this.currentAuthor.token);
       this.displayAuthor = this.currentAuthor;
     } else {
-      this.displayAuthor = new Author(authorData, null);
+      this.displayAuthor = new Author(authorData);
     }
 
     this.displayAuthor.posts = authorData.posts.map((post) => {
@@ -292,6 +294,24 @@ export default Reflux.createStore({
     AuthorActions.followFriend.complete(friend);
   },
 
+  onGetAuthors: function() {
+    Request
+      .get('/authors')
+      .use(apiPrefix)
+      .promise(this.getAuthorsComplete, AuthorActions.getAuthors.fail);
+  },
+
+  getAuthorsComplete: function(result) {
+    this.authorsList = result.authors.filter((authorData) => {
+      if (this.isLoggedIn()) {
+        return authorData.id !== this.getAuthor().id;
+      }
+      return true;
+    }).map(authorData => new Author(authorData));
+
+    this.trigger({authorsList: this.authorsList});
+    AuthorActions.getAuthors.complete(this.authorsList);
+  },
   // This is a listener not a handler
   // `logOut` doesn't require any AJAX calls
   logOut: function() {

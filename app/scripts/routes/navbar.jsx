@@ -3,7 +3,7 @@ import React from 'react';
 import { NavItemLink } from 'react-router-bootstrap';
 import { Navbar, Nav, NavItem, Input } from 'react-bootstrap';
 
-import UserSearch from '../components/usersearch';
+import UsersTypeahead from '../components/users-typeahead';
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
 
@@ -15,10 +15,13 @@ export default React.createClass({
   },
 
   render: function() {
-    var profileList;
+    var profileList = [];
     var navList;
 
     navList = [
+      <NavItemLink  key="users" to="users">
+        <i className="fa fa-users"></i> Users
+      </NavItemLink>,
       <NavItemLink key="posts" to="posts">
         <i className="fa fa-list"></i> Public Posts
        </NavItemLink>
@@ -37,7 +40,6 @@ export default React.createClass({
         <i className="fa fa-sign-out"></i> Logout
         </NavItem>
       );
-      //TODO: usersearch typeahead down here
       profileList = [
         <NavItem key="notifications" href="javascript:void(0)">
           <Notification />
@@ -54,17 +56,17 @@ export default React.createClass({
       )
     }
 
-    navList.unshift(
+    profileList.push(
       <form key="search" className="navbar-form navbar-left" role="search">
         <div className="form-group">
-          <Input type="text" className="form-control" placeholder="Search authors..." />
+          <UsersTypeahead />
         </div>
       </form>
     );
 
 
     return (
-      <Navbar brand='Socshizzle'>
+      <Navbar brand='Socshizzle' fixedTop>
         <Nav navbar>
           {profileList}
         </Nav>

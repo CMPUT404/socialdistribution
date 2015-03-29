@@ -74,7 +74,7 @@ export default React.createClass({
                       placement='bottom'
                       overlay={overlay}>
         <span>
-          <i className="fa fa-users"></i> {requests.length ? requests.length : ''}
+          <i className="fa fa-user-plus"></i> {requests.length ? requests.length : ''}
         </span>
       </OverlayTrigger>
 
