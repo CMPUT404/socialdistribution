@@ -58,7 +58,8 @@ export default React.createClass({
 
   // https://github.com/rackt/react-router/blob/master/docs/guides/overview.md#important-note-about-dynamic-segments
   componentWillReceiveProps: function(nextProps) {
-    if (_.isNull(nextProps.currentAuthor)) {
+    if (_.isNull(nextProps.currentAuthor) &&
+        _.isNull(this.state.displayAuthor)) {
       this.onLogout();
     } else {
       this.updateParams();

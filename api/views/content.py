@@ -123,7 +123,7 @@ class AuthorPostViewSet(
                     try:
                         self.check_object_permissions(self.request, post)
                     except:
-                        posts.remove(post)
+                        posts = posts.exclude(guid=post.guid)
                 if posts is not None:
                     posts = PostSerializer(posts, many=True)
                     data["posts"] = posts.data
