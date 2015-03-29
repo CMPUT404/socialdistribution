@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import { addons } from 'react/addons';
-import { Button, Col, Row } from 'react-bootstrap';
+import { ButtonGroup, Button, Col, Row } from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
@@ -70,14 +70,13 @@ export default React.createClass({
     // under any context
     if (this.state.currentAuthor.inList('friends', this.props.author)) {
       return (
-        <Row  className="pull-right row-padding">
-          <Button onClick={this.unFollow}
-                  bsStyle={this.state.friendStyle}
-                  onMouseOut={this.onMouseOut.bind(this, 'friend', 'success', 'Friends')}
-                  onMouseOver={this.onMouseOver.bind(this, 'friend', 'danger', 'Un-Friend')} >
-            Friends
-          </Button>
-        </Row>
+        <Button {...this.props}
+                onClick={this.unFollow}
+                bsStyle={this.state.friendStyle}
+                onMouseOut={this.onMouseOut.bind(this, 'friend', 'success', 'Friends')}
+                onMouseOver={this.onMouseOver.bind(this, 'friend', 'danger', 'Un-Friend')} >
+          Friends
+        </Button>
       );
     }
 
@@ -92,7 +91,7 @@ export default React.createClass({
       );
     } else {
       follow = (
-        <Button bsStyle="primary" onClick={this.follow}>
+        <Button bsStyle="info" onClick={this.follow}>
           Follow
         </Button>
       );
@@ -109,10 +108,10 @@ export default React.createClass({
     }
 
     return (
-      <Row className="pull-right row-padding">
-        <Col md={6}>{friend}</Col>
-        <Col md={6}>{follow}</Col>
-      </Row>
+      <ButtonGroup {...this.props} vertical>
+        {friend}
+        {follow}
+      </ButtonGroup>
     );
   }
 });

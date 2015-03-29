@@ -2,19 +2,22 @@ import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import { State, Navigation } from 'react-router';
-import { Col, Row, Button } from 'react-bootstrap';
+import { TabbedArea, TabPane, Col, Row, Button } from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
-import Subcribe from '../components/subscribe';
-import Spinner from '../components/spinner';
-import Stream from '../components/github/stream';
 
 import ContentViewer from '../components/content/content-viewer';
 import PostCreator from '../components/content/post-creator';
+import ProfileLink from '../components/content/profile-link';
+import ListAuthors from '../components/list-authors';
+import Stream from '../components/github/stream';
+import Subscribe from '../components/subscribe';
+import Spinner from '../components/spinner';
+
 
 import ActionListener from '../mixins/action-listener';
-import ProfileLink from '../components/content/profile-link';
+
 
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
@@ -82,33 +85,9 @@ export default React.createClass({
     // this comes from the RouterState mixin and lets us pull an author id out
     // of the uri so we can fetch their posts.
     var postCreator, ghStream, githubUrl;
-    var friends = [];
+    var contentTitle, friendsTitle;
 
     githubUrl = this.state.displayAuthor.getGithubUrl();
-
-
-    this.state.displayAuthor.friends.forEach((friend) => {
-      friends.push(
-        <li key={friend.id} className="list-group-item">
-          <div className="media">
-            <div className="media-left">
-              <ProfileLink author={friend}>
-                <img className="media-object author-image" src={friend.getImage()}/>
-              </ProfileLink>
-            </div>
-            <Row className="media-body row-padding">
-              <Col md={6}>
-                <h4 className="text-capitalize">{friend.displayname}</h4>
-                <h6 className="light-text">Host: {friend.host}</h6>
-              </Col>
-              <Col md={6}>
-                <Subcribe author={friend} />
-              </Col>
-            </Row>
-          </div>
-        </li>
-      );
-    });
 
     // see if the viewer is logged in
     // and if viewing their own profile
@@ -136,6 +115,9 @@ export default React.createClass({
       }
     }
 
+    contentTitle = <span>Posts <span className="badge">{this.state.displayAuthor.posts.length}</span></span>
+    friendsTitle = <span>Friends <span className="badge">{this.state.displayAuthor.friends.length}</span></span>
+
     return (
       <Row>
         <Col md={8}>
@@ -143,7 +125,7 @@ export default React.createClass({
             <div className="media-left">
               <img className="media-object profile-image" src={this.state.displayAuthor.getImage()} />
             </div>
-            <Row className="media-body row-padding">
+            <Row className="media-body">
               <Col md={6}>
                 <h2 className="media-heading text-capitalize">{this.state.displayAuthor.getName()}</h2>
                 <h4 className="media-heading text-capitalize">{this.state.displayAuthor.displayname}</h4>
@@ -152,32 +134,22 @@ export default React.createClass({
                 {githubUrl}
               </Col>
               <Col md={6}>
-                <Subcribe author={this.state.displayAuthor} />
+                <Subscribe className="pull-right" author={this.state.displayAuthor} />
               </Col>
             </Row>
           </div>
           {postCreator}
-          <ul className="nav nav-tabs author-tabs">
-            <li role="presentation" className="active">
-              <a href="#posts-tab" aria-controls="posts-tab" role="tab" data-toggle="tab">Posts <span className="badge">{this.state.displayAuthor.posts.length}</span></a>
-            </li>
-            <li role="presentation" className="">
-              <a href="#friends-tab" aria-controls="preview-tab" role="tab" data-toggle="tab">Friends <span className="badge">{this.state.displayAuthor.friends.length}</span></a>
-            </li>
-          </ul>
-          <div className="tab-content">
-            <div role="tabpanel" className="tab-pane active" id="posts-tab">
-              <ContentViewer
-                currentAuthor={this.props.currentAuthor}
-                posts={this.state.displayAuthor.sortedPosts()} />
-            </div>
-            <div role="tabpanel" className="tab-pane" id="friends-tab">
-              <div className="well">
-                <ul className="list-group">
-                  {friends}
-                </ul>
-              </div>
-            </div>
+          <div className="author-tabs">
+            <TabbedArea defaultActiveKey={1}>
+              <TabPane eventKey={1} tab={contentTitle}>
+                <ContentViewer
+                  currentAuthor={this.props.currentAuthor}
+                  posts={this.state.displayAuthor.sortedPosts()} />
+              </TabPane>
+              <TabPane eventKey={2} tab={friendsTitle}>
+                <ListAuthors authors={this.state.displayAuthor.friends} />
+              </TabPane>
+            </TabbedArea>
           </div>
         </Col>
         <Col md={4}>

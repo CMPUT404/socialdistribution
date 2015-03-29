@@ -9,7 +9,6 @@ import PostActions from '../actions/post';
 
 import PostCreator from '../components/content/post-creator';
 import ContentViewer from '../components/content/content-viewer';
-import UserSearch from '../components/usersearch';
 import Spinner from '../components/spinner';
 
 import AuthorStore from '../stores/author';
@@ -54,7 +53,6 @@ export default React.createClass({
 
     return (
       <Col md={8} mdOffset={2}>
-        {/**<UserSearch key="search" />**/}
         <div className="jumbotron">
           <h3>Mood?</h3>
           <PostCreator currentAuthor={this.props.currentAuthor} />

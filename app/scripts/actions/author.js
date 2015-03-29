@@ -14,6 +14,5 @@ export default Reflux.createActions({
   'addFriend'            : Async,
   'followFriend'         : Async,
   'unfollowFriend'       : Async,
-
-  // unfollow, unfriend?
+  "getAuthors"           : Async,
 });
