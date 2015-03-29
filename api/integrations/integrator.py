@@ -73,7 +73,7 @@ class Integrator:
         headers = {"Uuid": str(local_author.id)}
         response = self.request(request.get, origin, headers=headers)
         if response and response.status_code == 200:
-            return self.prepare_author_data(response)
+            return self.prepare_author_data(response.json())
         else:
             return None
 
@@ -125,6 +125,16 @@ class Integrator:
         # author["friends"] = friends
         return author
 
+    def get_authors(self):
+        """
+        Fetches all authors from the server using GET /authors
+        """
+        response = self.request(request.get, self.build_url('authors'))
+        if response and response.status_code == 200:
+            return self.prepare_authors(response)
+        else:
+            return []
+
     def prepare_post_data(self, response):
         posts = response.json()["posts"]
         for post in posts:
@@ -132,7 +142,12 @@ class Integrator:
             post["author"]["source"] = self.host
         return posts
 
-    def prepare_author_data(self, response):
-        author = response.json()
+    def prepare_authors(self, response):
+        authors = []
+        for author in response.json():
+            authors.append(self.prepare_author_data(author))
+        return authors
+
+    def prepare_author_data(self, author):
         author["source"] = self.host
         return author

@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from ..utils.utils import AuthorNotFound, AuthenticationFailure
 from ..permissions.author import IsEnabled
-from ..integrations import Integrator
+from ..integrations import Integrator, Aggregator
 from api_settings import settings
 
 from collections import OrderedDict
@@ -265,5 +265,9 @@ class QueryAuthors(APIView):
     """
     def get(self, request, *args, **kwargs):
         cached_authors = CachedAuthor.objects.all()
-        serializer = CachedAuthorSerializer(cached_authors, many=True)
-        return Response({"authors": serializer.data}, status=status.HTTP_200_OK)
+        authors = CachedAuthorSerializer(cached_authors, many=True).data
+
+        # get all available foreign authors too
+        authors.extend(Aggregator.get_authors())
+
+        return Response({"authors": authors}, status=status.HTTP_200_OK)
