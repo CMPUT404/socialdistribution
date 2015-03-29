@@ -14,10 +14,9 @@ class IntegrationTests(APITestCase):
         user.save()
         Node.objects.get_or_create(
             user=user,
-            # host="http://hindlebook.tamarabyte.com/",
-            host="http://localhost:8001/api/",
-            foreign_username="test",
-            foreign_pass="test",
+            host="http://hindlebook.tamarabyte.com/",
+            foreign_username="socshizzle",
+            foreign_pass="socshizzle",
             outbound=True
         )
         self.integrators = Aggregator.get_integrators()
