@@ -19,12 +19,7 @@ def custom_exception_handler(exc, context):
         }
     """
 
-    # Marshal DRF into a standardized format
-    response = exception_handler(exc, context)
-    if response is not None:
-        return response
-
-    elif isinstance(exc, exceptions.APIException):
+    if isinstance(exc, exceptions.APIException):
         data = {'error': exc.detail}
         return Response(data, status=exc.status_code)
 
@@ -34,9 +29,14 @@ def custom_exception_handler(exc, context):
         return Response(data, status=status.HTTP_404_NOT_FOUND)
 
     elif isinstance(exc, PermissionDenied):
-        msg = _('Permission denied.')
+        msg = ('Permission denied.')
         data = {'error': six.text_type(msg)}
         return Response(data, status=status.HTTP_403_FORBIDDEN)
+
+    # Marshal DRF into a standardized format
+    response = exception_handler(exc, context)
+    if response is not None:
+        return response
 
     # Note: Unhandled exceptions will raise a 500 error.
     return None

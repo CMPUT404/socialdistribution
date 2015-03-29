@@ -38,24 +38,27 @@ class Integrator:
         """
         return HTTPBasicAuth(self.username, self.password)
 
-    def request(self, method, url, data={}, headers={}):
+    def request(self, method, url, json={}, headers={}):
         """
         Handles build and sending requests based on defined settings.
         """
-        return method(
-            url,
-            headers=headers,
-            auth=self.build_auth(),
-            data=data
-        )
+        try:
+            return method(
+                url,
+                headers=headers,
+                auth=self.build_auth(),
+                json=json
+            )
+        except:
+            print "Error calling %s:%s" % (method, url)
+            return None
 
     def get_public_posts(self):
         """
         Queries foreign server for /posts
         """
         response = self.request(request.get, self.build_url("posts"))
-        print vars(response)
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             return self.prepare_post_data(response)
         else:
             # we're returning an empty list here because we dont' want to crash
@@ -69,7 +72,7 @@ class Integrator:
         """
         headers = {"Uuid": str(local_author.id)}
         response = self.request(request.get, origin, headers=headers)
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             return self.prepare_author_data(response)
         else:
             return None
@@ -81,23 +84,22 @@ class Integrator:
         headers = {"Uuid": str(requestor)}
 
         response = self.request(request.get, "%s/posts" % (origin), headers=headers)
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             return self.prepare_post_data(response)
         else:
             return []
 
     def send_friend_request(self, author, foreign_author):
-        print foreign_author
         data = {
             "query": "friendrequest",
             "author": {
-                "id": foreign_author.id,
+                "id": str(foreign_author.id),
                 "host": foreign_author.host,
                 "displayname": foreign_author.displayname,
                 "url": foreign_author.url
             },
             "friend": {
-                "id": author.id,
+                "id": str(author.id),
                 "host": author.host,
                 "displayname": author.displayname,
                 "url": author.url
@@ -105,10 +107,8 @@ class Integrator:
         }
 
         headers = {"Uuid": str(author.id)}
-
-        response = self.request(request.post, self.build_url("friendrequest"), data, headers=headers)
-        print response
-        if response.status_code == 201:
+        response = self.request(request.post, self.build_url("friendrequest"), json=data, headers=headers)
+        if response and response.status_code == 200:
             return True
         else:
             return False
