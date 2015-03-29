@@ -114,6 +114,7 @@ class Author(APIUser):
         try:
             self.remove_friend(following)
             self.following.remove(following)
+            self.remove_pending(following)
             self.save()
         except:
             # TODO: some sort of logging/exception handling

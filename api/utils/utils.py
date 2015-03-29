@@ -57,6 +57,9 @@ class AuthenticationFailure(exceptions.AuthenticationFailed):
     status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = 'Authentication failed'
 
+class NotAuthor(exceptions.AuthenticationFailed):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    default_detail = 'You must be the author to edit this'
 
 class ListField(models.TextField):
     __metaclass__ = models.SubfieldBase
