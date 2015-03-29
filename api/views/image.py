@@ -6,6 +6,7 @@ from ..renderers.image import ImageRenderer
 from ..models.author import Author
 from ..models.content import Post
 from rest_framework.permissions import IsAuthenticated
+from ..permissions.author import IsEnabled
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.renderers import JSONRenderer
 import os
@@ -20,8 +21,6 @@ class AuthorImage(ListAPIView):
     """
     Returns an image.
     """
-    authentication_classes = (TokenAuthentication, BasicAuthentication, )
-    permission_classes = (IsAuthenticated, )
     renderer_classes = (ImageRenderer, JSONRenderer, )
 
     def get(self, request, *args, **kwargs):
@@ -40,7 +39,7 @@ class PostImage(ListAPIView):
     """
     Returns an image.
     """
-    authentication_classes = (TokenAuthentication, BasicAuthentication, )
+    authentication_classes = (TokenAuthentication, IsEnabled, )
     permission_classes = (IsAuthenticated, )
     renderer_classes = (ImageRenderer, )
 
