@@ -4,6 +4,9 @@ from ..models.author import Author
 from author import CompactAuthorSerializer
 from image import ImageSerializer
 from django.conf import settings
+from api_settings import settings as api_settings
+
+
 import time
 
 # TODO
@@ -61,7 +64,8 @@ class CommentSerializer(serializers.ModelSerializer):
 class PostImageSerializer(ImageSerializer):
     def to_representation(self, data):
         if data:
-            return '/author/posts/images/' + data.name.split('/')[-1]
+            post_id = str(self.parent.instance.guid)
+            return api_settings.HOST + 'post/' + post_id + '/image/'
         else:
             return ''
 

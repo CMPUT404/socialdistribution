@@ -17,6 +17,7 @@ import uuid
 import json
 import base64
 import os
+import shutil
 
 ACL_DEFAULT = "PUBLIC"
 
@@ -68,12 +69,12 @@ def get_test_image():
         os.path.dirname(__file__) + TEST_FOLDER_RELATIVE + '/fixtures/images/s.jpg'
     )
 
-def clean_up_imgs(prefix, url):
+def clean_up_imgs(prefix):
     """
     Cleans up images from tests.
     """
-    img_path = os.path.dirname(__file__) + '/../../' + 'images/' + prefix + '/' + url.split('/')[-1]
-    os.remove(img_path)
+    folder_path = os.path.dirname(__file__) + '/../../' + 'images/' + prefix
+    shutil.rmtree(folder_path)
 
 def pretty_print(data):
     """Pretty prints a dictionary object"""

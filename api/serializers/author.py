@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from image import ImageSerializer
+from api_settings import settings as api_settings
 from ..models.author import (
     Author,
     CachedAuthor
@@ -10,7 +11,8 @@ from ..models.author import (
 class AuthorImageSerializer(ImageSerializer):
     def to_representation(self, data):
         if data:
-            return '/author/profile/images/' + data.name.split('/')[-1]
+            author_id = str(self.parent.instance.id)
+            return api_settings.HOST + 'author/' + author_id + '/image/'
         else:
             return ''
 
