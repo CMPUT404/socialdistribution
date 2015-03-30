@@ -262,11 +262,26 @@ export default Reflux.createStore({
   },
 
   onFollowFriend: function(friend) {
+    let request = {
+      author: {
+        id         : this.currentAuthor.id,
+        url        : this.currentAuthor.url,
+        host       : this.currentAuthor.host,
+        displayname: this.currentAuthor.displayname
+      },
+      following: {
+        id         : friend.id,
+        url        : friend.url,
+        host       : friend.host,
+        displayname: friend.displayname
+      }
+    };
+
     Request
-      .get('/author/' + this.currentAuthor.id + '/follow/' + friend.id)
+      .post('/author/' + this.currentAuthor.id + '/follow')
       .use(apiPrefix)
       .token(this.getToken())
-      .host(friend.host)
+      .send(request)
       .promise(this.followFriendComplete.bind(this, friend),
                 AuthorActions.followFriend.fail);
   },
