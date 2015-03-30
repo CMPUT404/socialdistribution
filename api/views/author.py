@@ -143,18 +143,11 @@ class CreateFriendRequest(generics.CreateAPIView):
                     print "Friend Request failed"
                     return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                author.follow(friend)
-                author.add_pending(friend)
+                author.add_friend(friend)
 
             # otherwise assume we're operating on two local authors
             else:
-                # if both want to be friends, make it so
-                if author.is_pending_friend(friend):
-                    author.add_friend(friend)
-                    friend.add_friend(author)
-                else:
-                    author.add_pending(friend)
-                    friend.add_request(author)
+                author.add_friend(friend)
 
         return Response(status=status.HTTP_200_OK)
 

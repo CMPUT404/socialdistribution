@@ -19,6 +19,7 @@ class Author(APIUser):
     # Who the author is following
     following = models.ManyToManyField('CachedAuthor', blank=True, null=True,
                                        related_name='following')
+
     # All interaction with friends should be conducted through followers
     friends = models.ManyToManyField('CachedAuthor', blank=True, null=True,
                                      related_name='friends')
@@ -48,44 +49,80 @@ class Author(APIUser):
             # TODO: Should be an exception
             return None
 
-    def follow(self, author):
+    def _get_author(self, instance):
+        if isinstance(instance, Author):
+            return instance
+        if isinstance(instance, CachedAuthor):
+            return Author.objects.get(id=instance.id)
+        else:
+            return None
+
+    def add_friend(self, friend):
+        # Check if the potential friend has already befriended the author
+        if not isinstance(self, Author):
+            raise Exception("Not an instance of Author.")
+
+        friend = self._get_cached_author(friend)
+        if friend:
+            if self.has_friend_request_from(friend):
+                self._friend(friend)
+                # Make friendship official
+            else:
+                self._add_request_from_and_to(friend)
+
+
+    def follow(self, friend):
+        self._add_follower(friend)
+
+    def _add_follower(self, author):
         author = self._get_cached_author(author)
         if not self.following.filter(id=author.id).exists():
             self.following.add(author)
             self.save()
 
-    def add_pending(self, friend):
+    def _add_request_from_and_to(self, friend):
+        friend = self._get_author(friend)
+        if friend:
+            self._add_pending_friend_request_for(friend)
+            friend._add_friend_request_from(self)
+
+    def _add_pending_friend_request_for(self, friend):
         """Adds a pending friend request"""
+        # friend_auth = friend
         friend = self._get_cached_author(friend)
-        if not self.pending.filter(id=friend.id).exists():
-            self.pending.add(friend)
-            self.save()
+        self.pending.add(friend)
+        self.following.add(friend)
+        self.save()
 
-        self.follow(friend)
-
-    def add_friend(self, friend):
+    def _friend(self, friend):
         """Create a friend from an author model"""
+        # friend_auth = friend
+        friend_auth = self._get_author(friend)
         friend = self._get_cached_author(friend)
         if not self.friends.filter(id=friend.id).exists():
             self.friends.add(friend)
+            self.requests.remove(friend)
+            self.pending.remove(friend)
+            self.follow(friend)
             self.save()
+
+            # if friend_auth.is_local():
+            # Can only update local authors to prevent type errors
+            if friend.is_local():
+                if not friend_auth.friends.filter(id=self.id).exists():
+                    friend_auth.friends.add(self._get_cached_author(self))
+                friend_auth.requests.remove(self)
+                friend_auth.pending.remove(self)
+                friend_auth.follow(self)
+                friend_auth.save()
 
         # update other status accordingly
-        self.remove_pending(friend)
-        self.follow(friend)
 
-    def add_request(self, friend):
+    def _add_friend_request_from(self, friend):
         """Registers a new friend request that our author can respond to"""
         friend = self._get_cached_author(friend)
-
-        # if the incoming request is actually a pending friend, convert to friend
-        # status
-        if self.is_pending_friend(friend):
-            self.add_friend(friend)
-
-        elif not self.requests.filter(id=friend.id).exists():
-            self.requests.add(friend)
-            self.save()
+        self.requests.add(friend)
+        self.save()
 
     def remove_friend(self, friend):
         """
@@ -120,7 +157,14 @@ class Author(APIUser):
             # TODO: some sort of logging/exception handling
             pass
 
-    def remove_request(self, friend):
+    def _remove_request_and_pending(self, friend):
+        friend_auth = friend
+        friend = self._get_cached_author(friend)
+        if friend:
+            self._remove_request(friend)
+            friend_auth._remove_pending(self)
+
+    def _remove_request(self, friend):
         friend = self._get_cached_author(friend)
         try:
             self.requests.remove(friend)
@@ -129,7 +173,7 @@ class Author(APIUser):
             # TODO: some sort of logging/exception handling
             pass
 
-    def remove_pending(self, friend):
+    def _remove_pending(self, friend):
         friend = self._get_cached_author(friend)
         try:
             self.pending.remove(friend)
@@ -141,7 +185,10 @@ class Author(APIUser):
     def is_local(self):
         return self.host == settings.HOST
 
-    def is_pending_friend(self, author):
+    def has_friend_request_from(self, author):
+        return self.requests.filter(id=author.id).exists()
+
+    def has_sent_friend_request_to(self, author):
         return self.pending.filter(id=author.id).exists()
 
     def is_following(self, author):
