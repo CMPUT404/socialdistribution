@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 from api_settings import settings
-from ..integrations import Integrator, Aggregator
+from ..integrations import Aggregator
 from ..models import Node, CachedAuthor
 from django.contrib.auth.models import User
 import uuid
@@ -10,15 +10,26 @@ class IntegrationTests(APITestCase):
     def setUp(self):
         # need to specify nodes here otherwise there won't be anything in the nodes
         # db
-        user = User.objects.create(username="hindlebook")
+        # user = User.objects.create(username="hindlebook")
+        # user.save()
+        # Node.objects.get_or_create(
+            # user=user,
+            # host="http://hindlebook.tamarabyte.com/",
+            # foreign_username="socshizzle",
+            # foreign_pass="socshizzle",
+            # outbound=True
+        # )
+
+        user = User.objects.create(username="nbor")
         user.save()
         Node.objects.get_or_create(
             user=user,
-            host="http://hindlebook.tamarabyte.com/",
-            foreign_username="socshizzle",
-            foreign_pass="socshizzle",
+            host="http://cs410.cs.ualberta.ca:41080/api/",
+            foreign_username="host",
+            foreign_pass="password",
             outbound=True
         )
+
         self.integrators = Aggregator.get_integrators()
 
     def test_author(self):

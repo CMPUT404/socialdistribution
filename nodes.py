@@ -13,6 +13,7 @@ re-installed if we have to blow away our database in a migration.
 """
 
 # Hindlebook Creds
+# https://github.com/Tamarabyte/cmput410-project
 user = User.objects.get_or_create(username="hindlebook")
 user.set_password("hindlebook")
 node = Node.objects.get_or_create(
@@ -20,6 +21,19 @@ node = Node.objects.get_or_create(
     host="http://hindlebook.tamarabyte.com/api/",
     foreign_username="socshizzle",
     foreign_pass="socshizzle",
+    outbound=True,
+    enabled=True
+)
+
+# Nbor
+# https://github.com/CMPUT410W15/cmput410-project
+user = User.objects.get_or_create(username="nbor")
+user.set_password("nbor")
+node = Node.objects.get_or_create(
+    user=user,
+    host="http://cs410.cs.ualberta.ca:41080/api/",
+    foreign_username="host",
+    foreign_pass="password",
     outbound=True,
     enabled=True
 )

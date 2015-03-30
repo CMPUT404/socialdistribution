@@ -38,19 +38,33 @@ class Integrator:
         """
         return HTTPBasicAuth(self.username, self.password)
 
-    def request(self, method, url, json={}, headers={}):
+    def request(self, method, url, json={}, local_author_id=None):
         """
         Handles build and sending requests based on defined settings.
         """
+
+        headers = {}
+        basic_auth = self.build_auth()
+
+        # big hack because of lack of standardization without making this integrator
+        # a disaster
+        if "http://cs410.cs.ualberta.ca:41080/api/" in url:
+            pass
+            # basic_auth = "null_user:%s" % basic_auth
+            # basic_auth = "%s" % basic_auth
+
+        elif "http://hindlebook.tamarabyte.com/api/" in url:
+            headers = {"Uuid": local_author_id}
+
         try:
             return method(
                 url,
                 headers=headers,
-                auth=self.build_auth(),
-                json=json
+                auth=basic_auth,
+                json=json,
             )
-        except:
-            print "Error calling %s:%s" % (method, url)
+        except request.exceptions.RequestException as e:
+            print "Error calling %s:%s\n%s" % (method, url, e)
             return None
 
     def get_public_posts(self):
@@ -61,38 +75,41 @@ class Integrator:
         if response and response.status_code == 200:
             return self.prepare_post_data(response)
         else:
-            # we're returning an empty list here because we dont' want to crash
-            # the call if a foreign node breaks on us
-            print "Error calling %s" % (self.build_url("posts"))
             return []
 
     def get_author(self, id, local_author):
         """
         Queries foreign server for /author/:id
         """
-        headers = {"Uuid": str(local_author.id)}
         url = self.build_url("author/%s" % id)
-        response = self.request(request.get, url, headers=headers)
+        response = self.request(
+            request.get,
+            url,
+            local_author_context=local_author.id
+        )
 
         if response and response.status_code == 200:
             return self.prepare_author_data(response.json())
         else:
             return None
 
-    def get_author_posts(self, id, author):
+    def get_author_posts(self, id, local_author):
         """
         Queries foreign server for /author/:id/posts
         """
-        headers = {"UUID": str(author.id)}
         url = self.build_url("author/%s/posts" % id)
-        response = self.request(request.get, url, headers=headers)
+        response = self.request(
+            request.get,
+            url,
+            local_author_context=local_author.id
+        )
 
         if response and response.status_code == 200:
             return self.prepare_post_data(response)
         else:
             return []
 
-    def send_friend_request(self, author, foreign_author):
+    def send_friend_request(self, local_author, foreign_author):
         data = {
             "query": "friendrequest",
             "author": {
@@ -102,15 +119,20 @@ class Integrator:
                 "url": foreign_author.url
             },
             "friend": {
-                "id": str(author.id),
-                "host": author.host,
-                "displayname": author.displayname,
-                "url": author.url
+                "id": str(local_author.id),
+                "host": local_author.host,
+                "displayname": local_author.displayname,
+                "url": local_author.url
             }
         }
 
-        headers = {"Uuid": str(author.id)}
-        response = self.request(request.post, self.build_url("friendrequest"), json=data, headers=headers)
+        response = self.request(
+            request.post,
+            self.build_url("friendrequest"),
+            json=data,
+            local_author_context=local_author.id
+        )
+
         if response and response.status_code == 200:
             return True
         else:
