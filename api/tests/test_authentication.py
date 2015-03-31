@@ -206,9 +206,8 @@ class AuthorAuthentication(APITestCase):
         self.assertEquals(response.status_code, 401, 'user not logged in')
 
     def test_logout(self):
-        response = self.basic_client.post('/author/logout')
-
-        self.assertEquals(response.status_code, 200, "User not logged out")
+        response = self.basic_client.delete('/author/login')
+        self.assertEquals(response.status_code, 204, "User not logged out")
 
     def test_author_update(self):
         # All fields are good and should return 200
