@@ -62,8 +62,8 @@ class AuthorRegistration(APIView):
 # Token based
 class Login(APIView):
     """
-    Handles a GET with a Basic Auth and passes back a token and profile information.
-
+    Handles a GET with a Basic Auth or Token and passes back
+    token and profile information.
     Response format:
 
     {
@@ -81,36 +81,22 @@ class Login(APIView):
       "token": "steve's token hash"
     }
     """
-    authentication_classes = (IsEnabled, )
+    authentication_classes = (IsEnabled, TokenAuthentication)
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-      """Returns authentication token after validating Basic Auth header"""
-      token, created = Token.objects.get_or_create(user=request.user)
-      login(request, request.user)
+        """Returns authentication token after validating Basic Auth header"""
+        token, created = Token.objects.get_or_create(user=request.user)
 
-      author = Author.objects.get(user = request.user)
-      serializer = AuthorSerializer(author, context={'request': request})
+        if request.user.is_authenticated() is False:
+            login(request, request.user)
 
-      return Response({'token': token.key, 'author': serializer.data})
+        author = Author.objects.get(user=request.user)
+        serializer = AuthorSerializer(author, context={'request': request})
 
+        return Response({'token': token.key, 'author': serializer.data})
 
-# Token based
-class Logout(APIView):
-    """
-    Logs out and deletes the token for a given user
-
-    Requires HTTP Authorization header
-        Authorization: Token {token here}
-    """
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request):
-        """Logout user with given token"""
-        try:
-            request.user.auth_token.delete()
-        except:
-            pass
+    def delete(self, request):
+        request.user.auth_token.delete()
         logout(request)
-        return Response({"success": "Successfully logged out."},
-            status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -15,15 +15,11 @@ import Stream from '../components/github/stream';
 import Subscribe from '../components/subscribe';
 import Spinner from '../components/spinner';
 
-
-import ActionListener from '../mixins/action-listener';
-
-
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), ActionListener, Navigation, State],
+  mixins: [Reflux.connect(AuthorStore), Reflux.ListenerMixin, Navigation, State],
 
   statics: {
     willTransitionTo: function(transition, params) {
@@ -40,8 +36,16 @@ export default React.createClass({
     };
   },
 
-  onLogout: function() {
-    this.transitionTo('login');
+  formatParams: function(params) {
+    if (!_.isUndefined(params.host)) {
+      params.host = decodeURIComponent(params.host);
+    }
+
+    if (params.id === 'profile') {
+      params.id = AuthorStore.getAuthor().id;
+    }
+
+    return params;
   },
 
   updateParams: function() {
@@ -58,23 +62,23 @@ export default React.createClass({
 
   // https://github.com/rackt/react-router/blob/master/docs/guides/overview.md#important-note-about-dynamic-segments
   componentWillReceiveProps: function(nextProps) {
-    if (_.isNull(nextProps.currentAuthor) &&
-        _.isNull(this.state.displayAuthor)) {
-      this.onLogout();
-    } else {
-      this.updateParams();
-      this.refresh();
+    var newParams = this.formatParams(this.getParams());
+
+    if (newParams.id !== this.params.id &&
+        newParams.host !== this.params.host) {
+      this.params = newParams;
+      this.refresh(this.params);
     }
   },
 
-  refresh: function() {
-    AuthorActions.fetchAuthor(this.params.id, this.params.host);
+  refresh: function(params) {
+    AuthorActions.fetchAuthor(params.id, params.host);
   },
 
   componentDidMount: function () {
-    this.listen(AuthorActions.logout, this.onLogout);
-    this.updateParams();
-    this.refresh();
+    this.listenTo(AuthorActions.logout, () => this.transitionTo('login'));
+    this.params = this.formatParams(this.getParams());
+    this.refresh(this.params);
   },
 
   render: function() {
@@ -147,7 +151,7 @@ export default React.createClass({
                   currentAuthor={this.props.currentAuthor}
                   posts={this.state.displayAuthor.sortedPosts()} />
               </TabPane>
-              <TabPane eventKey={2} tab={friendsTitle}>
+              <TabPane eventKey={2} tab={friendsTitle} className="well">
                 <ListAuthors authors={this.state.displayAuthor.friends} />
               </TabPane>
             </TabbedArea>

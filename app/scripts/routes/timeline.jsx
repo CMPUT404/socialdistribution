@@ -14,12 +14,10 @@ import Spinner from '../components/spinner';
 import AuthorStore from '../stores/author';
 import PostStore from '../stores/post';
 
-import ActionListener from '../mixins/action-listener';
-
 // Represents a collection of posts within the logged in user's social network.
 export default React.createClass({
 
-  mixins: [Reflux.connect(PostStore), Navigation, ActionListener],
+  mixins: [Reflux.connect(PostStore), Navigation, Reflux.ListenerMixin],
 
   statics: {
     willTransitionTo: function (transition, params) {
@@ -37,8 +35,8 @@ export default React.createClass({
 
   componentDidMount: function() {
     // Listen to logout then transition
-    this.listen(AuthorActions.logout, () => this.transitionTo('login'));
-    // refresh posts?
+    this.listenTo(AuthorActions.logout, () => this.transitionTo('login'));
+    // refresh posts
     this.refresh();
   },
 

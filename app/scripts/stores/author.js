@@ -64,19 +64,18 @@ export default Reflux.createStore({
   },
 
   // Fires authentication AJAX
-  onLogin: function(username, password) {
+  onLogin: function(username, password, token = null) {
     Request
       .get('/author/login/')
       .use(apiPrefix)
-      .auth(username, password)
+      .token(token)
+      .basic(username, password)
       .promise(this.loginComplete, AuthorActions.login.fail);
   },
 
   // Create and save logged in user
   loginComplete: function(authorData) {
-
-    //TODO: store auth token in localStorage
-
+    sessionStorage.setItem('token', authorData.token);
     this.currentAuthor = new Author(authorData.author, authorData.token);
     this.trigger({currentAuthor: this.currentAuthor});
     AuthorActions.login.complete(this.currentAuthor);
@@ -99,11 +98,11 @@ export default Reflux.createStore({
   // check that our author is still logged in, update state of components
   // On page refreshes
   onCheckAuth: function() {
+    var token = sessionStorage.getItem('token');
 
-    // TODO: check localStorage here
-
-    this.trigger({currentAuthor: this.currentAuthor});
-    AuthorActions.checkAuth.complete(this.currentAuthor);
+    if (!_.isNull(token)) {
+      this.onLogin(null, null, token);
+    }
   },
 
   // Fetches author details via AJAX
@@ -327,9 +326,18 @@ export default Reflux.createStore({
     this.trigger({authorsList: this.authorsList});
     AuthorActions.getAuthors.complete(this.authorsList);
   },
+
   // This is a listener not a handler
-  // `logOut` doesn't require any AJAX calls
+  // fire it but don't worry about the response
+  // this should never fail
   logOut: function() {
+    Request
+      .del('/author/login/')
+      .use(apiPrefix)
+      .token(this.getToken())
+      .end()
+
+    sessionStorage.clear();
     this.currentAuthor = null;
     this.trigger({currentAuthor: this.currentAuthor});
   },
