@@ -2,7 +2,7 @@ import Reflux from 'reflux';
 import Async from './async';
 
 export default Reflux.createActions({
-  'update'               : {},
+  'update'               : Async,
   'register'             : Async,
   'logout'               : {},
   'login'                : Async,
