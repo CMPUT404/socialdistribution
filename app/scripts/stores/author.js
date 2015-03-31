@@ -30,6 +30,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.unfollowFriend, 'onUnfollowFriend');
     this.listenTo(AuthorActions.createComment,  'onCreateComment');
     this.listenTo(AuthorActions.getAuthors,     'onGetAuthors');
+    this.listenTo(AuthorActions.update,         'onUpdate');
 
     // Ajax fail listeners
     this.listenTo(AuthorActions.login.fail,           'ajaxFailed');
@@ -41,6 +42,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.followFriend.fail,    'ajaxFailed');
     this.listenTo(AuthorActions.unfollowFriend.fail,  'ajaxFailed');
     this.listenTo(AuthorActions.createComment.fail,   'ajaxFailed');
+    this.listenTo(AuthorActions.update.fail,          'ajaxFailed');
   },
 
   // if in a static method and need acces to store state
@@ -124,6 +126,9 @@ export default Reflux.createStore({
       this.displayAuthor = new Author(authorData);
     }
 
+    // async
+    this.fetchGithubStream();
+
     this.displayAuthor.posts = authorData.posts.map((post) => {
         post = new Post(post);
 
@@ -144,7 +149,9 @@ export default Reflux.createStore({
 
     this.trigger({displayAuthor: this.displayAuthor});
     AuthorActions.fetchAuthor.complete(this.displayAuthor);
+  },
 
+  fetchGithubStream: function() {
     if (this.displayAuthor.github_username) {
       Request
         .get('https://api.github.com/users/' + this.displayAuthor.github_username + '/events')
@@ -325,6 +332,32 @@ export default Reflux.createStore({
 
     this.trigger({authorsList: this.authorsList});
     AuthorActions.getAuthors.complete(this.authorsList);
+  },
+
+  onUpdate: function(data) {
+    Request
+      .post('/author/profile')
+      .use(apiPrefix)
+      .token(this.getToken())
+      .send(data)
+      .promise(this.updateComplete, AuthorActions.update.fail);
+  },
+
+  updateComplete: function(authorData) {
+    var newAuthor = new Author(authorData, this.currentAuthor.token);
+    newAuthor.post = this.currentAuthor.posts;
+    //updates can only occur from /author route
+    this.displayAuthor = newAuthor;
+    this.currentAuthor = newAuthor;
+
+    this.fetchGithubStream();
+
+    this.trigger({
+      currentAuthor: this.currentAuthor,
+      displayAuthor: this.displayAuthor
+    });
+
+    AuthorActions.update.complete(this.currentAuthor);
   },
 
   // This is a listener not a handler

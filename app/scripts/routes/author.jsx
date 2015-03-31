@@ -2,7 +2,15 @@ import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import { State, Navigation } from 'react-router';
-import { TabbedArea, TabPane, Col, Row, Button } from 'react-bootstrap';
+
+import {
+  Button,
+  Col,
+  Row,
+  TabbedArea,
+  TabPane,
+  ModalTrigger
+} from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
@@ -10,10 +18,12 @@ import AuthorActions from '../actions/author';
 import ContentViewer from '../components/content/content-viewer';
 import PostCreator from '../components/content/post-creator';
 import ProfileLink from '../components/content/profile-link';
+import ProfileModal from '../components/profile-modal';
 import ListAuthors from '../components/list-authors';
 import Stream from '../components/github/stream';
 import Subscribe from '../components/subscribe';
 import Spinner from '../components/spinner';
+
 
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
@@ -87,9 +97,7 @@ export default React.createClass({
       return (<Spinner />);
     }
 
-    // this comes from the RouterState mixin and lets us pull an author id out
-    // of the uri so we can fetch their posts.
-    var postCreator, ghStream, githubUrl;
+    var postCreator, ghStream, githubUrl, editProfile;
     var contentTitle, friendsTitle;
 
     githubUrl = this.state.displayAuthor.getGithubUrl();
@@ -102,6 +110,12 @@ export default React.createClass({
         <div className="jumbotron">
           <PostCreator currentAuthor={this.props.currentAuthor} />
         </div>
+      );
+
+      editProfile = (
+        <ModalTrigger modal={<ProfileModal />}>
+          <i className="fa fa-pencil"></i>
+        </ModalTrigger>
       );
     }
 
@@ -127,6 +141,9 @@ export default React.createClass({
       <Row>
         <Col md={8}>
           <div className="media well author-biography">
+            <span className="pull-right edit-prifle">
+              {editProfile}
+            </span>
             <div className="media-left">
               <img className="media-object profile-image" src={this.state.displayAuthor.getImage()} />
             </div>
