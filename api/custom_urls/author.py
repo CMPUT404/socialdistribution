@@ -4,11 +4,8 @@ from ..views.image import AuthorImage
 
 urlpatterns = [
 
-    # GET /login
+    # GET/DELETE /login
     url(r'^author/login/?$', authentication.Login.as_view(), name='login'),
-
-    # POST /logout
-    url(r'^author/logout/?$', authentication.Logout.as_view(), name='logout'),
 
     # GET POST /author/profile
     url(r'^author/profile/?$', authentication.AuthorProfile.as_view(), name='profile'),

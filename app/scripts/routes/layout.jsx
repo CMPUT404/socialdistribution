@@ -4,15 +4,14 @@ import { Grid } from 'react-bootstrap';
 import { RouteHandlerMixin } from 'react-router';
 
 import Navbar from './navbar';
+import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
-
-import ActionListener from '../mixins/action-listener';
 
 // This layout is used by React-Router to layout the base container of the app.
 // We shouldn't really be putting anything here other than the Navbar.
 export default React.createClass({
 
-  mixins: [RouteHandlerMixin, ActionListener],
+  mixins: [Reflux.connect(AuthorStore), RouteHandlerMixin],
 
   getInitialState: function() {
     return {
@@ -20,17 +19,12 @@ export default React.createClass({
     };
   },
 
-  // As soon as our base layout is ready, figure out if the user is logged in
-  componentDidMount: function () {
-    var self = this;
-    var complete = (a) => this.setState({currentAuthor: a});
-
-    // Way more efficient than listening for every change from author store
-    this.listen(AuthorActions.logout, () => this.setState(this.getInitialState()));
-    this.listen(AuthorActions.checkAuth.complete, complete);
-    this.listen(AuthorActions.login.complete, complete);
-
-    AuthorActions.checkAuth();
+  statics: {
+    willTransitionTo: function (transition, params) {
+      if (!AuthorStore.isLoggedIn()) {
+        AuthorActions.checkAuth(transition);
+      }
+    }
   },
 
   render: function() {

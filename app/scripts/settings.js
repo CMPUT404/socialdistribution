@@ -1,9 +1,17 @@
-import config from '../config.json';
+import Router from 'react-router';
+import Config from '../config.json';
 
-export function  API() {
-  if (config.env === 'dev') {
-    return 'http://localhost:8000';
-  } else {
-    return 'http://socshizzle-api.herokuapp.com';
-  }
+var API;
+var RouterLocation;
+
+if (Config.env === 'dev') {
+  API            = () => 'http://localhost:8000';
+  RouterLocation = () => Router.HashLocation;
 }
+
+if (Config.env === 'prod') {
+  API            = () => 'http://socshizzle-api.herokuapp.com';
+  RouterLocation = () => Router.HistoryLocation;
+}
+
+export { API, RouterLocation }

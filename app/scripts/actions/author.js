@@ -6,7 +6,7 @@ export default Reflux.createActions({
   'register'             : Async,
   'logout'               : {},
   'login'                : Async,
-  'checkAuth'            : Async,
+  'checkAuth'            : {},
   'fetchAuthor'          : Async,
   'createPost'           : Async,
   'deletePost'           : Async,
