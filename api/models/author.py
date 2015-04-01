@@ -59,9 +59,6 @@ class Author(APIUser):
 
     def add_friend(self, friend):
         # Check if the potential friend has already befriended the author
-        if not isinstance(self, Author):
-            raise Exception("Not an instance of Author.")
-
         friend = self._get_cached_author(friend)
         if friend:
             if self.has_friend_request_from(friend):
@@ -69,7 +66,6 @@ class Author(APIUser):
                 # Make friendship official
             else:
                 self._add_request_from_and_to(friend)
-
 
     def follow(self, friend):
         self._add_follower(friend)
@@ -81,14 +77,16 @@ class Author(APIUser):
             self.save()
 
     def _add_request_from_and_to(self, friend):
-        friend = self._get_author(friend)
-        if friend:
-            self._add_pending_friend_request_for(friend)
-            friend._add_friend_request_from(self)
+        if friend.is_local():
+            friend = self._get_author(friend)
+            if friend:
+                friend._add_friend_request_from(self)
+                self._add_pending_friend_request_for(friend)
+        else:
+            self._add_friend_request_from(friend)
 
     def _add_pending_friend_request_for(self, friend):
         """Adds a pending friend request"""
-        # friend_auth = friend
         friend = self._get_cached_author(friend)
         self.pending.add(friend)
         self.following.add(friend)
@@ -96,7 +94,6 @@ class Author(APIUser):
 
     def _friend(self, friend):
         """Create a friend from an author model"""
-        # friend_auth = friend
         friend_auth = self._get_author(friend)
         friend = self._get_cached_author(friend)
         if not self.friends.filter(id=friend.id).exists():
@@ -106,7 +103,6 @@ class Author(APIUser):
             self.follow(friend)
             self.save()
 
-            # if friend_auth.is_local():
             # Can only update local authors to prevent type errors
             if friend.is_local():
                 if not friend_auth.friends.filter(id=self.id).exists():
