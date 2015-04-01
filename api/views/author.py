@@ -155,8 +155,7 @@ class CreateFriendRequest(generics.CreateAPIView):
 
             author.add_friend(friend)
 
-            return Response({"friends": author.is_friend(friend)},
-                            status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
 
 class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):
