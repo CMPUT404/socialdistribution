@@ -7,7 +7,7 @@ urlpatterns = [
     # GET/DELETE /login
     url(r'^author/login/?$', authentication.Login.as_view(), name='login'),
 
-    # GET POST /author/profile
+    # POST /author/profile
     url(r'^author/profile/?$', authentication.AuthorProfile.as_view(), name='profile'),
 
     # POST friends/:fid

@@ -321,7 +321,32 @@ class AuthorModelAPITests(TestCase):
         self.assertTrue(self.author_a.has_sent_friend_request_to(self.author))
 
         self.author.add_friend(self.author_a)
-        #
-        # # Authors should appear on each others friends list
+
+        # Authors should appear on each others friends list
         self.assertTrue(self.author_a.is_friend(self.author))
         self.assertTrue(self.author.is_friend(self.author_a))
+
+    def test_foreign_host_friend_request(self):
+        request = {
+            "query": "friendrequest",
+            "author": {
+                "id": str(uuid.uuid4()),
+                "host": "http://example.org",
+                "displayname": "foreignauthorname"
+            },
+            "friend": {
+                "id": self.author.id,
+                "host": HOST,
+                "displayname": self.author.displayname,
+            }
+        }
+        response = self.client.post('/friendrequest', request,
+                                    **{'HTTP_ORIGIN': 'http://example.org'})
+        self.assertEquals(response.status_code, 200)
+
+        try:
+            friend = CachedAuthor.objects.get(id=request['author']['id'])
+        except:
+            self.assertFalse(True, "Cached author friend should have been made")
+
+        self.assertTrue(self.author.has_friend_request_from(friend))

@@ -66,6 +66,11 @@ class PostSerializer(serializers.ModelSerializer):
                     'pubDate', 'visibility', 'image', 'author', 'comments', 'categories')
         read_only_fields = ('guid', 'pubDate', 'comments', 'author', 'visibility')
 
+    def to_representation(self, data):
+        data = super(PostSerializer, self).to_representation(data)
+        data["content-type"] = data.pop('contentType')
+        return data
+
     # DRF does not currently support creation of nested relations...
     def create(self, validated_data):
         request = self.context.get('request', None)
