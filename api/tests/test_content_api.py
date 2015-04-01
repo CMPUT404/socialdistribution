@@ -12,7 +12,7 @@ import os
 USERNAME = "programmer"
 GITHUB_USERNAME = "programmer"
 BIO = "This is my witty biography!"
-HOST = "http://example.com/"
+HOST = settings.HOST
 
 # Values to be inserted and checked in the User model
 # required User model attributes

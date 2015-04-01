@@ -30,6 +30,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.unfollowFriend, 'onUnfollowFriend');
     this.listenTo(AuthorActions.createComment,  'onCreateComment');
     this.listenTo(AuthorActions.getAuthors,     'onGetAuthors');
+    this.listenTo(AuthorActions.update,         'onUpdate');
 
     // Ajax fail listeners
     this.listenTo(AuthorActions.login.fail,           'ajaxFailed');
@@ -41,6 +42,7 @@ export default Reflux.createStore({
     this.listenTo(AuthorActions.followFriend.fail,    'ajaxFailed');
     this.listenTo(AuthorActions.unfollowFriend.fail,  'ajaxFailed');
     this.listenTo(AuthorActions.createComment.fail,   'ajaxFailed');
+    this.listenTo(AuthorActions.update.fail,          'ajaxFailed');
   },
 
   // if in a static method and need acces to store state
@@ -64,19 +66,18 @@ export default Reflux.createStore({
   },
 
   // Fires authentication AJAX
-  onLogin: function(username, password) {
+  onLogin: function(username, password, token = null) {
     Request
       .get('/author/login/')
       .use(apiPrefix)
-      .auth(username, password)
+      .token(token)
+      .basic(username, password)
       .promise(this.loginComplete, AuthorActions.login.fail);
   },
 
   // Create and save logged in user
   loginComplete: function(authorData) {
-
-    //TODO: store auth token in localStorage
-
+    sessionStorage.setItem('token', authorData.token);
     this.currentAuthor = new Author(authorData.author, authorData.token);
     this.trigger({currentAuthor: this.currentAuthor});
     AuthorActions.login.complete(this.currentAuthor);
@@ -99,11 +100,11 @@ export default Reflux.createStore({
   // check that our author is still logged in, update state of components
   // On page refreshes
   onCheckAuth: function() {
+    var token = sessionStorage.getItem('token');
 
-    // TODO: check localStorage here
-
-    this.trigger({currentAuthor: this.currentAuthor});
-    AuthorActions.checkAuth.complete(this.currentAuthor);
+    if (!_.isNull(token)) {
+      this.onLogin(null, null, token);
+    }
   },
 
   // Fetches author details via AJAX
@@ -125,6 +126,9 @@ export default Reflux.createStore({
       this.displayAuthor = new Author(authorData);
     }
 
+    // async
+    this.fetchGithubStream();
+
     this.displayAuthor.posts = authorData.posts.map((post) => {
         post = new Post(post);
 
@@ -145,7 +149,9 @@ export default Reflux.createStore({
 
     this.trigger({displayAuthor: this.displayAuthor});
     AuthorActions.fetchAuthor.complete(this.displayAuthor);
+  },
 
+  fetchGithubStream: function() {
     if (this.displayAuthor.github_username) {
       Request
         .get('https://api.github.com/users/' + this.displayAuthor.github_username + '/events')
@@ -327,9 +333,44 @@ export default Reflux.createStore({
     this.trigger({authorsList: this.authorsList});
     AuthorActions.getAuthors.complete(this.authorsList);
   },
+
+  onUpdate: function(data) {
+    Request
+      .post('/author/profile')
+      .use(apiPrefix)
+      .token(this.getToken())
+      .send(data)
+      .promise(this.updateComplete, AuthorActions.update.fail);
+  },
+
+  updateComplete: function(authorData) {
+    var newAuthor = new Author(authorData, this.currentAuthor.token);
+    newAuthor.post = this.currentAuthor.posts;
+    //updates can only occur from /author route
+    this.displayAuthor = newAuthor;
+    this.currentAuthor = newAuthor;
+
+    this.fetchGithubStream();
+
+    this.trigger({
+      currentAuthor: this.currentAuthor,
+      displayAuthor: this.displayAuthor
+    });
+
+    AuthorActions.update.complete(this.currentAuthor);
+  },
+
   // This is a listener not a handler
-  // `logOut` doesn't require any AJAX calls
+  // fire it but don't worry about the response
+  // this should never fail
   logOut: function() {
+    Request
+      .del('/author/login/')
+      .use(apiPrefix)
+      .token(this.getToken())
+      .end()
+
+    sessionStorage.clear();
     this.currentAuthor = null;
     this.trigger({currentAuthor: this.currentAuthor});
   },

@@ -53,7 +53,7 @@ class Author {
             _.isEmpty(this.image) ||
             _.isUndefined(this.image))
              ?
-            'images/placeholder.jpg' : this.image;
+            '/images/placeholder.jpg' : this.image;
   }
 
   isAuthor (authorId) {

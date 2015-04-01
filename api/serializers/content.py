@@ -7,23 +7,6 @@ from django.conf import settings
 from api_settings import settings as api_settings
 
 
-import time
-
-# TODO
-# Date defaults to ISO-8601 as mentioned in class (but differs than example json).
-# Which format to adopt?
-# The calling of this serializer has been commented out.
-class UnixDateTimeField(serializers.DateTimeField):
-    def to_representation(self, value):
-        """
-        Return epoch time for datetime model field.
-        """
-        try:
-            return int(time.mktime(value.timetuple()))
-        except(AttributeError, TypeError):
-            return None
-
-
 class SourceSerializer(serializers.URLField):
     # Get path this post object was called from
     def get_attribute(self, post):
@@ -38,7 +21,6 @@ class OriginSerializer(serializers.URLField):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = CompactAuthorSerializer(many=False, read_only=True)
-    # pubDate = UnixDateTimeField(read_only=True)
 
     class Meta:
         model = Comment
@@ -72,7 +54,6 @@ class PostImageSerializer(ImageSerializer):
 class PostSerializer(serializers.ModelSerializer):
     author = CompactAuthorSerializer(many = False, read_only = True)
     comments = CommentSerializer(read_only = True, many = True)
-    # pubDate = UnixDateTimeField(read_only=True)
     categories = serializers.ListField(required=False)
     source = SourceSerializer(read_only = True)
     origin = OriginSerializer(read_only = True)
@@ -84,6 +65,11 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('guid', 'title', 'source', 'origin', 'content', 'contentType', \
                     'pubDate', 'visibility', 'image', 'author', 'comments', 'categories')
         read_only_fields = ('guid', 'pubDate', 'comments', 'author', 'visibility')
+
+    def to_representation(self, data):
+        data = super(PostSerializer, self).to_representation(data)
+        data["content-type"] = data.pop('contentType')
+        return data
 
     # DRF does not currently support creation of nested relations...
     def create(self, validated_data):

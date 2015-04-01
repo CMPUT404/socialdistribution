@@ -6,12 +6,13 @@ import Promise from 'bluebird';
 import Router from 'react-router';
 import Highlight from 'highlight.js';
 
+import { RouterLocation } from './settings';
+
 Reflux.setPromise(Promise);
 
 Marked.setOptions({
   highlight: (code) => Highlight.highlightAuto(code).value
 });
 
-// TODO: Use Router.HistoryLocation for prod
-// Gulp webserver doesn't support this properly for dev
-Router.run(Routes, Handler => React.render(<Handler />, document.getElementById('app')));
+Router.run(Routes, RouterLocation(),
+           Handler => React.render(<Handler />, document.getElementById('app')));

@@ -1,18 +1,17 @@
 import _ from 'lodash';
 import React from 'react';
 import { addons } from 'react/addons';
+import { ListenerMixin } from 'reflux';
 import { Navigation } from 'react-router';
 import { Row, Col, Input, PageHeader } from 'react-bootstrap';
 
 import AuthorActions from '../actions/author';
 import AuthorStore from '../stores/author';
 
-import ActionListener from '../mixins/action-listener';
-
 // This the registration handler
 export default React.createClass({
 
-  mixins: [Navigation, ActionListener, addons.LinkedStateMixin],
+  mixins: [Navigation, ListenerMixin, addons.LinkedStateMixin],
 
   statics: {
     // When an authenticated user tries to register?
@@ -40,7 +39,7 @@ export default React.createClass({
 
   componentDidMount: function() {
     // If registration is complete, transition away
-    this.listen(AuthorActions.register.complete, () => this.transitionTo('posts'));
+    this.listenTo(AuthorActions.register.complete, () => this.transitionTo('login'));
   },
 
   register: function(evt) {

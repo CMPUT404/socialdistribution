@@ -115,14 +115,12 @@ class AuthorModelAPITests(TestCase):
     def test_delete_follow(self):
         # Author is now following author_a
         self.author.follow(self.author_a)
-        self.author.add_friend(self.author_a)
-        self.author.add_pending(self.author_a)
 
         response = self.client.delete('/author/%s/follow/%s' %(self.author.id, self.author_a.id))
         self.assertEquals(response.status_code, 200, "Follower deleted")
 
         # author_a shouldn't be in an follow, pending or friend list
-        self.assertFalse(self.author.is_pending_friend(self.author_a))
+        self.assertFalse(self.author.has_sent_friend_request_to(self.author_a))
         self.assertFalse(self.author.is_friend(self.author_a))
         self.assertFalse(self.author.is_following(self.author_a))
 
@@ -162,8 +160,11 @@ class AuthorModelAPITests(TestCase):
         self.author_b.add_friend(self.author_a)
 
         # Confirm that A/B follow each other and thus are friends
-        self.assertEquals(1, len(self.author_a.friends.all()))
-        self.assertEquals(1, len(self.author_b.friends.all()))
+        self.assertTrue(self.author_a.is_friend(self.author_b))
+        self.assertTrue(self.author_b.is_friend(self.author_a))
+
+        self.assertTrue(self.author_a.is_following(self.author_b))
+        self.assertTrue(self.author_b.is_following(self.author_a))
 
         # This will remove the friendship. Follower/Friendship are dependents
         # Other author should no longer be a friend either
@@ -219,18 +220,18 @@ class AuthorModelAPITests(TestCase):
         self.assertEquals(0, len(self.author_a.friends.all()))
 
     def test_api_friend_request(self):
-        self.author.add_pending(self.author_a)
+        self.author.add_friend(self.author_a)
         request = {
             "query":"friendrequest",
             "author":{
-                "id":self.author.id,
+                "id":self.author_a.id,
                 "host":HOST,
-                "displayname":self.author.user.username
+                "displayname":self.author_a.user.username
             },
             "friend":{
-                "id":self.author_a.id,
+                "id":self.author.id,
                 "host": HOST,
-                "displayname":self.author_a.displayname,
+                "displayname":self.author.displayname,
             }
         }
         response = self.client.post('/friendrequest', request)
@@ -243,6 +244,25 @@ class AuthorModelAPITests(TestCase):
 
         self.assertEquals(0, len(self.author_a.requests.all()))
         self.assertEquals(1, len(self.author_a.friends.all()))
+
+    def test_friend_pending(self):
+        """
+        When friending an author, if they haven't sent you a request, then
+        you follow them and send a request.
+        """
+        self.author_a._add_request_from_and_to(self.author)
+
+        # author_a should have a pending friend and be following author
+        self.assertTrue(self.author_a.has_sent_friend_request_to(self.author))
+        self.assertTrue(self.author_a.is_following(self.author))
+        self.assertFalse(self.author_a.is_friend(self.author))
+
+        # Make sure no changes were made to the author, except that
+        # he should now have a friend request.
+        self.assertEquals(0, len(self.author.friends.all()))
+        self.assertEquals(0, len(self.author.pending.all()))
+        self.assertEquals(0, len(self.author.following.all()))
+        self.assertEquals(1, len(self.author.requests.all()))
 
     def test_api_get_friends(self):
         self.author.add_friend(self.author_a)
@@ -285,3 +305,48 @@ class AuthorModelAPITests(TestCase):
             %self.author_a.id)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.data['friends'], "NO")
+
+    def test_accept_friend_request(self):
+        """
+        If an author accepts a friend request, the author should be removed
+        from the friends pending list, and the friend should be removed
+        from the author's requests list.
+        """
+        # Friend author and then check that author has a friend request
+        self.author_a.add_friend(self.author)
+
+        self.assertTrue(self.author.has_friend_request_from(self.author_a))
+        self.assertFalse(self.author.is_following(self.author_a))
+        self.assertTrue(self.author_a.is_following(self.author))
+        self.assertTrue(self.author_a.has_sent_friend_request_to(self.author))
+
+        self.author.add_friend(self.author_a)
+
+        # Authors should appear on each others friends list
+        self.assertTrue(self.author_a.is_friend(self.author))
+        self.assertTrue(self.author.is_friend(self.author_a))
+
+    def test_foreign_host_friend_request(self):
+        request = {
+            "query": "friendrequest",
+            "author": {
+                "id": str(uuid.uuid4()),
+                "host": "http://example.org",
+                "displayname": "foreignauthorname"
+            },
+            "friend": {
+                "id": self.author.id,
+                "host": HOST,
+                "displayname": self.author.displayname,
+            }
+        }
+        response = self.client.post('/friendrequest', request,
+                                    **{'HTTP_ORIGIN': 'http://example.org'})
+        self.assertEquals(response.status_code, 200)
+
+        try:
+            friend = CachedAuthor.objects.get(id=request['author']['id'])
+        except:
+            self.assertFalse(True, "Cached author friend should have been made")
+
+        self.assertTrue(self.author.has_friend_request_from(friend))

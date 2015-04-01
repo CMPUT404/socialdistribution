@@ -2,7 +2,15 @@ import _ from 'lodash';
 import React from 'react';
 import Reflux from 'reflux';
 import { State, Navigation } from 'react-router';
-import { TabbedArea, TabPane, Col, Row, Button } from 'react-bootstrap';
+
+import {
+  Button,
+  Col,
+  Row,
+  TabbedArea,
+  TabPane,
+  ModalTrigger
+} from 'react-bootstrap';
 
 import AuthorStore from '../stores/author';
 import AuthorActions from '../actions/author';
@@ -10,20 +18,18 @@ import AuthorActions from '../actions/author';
 import ContentViewer from '../components/content/content-viewer';
 import PostCreator from '../components/content/post-creator';
 import ProfileLink from '../components/content/profile-link';
+import ProfileModal from '../components/profile-modal';
 import ListAuthors from '../components/list-authors';
 import Stream from '../components/github/stream';
 import Subscribe from '../components/subscribe';
 import Spinner from '../components/spinner';
 
 
-import ActionListener from '../mixins/action-listener';
-
-
 // Represents a prfoile page.
 // It should only display a list of posts created by the author
 export default React.createClass({
 
-  mixins: [Reflux.connect(AuthorStore), ActionListener, Navigation, State],
+  mixins: [Reflux.connect(AuthorStore), Reflux.ListenerMixin, Navigation, State],
 
   statics: {
     willTransitionTo: function(transition, params) {
@@ -40,8 +46,16 @@ export default React.createClass({
     };
   },
 
-  onLogout: function() {
-    this.transitionTo('login');
+  formatParams: function(params) {
+    if (!_.isUndefined(params.host)) {
+      params.host = decodeURIComponent(params.host);
+    }
+
+    if (params.id === 'profile') {
+      params.id = AuthorStore.getAuthor().id;
+    }
+
+    return params;
   },
 
   updateParams: function() {
@@ -58,23 +72,23 @@ export default React.createClass({
 
   // https://github.com/rackt/react-router/blob/master/docs/guides/overview.md#important-note-about-dynamic-segments
   componentWillReceiveProps: function(nextProps) {
-    if (_.isNull(nextProps.currentAuthor) &&
-        _.isNull(this.state.displayAuthor)) {
-      this.onLogout();
-    } else {
-      this.updateParams();
-      this.refresh();
+    var newParams = this.formatParams(this.getParams());
+
+    if (newParams.id !== this.params.id &&
+        newParams.host !== this.params.host) {
+      this.params = newParams;
+      this.refresh(this.params);
     }
   },
 
-  refresh: function() {
-    AuthorActions.fetchAuthor(this.params.id, this.params.host);
+  refresh: function(params) {
+    AuthorActions.fetchAuthor(params.id, params.host);
   },
 
   componentDidMount: function () {
-    this.listen(AuthorActions.logout, this.onLogout);
-    this.updateParams();
-    this.refresh();
+    this.listenTo(AuthorActions.logout, () => this.transitionTo('login'));
+    this.params = this.formatParams(this.getParams());
+    this.refresh(this.params);
   },
 
   render: function() {
@@ -83,9 +97,7 @@ export default React.createClass({
       return (<Spinner />);
     }
 
-    // this comes from the RouterState mixin and lets us pull an author id out
-    // of the uri so we can fetch their posts.
-    var postCreator, ghStream, githubUrl;
+    var postCreator, ghStream, githubUrl, editProfile;
     var contentTitle, friendsTitle;
 
     githubUrl = this.state.displayAuthor.getGithubUrl();
@@ -98,6 +110,12 @@ export default React.createClass({
         <div className="jumbotron">
           <PostCreator currentAuthor={this.props.currentAuthor} />
         </div>
+      );
+
+      editProfile = (
+        <ModalTrigger modal={<ProfileModal />}>
+          <i className="fa fa-pencil"></i>
+        </ModalTrigger>
       );
     }
 
@@ -123,6 +141,9 @@ export default React.createClass({
       <Row>
         <Col md={8}>
           <div className="media well author-biography">
+            <span className="pull-right edit-prifle">
+              {editProfile}
+            </span>
             <div className="media-left">
               <img className="media-object profile-image" src={this.state.displayAuthor.getImage()} />
             </div>
@@ -147,7 +168,7 @@ export default React.createClass({
                   currentAuthor={this.props.currentAuthor}
                   posts={this.state.displayAuthor.sortedPosts()} />
               </TabPane>
-              <TabPane eventKey={2} tab={friendsTitle}>
+              <TabPane eventKey={2} tab={friendsTitle} className="well">
                 <ListAuthors authors={this.state.displayAuthor.friends} />
               </TabPane>
             </TabbedArea>

@@ -104,59 +104,59 @@ class CreateFriendRequest(generics.CreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Author.objects.all()
     serializer_class = FriendRequestSerializer
+    hosts = [settings.HOST, settings.FRONTEND_HOST, "http://testserver/"]
 
-    def get_author(self, id):
+    def get_author_or_cached(self, id):
+        """
+        Returns an Author or CachedAuthor if author does not exist.
+
+        It is gauranted that an CachedAuthor will be returned as it is
+        created in the serialization process.
+        """
         try:
-            return Author.objects.get(id=id)
+            instance = Author.objects.get(id=id)
         except:
-            raise AuthorNotFound
+            instance = CachedAuthor.objects.get(id=id)
+
+        return instance
 
     def create(self, request, *args, **kwargs):
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # get our author and friend models
-        author = self.get_author(serializer.validated_data['author']['id'])
+        author_id = serializer.validated_data['author']['id']
         friend_id = serializer.validated_data["friend"]["id"]
-        try:
-            friend = self.get_author(friend_id)
-        except:
-            friend = CachedAuthor.objects.get(id=friend_id)
+
+        # get our author and friend models
+        author = self.get_author_or_cached(author_id)
+        friend = self.get_author_or_cached(friend_id)
 
         # parse any incoming api calls from other nodes
-        if request.META["HTTP_ORIGIN"] not in [settings.HOST, settings.FRONTEND_HOST, "http://testserver/"]:
-            author.add_request(friend)
+        if request.META["HTTP_ORIGIN"] not in self.hosts:
+            if isinstance(friend, Author):
+                friend.add_friend(author)
+                return Response({"friends": friend.is_friend(author)},
+                                status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Otherwise, figureout how to handle the request
         else:
             # perform remote calls if necessary
             if friend.is_local() is False:
-                integrator = Integrator.build_from_host(friend["host"])
-                print integrator
+                integrator = Integrator.build_from_host(friend.host)
                 success = integrator.send_friend_request(
                     CachedAuthor(**serializer.data["author"]),
                     friend
                 )
 
                 if not success:
-                    print "Friend Request failed"
                     return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                author.follow(friend)
-                author.add_pending(friend)
+            author.add_friend(friend)
 
-            # otherwise assume we're operating on two local authors
-            else:
-                # if both want to be friends, make it so
-                if author.is_pending_friend(friend):
-                    author.add_friend(friend)
-                    friend.add_friend(author)
-                else:
-                    author.add_pending(friend)
-                    friend.add_request(author)
-
-        return Response(status=status.HTTP_200_OK)
+            return Response({"friends": author.is_friend(friend)},
+                            status=status.HTTP_200_OK)
 
 
 class GetFriends(BaseRelationsMixin, generics.RetrieveAPIView):

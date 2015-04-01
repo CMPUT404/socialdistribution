@@ -2,11 +2,11 @@ import Reflux from 'reflux';
 import Async from './async';
 
 export default Reflux.createActions({
-  'update'               : {},
+  'update'               : Async,
   'register'             : Async,
   'logout'               : {},
   'login'                : Async,
-  'checkAuth'            : Async,
+  'checkAuth'            : {},
   'fetchAuthor'          : Async,
   'createPost'           : Async,
   'deletePost'           : Async,

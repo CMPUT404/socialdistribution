@@ -24,11 +24,11 @@ class AuthorUpdateSerializer(serializers.Serializer):
     Update passwords is done separately.
     Username cannot be updated.
     """
-    email = serializers.EmailField(required=False)
-    bio = serializers.CharField(required=False)
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    github_username = serializers.CharField(required=False)
+    email = serializers.EmailField(allow_blank=True, required=False)
+    bio = serializers.CharField(allow_blank=True, required=False)
+    first_name = serializers.CharField(allow_blank=True, required=False)
+    last_name = serializers.CharField(allow_blank=True, required=False)
+    github_username = serializers.CharField(allow_blank=True, required=False)
     image = AuthorImageSerializer(required=False)
 
     def update(self, instance, validated_data):

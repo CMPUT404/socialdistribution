@@ -40,18 +40,26 @@ SuperAgent.Request.prototype.promise = function createPromise(done, fail) {
 
 SuperAgent.Request.prototype.token = function(token) {
   if (!_.isNull(token)) {
-    return this.set('Authorization', 'Token ' + token);
-  } else {
-    return this;
+    this.set('Authorization', 'Token ' + token);
   }
+
+  return this;
 };
 
 SuperAgent.Request.prototype.host = function(host) {
   if (!_.isUndefined(host) && host !== localhost) {
-    return this.set('Author-Host', host);
-  } else {
-    return this;
+    this.set('Author-Host', host);
   }
+
+  return this;
+};
+
+SuperAgent.Request.prototype.basic = function(user, pass) {
+  if (!_.isNull(user) && !_.isNull(pass)) {
+    this.set('Authorization', 'Basic ' + btoa(user + ':' + pass));
+  }
+
+  return this;
 };
 
 export function apiPrefix(request) {

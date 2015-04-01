@@ -7,17 +7,15 @@ import { Row, Col, Input, PageHeader, Button } from 'react-bootstrap';
 import AuthorActions from '../actions/author';
 import AuthorStore from '../stores/author';
 
-import ActionListener from '../mixins/action-listener';
-
 export default React.createClass({
 
-  mixins: [Navigation, ActionListener, addons.LinkedStateMixin],
+  mixins: [Navigation, Reflux.ListenerMixin, addons.LinkedStateMixin],
 
   statics: {
     // When an authenticated user tries to re-login
     willTransitionTo: function (transition, params) {
       if (AuthorStore.isLoggedIn()) {
-        transition.redirect("timeline");
+        transition.redirect('timeline');
       }
     }
   },
@@ -30,7 +28,7 @@ export default React.createClass({
   },
 
   componentDidMount: function() {
-    this.listen(AuthorActions.login.complete, () => this.transitionTo('timeline'));
+    this.listenTo(AuthorActions.login.complete, () => this.transitionTo('timeline'));
   },
 
   logIn: function(evt) {
