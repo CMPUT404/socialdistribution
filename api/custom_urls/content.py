@@ -1,6 +1,5 @@
 from django.conf.urls import url
 from ..views.content import CreateComment, DeleteComment
-from ..views.image import PostImage
 
 urlpatterns = [
     # POST /post/:postid/comments

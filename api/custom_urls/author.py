@@ -1,6 +1,5 @@
 from django.conf.urls import url
-from ..views import author, authentication, image
-from ..views.image import AuthorImage
+from ..views import author, authentication
 
 urlpatterns = [
 
