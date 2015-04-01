@@ -13,7 +13,7 @@ export default class extends Content {
     this.source = postData.source;
     this.origin = postData.origin;
     this.content = postData.content;
-    this.contentType = postData.contentType;
+    this.contentType = postData['content-type'];
     this.visibility = postData.visibility;
     this.image = postData.image;
     this.comments = [];

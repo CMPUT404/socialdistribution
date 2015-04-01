@@ -30,6 +30,10 @@ export default React.createClass({
 
     var post = _.clone(this.state);
 
+    if (_.isEmpty(post.image)) {
+      delete post.image;
+    }
+
     delete post.preview;
     delete post.tabKey;
 
