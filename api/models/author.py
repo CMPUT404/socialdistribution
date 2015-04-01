@@ -4,8 +4,6 @@ from user import APIUser
 from api_settings import settings
 import os
 
-def get_image_path(instance, filename):
-    return os.path.join('photos', str(instance.id), filename)
 
 class Author(APIUser):
     """

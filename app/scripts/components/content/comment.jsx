@@ -18,7 +18,7 @@ export default React.createClass({
       <div className="media">
         <div className="media-left">
           <ProfileLink author={this.props.data.author}>
-            <img className="media-object content-auth-img" src={this.props.data.author.getImage()} />
+            <img className="media-object content-auth-img" src={this.props.data.author.image} />
           </ProfileLink>
         </div>
         <div className="media-body">

@@ -20,7 +20,7 @@ export default React.createClass({
           <div className="media">
             <div className="media-left">
               <ProfileLink author={author}>
-                <img className="media-object author-image" src={author.getImage()}/>
+                <img className="media-object author-image" src={author.image}/>
               </ProfileLink>
             </div>
             <Row className="media-body">

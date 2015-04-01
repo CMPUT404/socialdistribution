@@ -25,12 +25,7 @@ urlpatterns = [
     url(r'^author/registration/?$', authentication.AuthorRegistration.as_view(),
         name = 'registration'),
 
-    # GET /author/:id/image
-    url(r'^author/(?P<aid>[a-zA-Z0-9]+)/image/?$', AuthorImage.as_view(),
-        name = 'author_image'),
-
     # GET /authors
     url(r'^authors/?$', author.QueryAuthors.as_view(),
-        name = 'authors'),
-
+        name='authors')
 ]
