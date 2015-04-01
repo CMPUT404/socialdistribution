@@ -8,15 +8,6 @@ from ..models.author import (
 )
 
 
-class AuthorImageSerializer(ImageSerializer):
-    def to_representation(self, data):
-        if data:
-            author_id = str(self.parent.instance.id)
-            return api_settings.HOST + 'author/' + author_id + '/image/'
-        else:
-            return ''
-
-
 class AuthorUpdateSerializer(serializers.Serializer):
     """
     Validates incoming form data for author profile updates
@@ -29,7 +20,7 @@ class AuthorUpdateSerializer(serializers.Serializer):
     first_name = serializers.CharField(allow_blank=True, required=False)
     last_name = serializers.CharField(allow_blank=True, required=False)
     github_username = serializers.CharField(allow_blank=True, required=False)
-    image = AuthorImageSerializer(required=False)
+    image = ImageSerializer(required=False)
 
     def update(self, instance, validated_data):
         """
@@ -72,7 +63,7 @@ class RegistrationSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
     github_username = serializers.CharField(required=False)
-    image = AuthorImageSerializer(required=False)
+    image = ImageSerializer(required=False)
 
     # Follow the same pattern to validate other fields if you desire.
     def validate_displayname(self, value):
@@ -153,7 +144,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
     email = serializers.EmailField(source='user.email')
-    image = AuthorImageSerializer(required=False)
+    image = ImageSerializer(required=False)
     following = CachedAuthorSerializer(many=True)
     requests = CachedAuthorSerializer(many=True)
     friends = CachedAuthorSerializer(many=True)

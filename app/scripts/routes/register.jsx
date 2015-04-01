@@ -3,10 +3,11 @@ import React from 'react';
 import { addons } from 'react/addons';
 import { ListenerMixin } from 'reflux';
 import { Navigation } from 'react-router';
-import { Row, Col, Input, PageHeader } from 'react-bootstrap';
+import { Row, Col, Input } from 'react-bootstrap';
 
 import AuthorActions from '../actions/author';
 import AuthorStore from '../stores/author';
+import ImageReader from '../components/image-reader';
 
 // This the registration handler
 export default React.createClass({
@@ -33,13 +34,18 @@ export default React.createClass({
       password        : '',
       bio             : '',
       github_username : '',
-      password_check  : ''
+      password_check  : '',
+      image           : ''
     };
   },
 
   componentDidMount: function() {
     // If registration is complete, transition away
     this.listenTo(AuthorActions.register.complete, () => this.transitionTo('login'));
+  },
+
+  setImage: function(image) {
+    this.setState({image: image});
   },
 
   register: function(evt) {
@@ -63,25 +69,44 @@ export default React.createClass({
     var payload = _.clone(this.state);
 
     this.setState(this.getInitialState());
+    this.refs.imageReader.reset();
 
     AuthorActions.register(payload);
   },
 
   render: function() {
+    var thumbnail =  (
+      <div className="thumbnail"><img src='/images/placeholder.jpg' /></div>
+    );
+
+    if (!_.isEmpty(this.state.image)) {
+      thumbnail = (
+        <div className="thumbnail"><img src={this.state.image} /></div>
+      );
+    }
+
     return (
-      <Col md={4} mdOffset={4} className="well">
+      <Col md={8} mdOffset={2} className="register-page well">
         <Row><h2 className="text-center">Sign Up</h2></Row>
         <Row>
-          <form onSubmit={this.register}>
-            <Input type="text"  label='Displayname *' placeholder="Displayname" valueLink={this.linkState('displayname')} required/>
-            <Input type="password" label='Password *' placeholder="secret" valueLink={this.linkState('password')} required/>
-            <Input type="password" label='Repeat Password *' placeholder="secret" valueLink={this.linkState('password_check')} required/>
-            <Input type="text" label='First Name' placeholder="first name" valueLink={this.linkState('first_name')} />
-            <Input type="text" label='Last Name' placeholder="last name" valueLink={this.linkState('last_name')} />
-            <Input type="email" label='Email' placeholder="email" valueLink={this.linkState('email')} />
-            <Input type="text" label='GitHub Username' placeholder="github username" valueLink={this.linkState('github_username')} />
-            <Input type="textarea" label='Bio' placeholder="Some stuff about yourself" valueLink={this.linkState('bio')} />
+          <form onSubmit={this.register} className="text-center">
+            <Row>
+              <Col md={6}>
+                <Input type="text"  label='Displayname *' placeholder="Displayname" valueLink={this.linkState('displayname')} required/>
+                <Input type="password" label='Password *' placeholder="secret" valueLink={this.linkState('password')} required/>
+                <Input type="password" label='Repeat Password *' placeholder="secret" valueLink={this.linkState('password_check')} required/>
+                <Input type="text" label='GitHub Username' placeholder="github username" valueLink={this.linkState('github_username')} />
 
+                <ImageReader ref="imageReader" label="Profile Image" onComplete={this.setImage} />
+                {thumbnail}
+              </Col>
+              <Col md={6}>
+                <Input type="text" label='First Name' placeholder="first name" valueLink={this.linkState('first_name')} />
+                <Input type="text" label='Last Name' placeholder="last name" valueLink={this.linkState('last_name')} />
+                <Input type="email" label='Email' placeholder="email" valueLink={this.linkState('email')} />
+                <Input type="textarea" label='Bio' placeholder="Some stuff about yourself" valueLink={this.linkState('bio')} />
+              </Col>
+            </Row>
             <p><strong>* Required Fields</strong></p>
             <Input className="pull-right" bsStyle="primary" type="submit" value="Register" />
           </form>

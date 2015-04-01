@@ -119,9 +119,9 @@ class AuthorAuthentication(APITestCase):
         self.c.basic_credentials(self.user_dict_with_img['username'], self.user_dict_with_img['password'])
         id = Author.objects.get(user__username = self.user_dict_with_img['username']).id
         response = self.c.get('/author/%s' % id)
-        url = response.data['image']
-        scaffold.enable_author(self.user_dict_with_img['username'])
-        response = self.c.get(url)
+
+        self.assertEquals(response.data['image'],
+                          self.user_dict_with_img['image'])
         self.assertEquals(response.status_code, 200)
 
         scaffold.clean_up_imgs('profile')
@@ -223,9 +223,7 @@ class AuthorAuthentication(APITestCase):
         self.assertEquals(response.status_code, 200)
 
         # Get image.
-        url = response.data.get('image')
-        response = self.token_client.get(url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.data.get('image'), update_author_dict['image'])
         # scaffold.pretty_print(response.data)
 
         # Compare the response content to that content in the database

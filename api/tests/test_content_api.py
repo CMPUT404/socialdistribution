@@ -229,13 +229,7 @@ class ContentAPITestCase(TestCase):
         response = self.client.post("/post", post, format='multipart')
         self.assertEquals(response.status_code, 201)
         # Get the image.
-        url = response.data.get('image')
-        response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
-
-        # Ensure 404 on no image
-        response = self.client.get('doesnt_exist.jpg')
-        self.assertEquals(response.status_code, 404)
+        self.assertEquals(response.data.get('image'), post['image'])
 
         scaffold.clean_up_imgs('posts')
 
