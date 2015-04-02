@@ -32,26 +32,51 @@ class Integrator:
         # Don't touch the slashes, or lack thereof, intentional.
         return "%s%s" % (self.host, endpoint)
 
-    def build_auth(self):
+    def build_auth(self, displayname=None):
         """
         Builds the authentication credentials from instance properties.
         """
-        return HTTPBasicAuth(self.username, self.password)
 
-    def request(self, method, url, json={}, headers={}):
+        if displayname:
+            username = "%s:%s" % (displayname, self.username)
+        else:
+            username = self.username
+
+        return HTTPBasicAuth(username, self.password)
+
+    def request(self, method, url, json={}, local_aid=None):
         """
         Handles build and sending requests based on defined settings.
         """
+
+        basic_auth = self.build_auth()
+        headers = {}
+
+        # big hack because of lack of standardization without making this integrator
+        # a disaster
+        if "http://cs410.cs.ualberta.ca:41084/api/" in url:
+            basic_auth = self.build_auth(displayname="garbage")
+        elif "http://hindlebook.tamarabyte.com/api/" in url:
+            # basic_auth = None
+            headers["Uuid"] = local_aid
+
         try:
-            return method(
+            response = method(
                 url,
                 headers=headers,
-                auth=self.build_auth(),
-                json=json
+                auth=basic_auth,
+                json=json,
+                timeout=2
             )
-        except:
-            print "Error calling %s:%s" % (method, url)
+        except request.exceptions.RequestException as e:
+            print vars(e)
+            print "Error calling %s\n%s" % (url, e)
             return None
+
+        if response and response.status_code == 401:
+            print "Unauthorized, consult team for %s on access credentials:(%s:%s)" % (self.host, self.username, self.password)
+
+        return response
 
     def get_public_posts(self):
         """
@@ -61,38 +86,41 @@ class Integrator:
         if response and response.status_code == 200:
             return self.prepare_post_data(response)
         else:
-            # we're returning an empty list here because we dont' want to crash
-            # the call if a foreign node breaks on us
-            print "Error calling %s" % (self.build_url("posts"))
             return []
 
     def get_author(self, id, local_author):
         """
         Queries foreign server for /author/:id
         """
-        headers = {"Uuid": str(local_author.id)}
         url = self.build_url("author/%s" % id)
-        response = self.request(request.get, url, headers=headers)
+        response = self.request(
+            request.get,
+            url,
+            local_aid=local_author.id
+        )
 
         if response and response.status_code == 200:
             return self.prepare_author_data(response.json())
         else:
             return None
 
-    def get_author_posts(self, id, author):
+    def get_author_posts(self, id, local_author):
         """
         Queries foreign server for /author/:id/posts
         """
-        headers = {"UUID": str(author.id)}
         url = self.build_url("author/%s/posts" % id)
-        response = self.request(request.get, url, headers=headers)
+        response = self.request(
+            request.get,
+            url,
+            local_aid=local_author.id
+        )
 
         if response and response.status_code == 200:
             return self.prepare_post_data(response)
         else:
             return []
 
-    def send_friend_request(self, author, foreign_author):
+    def send_friend_request(self, local_author, foreign_author):
         data = {
             "query": "friendrequest",
             "author": {
@@ -102,15 +130,20 @@ class Integrator:
                 "url": foreign_author.url
             },
             "friend": {
-                "id": str(author.id),
-                "host": author.host,
-                "displayname": author.displayname,
-                "url": author.url
+                "id": str(local_author.id),
+                "host": local_author.host,
+                "displayname": local_author.displayname,
+                "url": local_author.url
             }
         }
 
-        headers = {"Uuid": str(author.id)}
-        response = self.request(request.post, self.build_url("friendrequest"), json=data, headers=headers)
+        response = self.request(
+            request.post,
+            self.build_url("friendrequest"),
+            json=data,
+            local_aid=local_author.id
+        )
+
         if response and response.status_code == 200:
             return True
         else:
@@ -122,9 +155,13 @@ class Integrator:
         frontend. Includes, author's info, friends, and posts.
         """
         author = self.get_author(id, local_author)
-        posts = self.get_author_posts(id, local_author)
-        author["posts"] = posts
-        return author
+
+        if author:
+            posts = self.get_author_posts(id, local_author)
+            author["posts"] = posts
+            return author
+        else:
+            return None
 
     def get_authors(self):
         """
@@ -137,15 +174,28 @@ class Integrator:
             return []
 
     def prepare_post_data(self, response):
-        posts = response.json()["posts"]
+        """
+        Unpacks post data responses into a consistent format for our backend.
+        """
+
+        # handle post array inconsistenices in other apis
+        json_data = response.json()
+        if "posts" in json_data:
+            posts = json_data["posts"]
+        else:
+            posts = json_data
+
+        # marshal and slap on expected metadata
         for post in posts:
             post["source"] = self.host
             post["author"]["host"] = self.host
+
         return posts
 
     def prepare_authors(self, response):
         authors = []
         for author in response.json():
+            author["host"] = self.host
             authors.append(self.prepare_author_data(author))
         return authors
 
