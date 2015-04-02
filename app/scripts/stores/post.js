@@ -3,6 +3,7 @@ import Reflux from 'reflux';
 
 import { Request, apiPrefix } from '../utils/helpers';
 
+import AuthorStore from './author';
 import PostActions from '../actions/post';
 import AuthorActions from '../actions/author';
 
@@ -81,7 +82,7 @@ export default Reflux.createStore({
   }
 });
 
-export function responseToPosts(postsData) {
+function responseToPosts(postsData) {
   return _.sortByOrder(postsData.posts.map((post) => {
     return new Post(post);
   }), ['pubDate'], [false]);

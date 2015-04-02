@@ -42,18 +42,16 @@ class Author {
     if (!_.isEmpty(author.pending)) {
       this.pending = author.pending.map(responseToAuthor)
     }
+
+    if (_.isNull(this.image) ||
+        _.isEmpty(this.image) ||
+        _.isUndefined(this.image)) {
+      this.image = '/images/placeholder.jpg';
+    }
   }
 
   getName() {
     return this.first_name + ' ' + this.last_name;
-  }
-
-  getImage () {
-    return (_.isNull(this.image) ||
-            _.isEmpty(this.image) ||
-            _.isUndefined(this.image))
-             ?
-            '/images/placeholder.jpg' : this.image;
   }
 
   isAuthor (authorId) {

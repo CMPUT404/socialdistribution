@@ -43,13 +43,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
         return comment
 
-class PostImageSerializer(ImageSerializer):
-    def to_representation(self, data):
-        if data:
-            post_id = str(self.parent.instance.guid)
-            return api_settings.HOST + 'post/' + post_id + '/image/'
-        else:
-            return ''
 
 class PostSerializer(serializers.ModelSerializer):
     author = CompactAuthorSerializer(many = False, read_only = True)
@@ -58,7 +51,7 @@ class PostSerializer(serializers.ModelSerializer):
     source = SourceSerializer(read_only = True)
     origin = OriginSerializer(read_only = True)
     visibility = serializers.CharField()
-    image = PostImageSerializer(required=False)
+    image = ImageSerializer(required=False)
 
     class Meta:
         model = Post
@@ -75,7 +68,11 @@ class PostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request', None)
         _author = Author.objects.get(user = request.user)
+        imageFile = validated_data.pop('image', None)
         post = Post(author = _author, **validated_data)
         post.save()
+
+        if bool(imageFile):
+            post.image.save(str(post.guid), imageFile)
 
         return post

@@ -13,10 +13,16 @@ import ProfileLink from './profile-link';
 export default React.createClass({
 
   render: function() {
-    var content, comments;
+    var content, comments, image;
 
     if (_.isNull(this.props.data)) {
       return (<Spinner />);
+    }
+
+    if (!_.isEmpty(this.props.data.image)) {
+      image = (
+      <image className="post-image" src={this.props.data.image} />
+      );
     }
 
     if (this.props.data.hasComments()) {
@@ -42,12 +48,13 @@ export default React.createClass({
       <div className="media">
         <div className="media-left">
           <ProfileLink author={this.props.data.author}>
-            <img className="media-object content-auth-img" src={this.props.data.author.getImage()} />
+            <img className="media-object content-auth-img" src={this.props.data.author.image} />
           </ProfileLink>
         </div>
         <div className="media-body">
           <h4>{this.props.data.title}</h4>
           {content}
+          {image}
           <h6 className="light-text">{Moment(this.props.data.pubDate).fromNow()} by
             <ProfileLink author={this.props.data.author}>
               <span className="text-capitalize"> {this.props.data.author.displayname}</span>

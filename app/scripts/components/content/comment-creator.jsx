@@ -43,7 +43,7 @@ export default React.createClass({
       <div className="media">
         <div className="media-left">
           <ProfileLink author={this.props.currentAuthor}>
-            <img className="media-object author-image" src={this.props.currentAuthor.getImage()}/>
+            <img className="media-object author-image" src={this.props.currentAuthor.image}/>
           </ProfileLink>
         </div>
         <form onSubmit={this.submitComment} className="media-body content-creator">

@@ -51,7 +51,7 @@ export default React.createClass({
       params.host = decodeURIComponent(params.host);
     }
 
-    if (params.id === 'profile') {
+    if (AuthorStore.isLoggedIn() && params.id === 'profile') {
       params.id = AuthorStore.getAuthor().id;
     }
 
@@ -145,7 +145,7 @@ export default React.createClass({
               {editProfile}
             </span>
             <div className="media-left">
-              <img className="media-object profile-image" src={this.state.displayAuthor.getImage()} />
+              <img className="media-object profile-image" src={this.state.displayAuthor.image} />
             </div>
             <Row className="media-body">
               <Col md={6}>

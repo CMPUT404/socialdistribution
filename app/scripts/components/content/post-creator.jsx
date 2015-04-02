@@ -5,6 +5,7 @@ import { TabbedArea, TabPane, Input } from 'react-bootstrap';
 import Marked from 'marked';
 
 import AuthorActions from '../../actions/author';
+import ImageReader from '../image-reader';
 import ProfileLink from './profile-link';
 // Responsible for creating posts and notifying the Author store when
 // this happens.
@@ -19,6 +20,7 @@ export default React.createClass({
       preview    : '',
       content    : '',
       title      : '',
+      image      : '',
       tabKey     : 1
     };
   },
@@ -28,11 +30,16 @@ export default React.createClass({
 
     var post = _.clone(this.state);
 
+    if (_.isEmpty(post.image)) {
+      delete post.image;
+    }
+
     delete post.preview;
     delete post.tabKey;
 
     // reset content state now that we have it stored
     this.setState(this.getInitialState());
+    this.refs.imageReader.reset();
 
     AuthorActions.createPost(post);
   },
@@ -56,6 +63,10 @@ export default React.createClass({
     }
   },
 
+  setImage: function(image) {
+    this.setState({image: image});
+  },
+
   render: function() {
 
     // don't go further if we don't have our current author prop
@@ -67,7 +78,7 @@ export default React.createClass({
       <div className="media">
         <div className="media-left">
           <ProfileLink author={this.props.currentAuthor}>
-            <img className="media-object author-image" src={this.props.currentAuthor.getImage()}/>
+            <img className="media-object author-image" src={this.props.currentAuthor.image}/>
           </ProfileLink>
         </div>
         <div className="media-body content-creator">
@@ -89,7 +100,7 @@ export default React.createClass({
                   <option value="text/html">HTML</option>
                   <option value="text/plain">Text</option>
                 </Input>
-
+                <ImageReader ref="imageReader" onComplete={this.setImage} />
                 <Input className="pull-right" type="submit" value="Post" />
               </form>
             </TabPane>
