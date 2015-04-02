@@ -13,19 +13,33 @@ re-installed if we have to blow away our database in a migration.
 """
 
 # Hindlebook Creds
-user = User.objects.get_or_create(username="hindlebook")
+# https://github.com/Tamarabyte/cmput410-project
+user = User.objects.create(username="hindlebook")
 user.set_password("hindlebook")
 node = Node.objects.get_or_create(
     user=user,
     host="http://hindlebook.tamarabyte.com/api/",
-    foreign_username="socshizzle",
-    foreign_pass="socshizzle",
+    foreign_username="team5",
+    foreign_pass="team5",
+    outbound=True,
+    enabled=True
+)
+
+# Nbor
+# https://github.com/CMPUT410W15/cmput410-project
+user = User.objects.create(username="nbor")
+user.set_password("nbor")
+node = Node.objects.get_or_create(
+    user=user,
+    host="http://cs410.cs.ualberta.ca:41084/api/",
+    foreign_username="host",
+    foreign_pass="password",
     outbound=True,
     enabled=True
 )
 
 # API Public Test Credentials
-test_user = User.objects.get_or_create(username="test")
+test_user = User.objects.create(username="test")
 test_user.set_password("test")
 test_node = Node.objects.get_or_create(
     user=test_user,

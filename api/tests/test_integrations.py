@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 from api_settings import settings
-from ..integrations import Integrator, Aggregator
+from ..integrations import Aggregator
 from ..models import Node, CachedAuthor
 from django.contrib.auth.models import User
 import uuid
@@ -10,18 +10,29 @@ class IntegrationTests(APITestCase):
     def setUp(self):
         # need to specify nodes here otherwise there won't be anything in the nodes
         # db
+        user = User.objects.create(username="nbor")
+        user.save()
+        Node.objects.get_or_create(
+            user=user,
+            host="http://cs410.cs.ualberta.ca:41084/api/",
+            foreign_username="host",
+            foreign_pass="password",
+            outbound=True
+        )
+
         user = User.objects.create(username="hindlebook")
         user.save()
         Node.objects.get_or_create(
             user=user,
-            host="http://hindlebook.tamarabyte.com/",
-            foreign_username="socshizzle",
-            foreign_pass="socshizzle",
+            host="http://hindlebook.tamarabyte.com/api/",
+            foreign_username="team5",
+            foreign_pass="team5",
             outbound=True
         )
+
         self.integrators = Aggregator.get_integrators()
 
-    def test_author(self):
+    def build_author(self):
         id = uuid.uuid4()
         return CachedAuthor(
             id=id,
@@ -72,14 +83,14 @@ class IntegrationTests(APITestCase):
         for integrator in self.integrators:
             author = self.get_available_author(integrator)
             if author is not None:
-                author_posts = Aggregator.get_posts_for_authors([author], self.test_author())
+                author_posts = Aggregator.get_posts_for_authors([author], self.build_author())
                 self.assertTrue(type(author_posts) is list, "Expected get_author_posts to return a list")
 
     def test_get_author_view(self):
         for integrator in self.integrators:
             author = self.get_available_author(integrator)
             if author is not None:
-                author_data = integrator.get_author_view(author.id, self.test_author())
+                author_data = integrator.get_author_view(author.id, self.build_author())
                 self.assertTrue(author_data is not None, "Empty author data")
                 self.assertTrue(author_data["posts"] is not None, "No posts returned")
                 self.assertTrue(author_data["host"] is not None, "No host is set")
@@ -90,7 +101,7 @@ class IntegrationTests(APITestCase):
         for integrator in self.integrators:
             foreign_author = self.get_available_author(integrator)
             if foreign_author is not None:
-                success = integrator.send_friend_request(self.test_author(), foreign_author)
+                success = integrator.send_friend_request(self.build_author(), foreign_author)
                 print success
                 self.assertTrue(success, "Friend Request Failed")
 
