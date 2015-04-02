@@ -68,7 +68,11 @@ class PostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request', None)
         _author = Author.objects.get(user = request.user)
+        imageFile = validated_data.pop('image', None)
         post = Post(author = _author, **validated_data)
         post.save()
+
+        if bool(imageFile):
+            post.image.save(str(post.guid), imageFile)
 
         return post
