@@ -12,7 +12,7 @@ class Author(APIUser):
     """
     bio = models.TextField(blank=True, null=True)
     github_username = models.CharField(max_length=40, blank=True, null=True)
-    image = models.ImageField(upload_to='images/profile', blank=True, null=True)
+    image = models.TextField(blank=True, null=True)
 
     # Who the author is following
     following = models.ManyToManyField('CachedAuthor', blank=True, null=True,

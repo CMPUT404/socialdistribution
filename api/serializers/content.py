@@ -51,7 +51,7 @@ class PostSerializer(serializers.ModelSerializer):
     source = SourceSerializer(read_only = True)
     origin = OriginSerializer(read_only = True)
     visibility = serializers.CharField()
-    image = ImageSerializer(required=False)
+    image = serializers.CharField(required=False)
 
     class Meta:
         model = Post
@@ -68,11 +68,7 @@ class PostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request', None)
         _author = Author.objects.get(user = request.user)
-        imageFile = validated_data.pop('image', None)
         post = Post(author = _author, **validated_data)
         post.save()
-
-        if bool(imageFile):
-            post.image.save(str(post.guid), imageFile)
 
         return post

@@ -231,8 +231,6 @@ class ContentAPITestCase(TestCase):
         # Get the image.
         self.assertEquals(response.data.get('image'), post['image'])
 
-        scaffold.clean_up_imgs('posts')
-
     def test_create_post_no_auth(self):
         ptext = TEXT + " message"
         post = {
