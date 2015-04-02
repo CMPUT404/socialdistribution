@@ -33,9 +33,11 @@ class AuthorUpdateSerializer(serializers.Serializer):
         instance.bio = validated_data.get('bio', instance.bio)
         instance.github_username = validated_data.get('github_username',
                                                       instance.github_username)
-
-        instance.image = validated_data.get('image', instance.image)
         instance.save()
+        imageFile = validated_data.get('image', instance.image)
+
+        if bool(imageFile):
+            instance.image.save(str(instance.id), imageFile)
 
         instance.user.email = validated_data.get('email', instance.user.email)
         instance.user.last_name = validated_data.get('last_name',
@@ -82,13 +84,17 @@ class RegistrationSerializer(serializers.Serializer):
         _author = {}
         _author['github_username'] = validated_data.pop('github_username', '')
         _author['bio'] = validated_data.pop('bio', '')
-        _author['image'] = validated_data.pop('image', '')
+
+        imageFile = validated_data.pop('image', None)
 
         user = User.objects.create_user(**validated_data)
         user.save()
 
         author = Author(user=user, **_author)
         author.save()
+
+        if bool(imageFile):
+            author.image.save(str(author.id), imageFile)
 
         return author
 
