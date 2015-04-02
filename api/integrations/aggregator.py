@@ -2,9 +2,18 @@ from ..models import Node
 from . import Integrator
 
 class Aggregator(object):
+    """
+    This class handles the intricacies of aggregating data among all registered
+    foreign nodes.
+    """
 
     @staticmethod
     def get_integrators():
+        """
+        Builds integrators for each of our registered nodes if custom logic is
+        needed. Should only ever really be used in testing situations outside of
+        this class.
+        """
         nodes = Node.objects.filter(outbound=True)
         integrators = []
         for node in nodes:
@@ -21,8 +30,8 @@ class Aggregator(object):
         return posts
 
     @staticmethod
-    # aggregate posts using a list of cached authors
     def get_posts_for_authors(authors, local_author):
+        """Aggregate posts using a list of cached authors"""
         posts = []
         for author in authors:
             integrator = Integrator.build_for_author(author)
@@ -31,8 +40,8 @@ class Aggregator(object):
         return posts
 
     @staticmethod
-    # Fetches all available authors from all nodes
     def get_authors():
+        """Fetches all registered authors from all nodes."""
         authors = []
         for integrator in Aggregator.get_integrators():
             node_authors = integrator.get_authors()
