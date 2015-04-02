@@ -32,40 +32,51 @@ class Integrator:
         # Don't touch the slashes, or lack thereof, intentional.
         return "%s%s" % (self.host, endpoint)
 
-    def build_auth(self):
+    def build_auth(self, displayname=None):
         """
         Builds the authentication credentials from instance properties.
         """
-        return HTTPBasicAuth(self.username, self.password)
 
-    def request(self, method, url, json={}, local_author_id=None):
+        if displayname:
+            username = "%s:%s" % (displayname, self.username)
+        else:
+            username = self.username
+
+        return HTTPBasicAuth(username, self.password)
+
+    def request(self, method, url, json={}, local_aid=None):
         """
         Handles build and sending requests based on defined settings.
         """
 
-        headers = {}
         basic_auth = self.build_auth()
+        headers = {}
 
         # big hack because of lack of standardization without making this integrator
         # a disaster
-        if "http://cs410.cs.ualberta.ca:41080/api/" in url:
-            pass
-            # basic_auth = "null_user:%s" % basic_auth
-            # basic_auth = "%s" % basic_auth
-
+        if "http://cs410.cs.ualberta.ca:41084/api/" in url:
+            basic_auth = self.build_auth(displayname="garbage")
         elif "http://hindlebook.tamarabyte.com/api/" in url:
-            headers = {"Uuid": local_author_id}
+            # basic_auth = None
+            headers["Uuid"] = local_aid
 
         try:
-            return method(
+            response = method(
                 url,
                 headers=headers,
                 auth=basic_auth,
                 json=json,
+                timeout=2
             )
         except request.exceptions.RequestException as e:
-            print "Error calling %s:%s\n%s" % (method, url, e)
+            print vars(e)
+            print "Error calling %s\n%s" % (url, e)
             return None
+
+        if response and response.status_code == 401:
+            print "Unauthorized, consult team for %s on access credentials:(%s:%s)" % (self.host, self.username, self.password)
+
+        return response
 
     def get_public_posts(self):
         """
@@ -85,7 +96,7 @@ class Integrator:
         response = self.request(
             request.get,
             url,
-            local_author_context=local_author.id
+            local_aid=local_author.id
         )
 
         if response and response.status_code == 200:
@@ -101,7 +112,7 @@ class Integrator:
         response = self.request(
             request.get,
             url,
-            local_author_context=local_author.id
+            local_aid=local_author.id
         )
 
         if response and response.status_code == 200:
@@ -130,7 +141,7 @@ class Integrator:
             request.post,
             self.build_url("friendrequest"),
             json=data,
-            local_author_context=local_author.id
+            local_aid=local_author.id
         )
 
         if response and response.status_code == 200:
@@ -144,9 +155,13 @@ class Integrator:
         frontend. Includes, author's info, friends, and posts.
         """
         author = self.get_author(id, local_author)
-        posts = self.get_author_posts(id, local_author)
-        author["posts"] = posts
-        return author
+
+        if author:
+            posts = self.get_author_posts(id, local_author)
+            author["posts"] = posts
+            return author
+        else:
+            return None
 
     def get_authors(self):
         """
@@ -159,15 +174,28 @@ class Integrator:
             return []
 
     def prepare_post_data(self, response):
-        posts = response.json()["posts"]
+        """
+        Unpacks post data responses into a consistent format for our backend.
+        """
+
+        # handle post array inconsistenices in other apis
+        json_data = response.json()
+        if "posts" in json_data:
+            posts = json_data["posts"]
+        else:
+            posts = json_data
+
+        # marshal and slap on expected metadata
         for post in posts:
             post["source"] = self.host
             post["author"]["host"] = self.host
+
         return posts
 
     def prepare_authors(self, response):
         authors = []
         for author in response.json():
+            author["host"] = self.host
             authors.append(self.prepare_author_data(author))
         return authors
 

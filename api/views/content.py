@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from rest_framework import generics, viewsets, mixins, exceptions
+from rest_framework import generics, viewsets, mixins, exceptions, status
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import TokenAuthentication
@@ -112,7 +112,10 @@ class AuthorPostViewSet(
                 integrator = Integrator.build_from_host(host)
                 data = integrator.get_author_view(pk, author)
 
-            # otherwise try and find them locally
+                if data is None:
+                    return Response(status=status.HTTP_404_NOT_FOUND)
+
+            # otherwise try and find the author locally
             else:
                 author = get_object_or_404(Author, id=pk)
                 data = AuthorSerializer(author, context={'request': request}).data
@@ -128,7 +131,7 @@ class AuthorPostViewSet(
                     posts = PostSerializer(posts, many=True)
                     data["posts"] = posts.data
 
-        # otherwise fetch a specific post
+        # if both, author_pk and post are defined, return a specific post
         else:
             post = self.queryset.get(author__id=author_pk, guid=pk)
             self.check_object_permissions(self.request, post)
