@@ -124,8 +124,6 @@ class AuthorAuthentication(APITestCase):
                           self.user_dict_with_img['image'])
         self.assertEquals(response.status_code, 200)
 
-        scaffold.clean_up_imgs('profile')
-
     def test_registration_same_user(self):
         """
         Test registering duplicate users
@@ -236,9 +234,6 @@ class AuthorAuthentication(APITestCase):
 
         self.assertEquals(details.bio, update_author_dict['bio'])
         self.assertEquals(details.github_username, update_author_dict['github_username'])
-
-        # Clean up
-        scaffold.clean_up_imgs('profile')
 
     def test_author_update_bad_authorization(self):
         old = User.objects.get(username = RUSERNAME)

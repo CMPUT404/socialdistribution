@@ -70,13 +70,6 @@ def get_test_image():
         os.path.dirname(__file__) + TEST_FOLDER_RELATIVE + '/fixtures/images/s.jpg'
     )
 
-def clean_up_imgs(prefix):
-    """
-    Cleans up images from tests.
-    """
-    folder_path = os.path.dirname(__file__) + '/../../' + 'images/' + prefix
-    shutil.rmtree(folder_path)
-
 def pretty_print(data):
     """Pretty prints a dictionary object"""
     print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))

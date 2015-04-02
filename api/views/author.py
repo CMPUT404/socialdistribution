@@ -16,7 +16,7 @@ from ..models.author import (
     Author,
     CachedAuthor
 )
-from ..serializers.author import CachedAuthorSerializer
+from ..serializers.author import CompactAuthorSerializer
 from ..serializers.relations import (
     BaseRetrieveFollowingSerializer,
     FriendRequestSerializer,
@@ -186,8 +186,9 @@ class QueryAuthors(APIView):
     Queries the database for all cached authors
     """
     def get(self, request, *args, **kwargs):
-        cached_authors = CachedAuthor.objects.all()
-        authors = CachedAuthorSerializer(cached_authors, many=True).data
+        authorsSet = Author.objects.all()
+
+        authors = CompactAuthorSerializer(authorsSet, many=True).data
 
         # get all available foreign authors too
         authors.extend(Aggregator.get_authors())

@@ -15,7 +15,7 @@ class Post(models.Model):
     categories = ListField(blank=True, default=[])
     pubDate = models.DateTimeField(auto_now_add=True, editable=False)
     visibility = models.CharField(blank=False, max_length=10)
-    image = models.ImageField(upload_to='images/posts', null=True, blank=True)
+    image = models.TextField(blank=True, null=True)
     author = models.ForeignKey(Author, blank=False, editable=False)
 
     def __unicode__(self):

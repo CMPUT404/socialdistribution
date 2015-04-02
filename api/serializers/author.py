@@ -20,7 +20,7 @@ class AuthorUpdateSerializer(serializers.Serializer):
     first_name = serializers.CharField(allow_blank=True, required=False)
     last_name = serializers.CharField(allow_blank=True, required=False)
     github_username = serializers.CharField(allow_blank=True, required=False)
-    image = ImageSerializer(required=False)
+    image = serializers.CharField(required=False)
 
     def update(self, instance, validated_data):
         """
@@ -31,13 +31,10 @@ class AuthorUpdateSerializer(serializers.Serializer):
             validated_dated: Scrubed data from an HTTP request.
         """
         instance.bio = validated_data.get('bio', instance.bio)
+        instance.image = validated_data.get('image', instance.image)
         instance.github_username = validated_data.get('github_username',
                                                       instance.github_username)
         instance.save()
-        imageFile = validated_data.get('image', instance.image)
-
-        if bool(imageFile):
-            instance.image.save(str(instance.id), imageFile)
 
         instance.user.email = validated_data.get('email', instance.user.email)
         instance.user.last_name = validated_data.get('last_name',
@@ -65,7 +62,7 @@ class RegistrationSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
     github_username = serializers.CharField(required=False)
-    image = ImageSerializer(required=False)
+    image = serializers.CharField(required=False)
 
     # Follow the same pattern to validate other fields if you desire.
     def validate_displayname(self, value):
@@ -83,18 +80,15 @@ class RegistrationSerializer(serializers.Serializer):
 
         _author = {}
         _author['github_username'] = validated_data.pop('github_username', '')
+        _author['image'] = validated_data.pop('image', '')
         _author['bio'] = validated_data.pop('bio', '')
 
-        imageFile = validated_data.pop('image', None)
 
         user = User.objects.create_user(**validated_data)
         user.save()
 
         author = Author(user=user, **_author)
         author.save()
-
-        if bool(imageFile):
-            author.image.save(str(author.id), imageFile)
 
         return author
 
@@ -104,14 +98,14 @@ class CompactAuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('id', 'displayname', 'host', 'url')
+        fields = ('id', 'displayname', 'host', 'url', 'image')
 
 
 # This will throw an error if duplicate id's
 class CachedAuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = CachedAuthor
-        fields = ('id', 'host', 'displayname', 'url',)
+        fields = ('id', 'host', 'displayname', 'url')
 
 
 # This will not throw an error if duplicate id's
@@ -150,7 +144,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
     email = serializers.EmailField(source='user.email')
-    image = ImageSerializer(required=False)
+    image = serializers.CharField(required=False)
     following = CachedAuthorSerializer(many=True)
     requests = CachedAuthorSerializer(many=True)
     friends = CachedAuthorSerializer(many=True)
