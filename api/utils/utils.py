@@ -1,5 +1,6 @@
 from rest_framework.views import exception_handler
-from rest_framework import status, exceptions
+from rest_framework import status
+from rest_framework.exceptions import APIException, AuthenticationFailed
 import ast
 from django.db import models
 from django.core.exceptions import PermissionDenied
@@ -34,32 +35,36 @@ def custom_exception_handler(exc, context):
     if response is not None:
         return response
 
-    # Note: Unhandled exceptions will raise a 500 error.
-    return None
 
-class GenericException(exceptions.APIException):
+class GenericException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Error encountered'
 
-class UserNotFound(exceptions.APIException):
+
+class UserNotFound(APIException):
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = 'Username not found'
 
-class AuthorNotFound(exceptions.APIException):
+
+class AuthorNotFound(APIException):
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = 'Author not found'
 
-class UserAlreadyExists(exceptions.APIException):
+
+class UserAlreadyExists(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Username already exists'
 
-class AuthenticationFailure(exceptions.AuthenticationFailed):
+
+class AuthenticationFailure(AuthenticationFailed):
     status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = 'Authentication failed'
 
-class NotAuthor(exceptions.AuthenticationFailed):
+
+class NotAuthor(AuthenticationFailed):
     status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = 'You must be the author to edit this'
+
 
 class ListField(models.TextField):
     __metaclass__ = models.SubfieldBase

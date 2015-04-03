@@ -69,7 +69,6 @@ class Integrator:
                 timeout=2
             )
         except request.exceptions.RequestException as e:
-            print vars(e)
             print "Error calling %s\n%s" % (url, e)
             return None
 
@@ -88,15 +87,21 @@ class Integrator:
         else:
             return []
 
-    def get_author(self, id, local_author):
+    def get_author(self, id, author_context=None):
         """
         Queries foreign server for /author/:id
         """
+
+        if author_context:
+            local_author_id = author_context.id
+        else:
+            local_author_id = ""
+
         url = self.build_url("author/%s" % id)
         response = self.request(
             request.get,
             url,
-            local_aid=local_author.id
+            local_aid=local_author_id
         )
 
         if response and response.status_code == 200:
@@ -104,15 +109,20 @@ class Integrator:
         else:
             return None
 
-    def get_author_posts(self, id, local_author):
+    def get_author_posts(self, id, author_context=None):
         """
         Queries foreign server for /author/:id/posts
         """
+        if author_context:
+            local_author_id = author_context.id
+        else:
+            local_author_id = ""
+
         url = self.build_url("author/%s/posts" % id)
         response = self.request(
             request.get,
             url,
-            local_aid=local_author.id
+            local_aid=local_author_id
         )
 
         if response and response.status_code == 200:
@@ -149,15 +159,15 @@ class Integrator:
         else:
             return False
 
-    def get_author_view(self, id, local_author):
+    def get_author_view(self, id, author_context=None):
         """
         Combines together a bunch of foreign author calls to one object to help the
         frontend. Includes, author's info, friends, and posts.
         """
-        author = self.get_author(id, local_author)
+        author = self.get_author(id, author_context=author_context)
 
         if author:
-            posts = self.get_author_posts(id, local_author)
+            posts = self.get_author_posts(id, author_context=author_context)
             author["posts"] = posts
             return author
         else:

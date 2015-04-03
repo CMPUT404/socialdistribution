@@ -1,15 +1,15 @@
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import AnonymousUser
 from rest_framework.response import Response
 from rest_framework import generics, viewsets, mixins, exceptions, status
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from ..models.content import Post, Comment
+from ..models import Post, Comment, Author, Node
 from ..serializers.content import PostSerializer, CommentSerializer
 from ..permissions.permissions import IsAuthor, Custom
 from ..permissions.author import IsEnabled
-from ..models.author import Author
 from ..serializers.author import AuthorSerializer
 from ..integrations import Aggregator, Integrator
 
@@ -55,7 +55,7 @@ class CreateComment(generics.CreateAPIView):
 #
 # Post Retrieval for authors and timeline
 #
-class PostBaseView(object):
+class PostBaseView():
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 
@@ -107,12 +107,18 @@ class AuthorPostViewSet(
 
             # check if we're querying for a remote author
             if "HTTP_AUTHOR_HOST" in request.META:
-                author = Author.objects.get(user__id=self.request.user.id)
+
+                # handle un-authenticated viewing for uuid hack
+                if request.auth:
+                    author = Author.objects.get(user__id=self.request.user.id)
+                else:
+                    author = None
+
                 host = request.META["HTTP_AUTHOR_HOST"]
                 integrator = Integrator.build_from_host(host)
-                data = integrator.get_author_view(pk, author)
+                data = integrator.get_author_view(pk, author_context=author)
 
-                if data is None:
+                if not data:
                     return Response(status=status.HTTP_404_NOT_FOUND)
 
             # otherwise try and find the author locally
@@ -122,6 +128,9 @@ class AuthorPostViewSet(
 
                 # append author posts to this object
                 posts = Post.objects.filter(author__id=pk)
+
+                # if request
+
                 for post in posts:
                     try:
                         self.check_object_permissions(self.request, post)
@@ -200,6 +209,7 @@ class PublicPostsViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
+    permission_classes = [IsAuthenticatedOrReadOnly,]
     def list(self, request):
         """
         Returns a list of public posts based on APIUser type.
@@ -209,7 +219,7 @@ class PublicPostsViewSet(
         posts = serializer.data
 
         # dont return public posts of other nodes in node-to-node calls
-        if request.auth is None or request.user.type is not "Node":
+        if isinstance(request.user, AnonymousUser) or not Node.objects.filter(user__username=request.user.username).exists():
             foreign_posts = Aggregator.get_public_posts()
             posts.extend(foreign_posts)
 

@@ -86,13 +86,13 @@ class Login(APIView):
 
     def get(self, request, format=None):
         """Returns authentication token after validating Basic Auth header"""
-        token, created = Token.objects.get_or_create(user=request.user)
 
         if request.user.is_authenticated() is False:
             login(request, request.user)
 
         author = Author.objects.get(user=request.user)
         serializer = AuthorSerializer(author, context={'request': request})
+        token, created = Token.objects.get_or_create(user=request.user)
 
         return Response({'token': token.key, 'author': serializer.data})
 
