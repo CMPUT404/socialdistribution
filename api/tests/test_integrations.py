@@ -10,25 +10,25 @@ class IntegrationTests(APITestCase):
     def setUp(self):
         # need to specify nodes here otherwise there won't be anything in the nodes
         # db
-        user = User.objects.create(username="nbor")
-        user.save()
-        Node.objects.get_or_create(
-            user=user,
-            host="http://cs410.cs.ualberta.ca:41084/api/",
-            foreign_username="host",
-            foreign_pass="password",
-            outbound=True
-        )
+        # user = User.objects.create(username="nbor")
+        # user.save()
+        # Node.objects.get_or_create(
+            # user=user,
+            # host="http://cs410.cs.ualberta.ca:41084/api/",
+            # foreign_username="host",
+            # foreign_pass="password",
+            # outbound=True
+        # )
 
-        user = User.objects.create(username="hindlebook")
-        user.save()
-        Node.objects.get_or_create(
-            user=user,
-            host="http://hindlebook.tamarabyte.com/api/",
-            foreign_username="team5",
-            foreign_pass="team5",
-            outbound=True
-        )
+        # user = User.objects.create(username="hindlebook")
+        # user.save()
+        # Node.objects.get_or_create(
+            # user=user,
+            # host="http://hindlebook.tamarabyte.com/api/",
+            # foreign_username="team5",
+            # foreign_pass="team5",
+            # outbound=True
+        # )
 
         self.integrators = Aggregator.get_integrators()
 
@@ -47,9 +47,9 @@ class IntegrationTests(APITestCase):
         if test_post_set:
             # parse out an author and convert to cached author format
             data = test_post_set[0]["author"]
+            print data
             return CachedAuthor(
-                host="http://localhost:8001/api/",
-                # host=data["host"],
+                host=data["host"],
                 id=str(data["id"]),
                 displayname=data["displayname"]
             )
@@ -102,7 +102,6 @@ class IntegrationTests(APITestCase):
             foreign_author = self.get_available_author(integrator)
             if foreign_author is not None:
                 success = integrator.send_friend_request(self.build_author(), foreign_author)
-                print success
                 self.assertTrue(success, "Friend Request Failed")
 
     def test_get_authors(self):
