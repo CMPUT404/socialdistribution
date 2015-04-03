@@ -33,3 +33,7 @@ pip install -r requirements
 ```
 ./manage.py test
 ```
+
+#### Libraries and Frameworks  
+[Back End](https://github.com/CMPUT404/socialdistribution/blob/master/requirements.txt)  
+[Front End](https://github.com/CMPUT404/socialdistribution/blob/master/package.json#L8-L17)
