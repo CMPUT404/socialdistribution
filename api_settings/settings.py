@@ -6,12 +6,27 @@ https://docs.djangoproject.com/en/1.7/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.7/ref/settings/
+
+https://devcenter.heroku.com/articles/getting-started-with-django
 """
+import os
+
+# Parse database configuration from $DATABASE_URL
+import dj_database_url
+DATABASES = {'default': dj_database_url.config()}
+
+# Honor the 'X-Forwarded-Proto' header for request.is_secure()
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+ALLOWED_HOSTS = ['.herokuapp.com']
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
+STATIC_ROOT = 'staticfiles'
+STATIC_URL = '/static/'
+MEDIA_ROOT = 'media'
+MEDIA_URL = '/media/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
@@ -24,10 +39,8 @@ DEBUG = True
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
-
-HOST = "http://localhost:8000/"
-FRONTEND_HOST = "http://localhost:1337"
+HOST = "http://socshizzle-api.herokuapp.com/"
+FRONTEND_HOST = "http://socshizzle.divshot.io"
 
 # Application definition
 
@@ -57,10 +70,10 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 )
 
-# CORS configs for dev
-# Won't be used in prod
-
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+  'socshizzle.divshot.io',
+  'development.socshizzle.divshot.io'
+)
 
 CORS_ALLOW_HEADERS = (
     'x-requested-with',
@@ -78,17 +91,6 @@ ROOT_URLCONF = 'api.urls'
 
 WSGI_APPLICATION = 'api_settings.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.7/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
@@ -103,11 +105,6 @@ USE_L10N = True
 USE_TZ = True
 
 APPEND_SLASH = False
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.7/howto/static-files/
-
-STATIC_URL = '/static/'
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
