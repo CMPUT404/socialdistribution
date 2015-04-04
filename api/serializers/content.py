@@ -2,7 +2,6 @@ from rest_framework import serializers
 from ..models.content import Post, Comment
 from ..models.author import Author
 from author import CompactAuthorSerializer
-from image import ImageSerializer
 from django.conf import settings
 from api_settings import settings as api_settings
 

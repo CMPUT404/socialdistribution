@@ -1,6 +1,5 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from image import ImageSerializer
 from api_settings import settings as api_settings
 from ..models.author import (
     Author,
