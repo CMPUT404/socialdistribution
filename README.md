@@ -8,6 +8,8 @@
 
 [API Documentation](https://github.com/CMPUT404/socialdistribution/wiki).
 
+[Short Video Demo](https://www.youtube.com/watch?v=zDQqr7t1elU).
+
 ### Setup
 Getting things up and running is a bit more complicated because we're running a separate purely restful backend and a React.js frontend.
 
